@@ -1,0 +1,4873 @@
+curl -XGET 'http://127.0.0.1:9200/_cluster/nodes' 
+# {
+#    "clusterName" : "elasticsearch",
+#    "nodes" : {
+#       "getafix-38291" : {
+#          "httpAddress" : "inet[/127.0.0.2:9202]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9300]",
+#          "name" : "Parks, Arthur"
+#       },
+#       "getafix-5242" : {
+#          "httpAddress" : "inet[/127.0.0.2:9201]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9301]",
+#          "name" : "Senor Muerte / Senor Suerte"
+#       },
+#       "getafix-64438" : {
+#          "httpAddress" : "inet[/127.0.0.2:9200]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9302]",
+#          "name" : "Quasimodo"
+#       }
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_cluster/state' 
+# {
+#    "routingNodes" : {
+#       "unassigned" : [],
+#       "nodes" : {}
+#    },
+#    "routingTable" : {
+#       "indices" : {}
+#    },
+#    "metadata" : {
+#       "maxNumberOfShardsPerNode" : 100,
+#       "indices" : {}
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_cluster/nodes' 
+# {
+#    "clusterName" : "elasticsearch",
+#    "nodes" : {
+#       "getafix-38291" : {
+#          "httpAddress" : "inet[/127.0.0.2:9202]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9300]",
+#          "name" : "Parks, Arthur"
+#       },
+#       "getafix-5242" : {
+#          "httpAddress" : "inet[/127.0.0.2:9201]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9301]",
+#          "name" : "Senor Muerte / Senor Suerte"
+#       },
+#       "getafix-64438" : {
+#          "httpAddress" : "inet[/127.0.0.2:9200]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9302]",
+#          "name" : "Quasimodo"
+#       }
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_cluster/nodes/getafix-38291' 
+# {
+#    "clusterName" : "elasticsearch",
+#    "nodes" : {
+#       "getafix-38291" : {
+#          "httpAddress" : "inet[/127.0.0.2:9202]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9300]",
+#          "name" : "Parks, Arthur"
+#       }
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_cluster/nodes?settings=true' 
+# {
+#    "clusterName" : "elasticsearch",
+#    "nodes" : {
+#       "getafix-38291" : {
+#          "httpAddress" : "inet[/127.0.0.2:9202]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9300]",
+#          "name" : "Parks, Arthur",
+#          "settings" : {
+#             "jmx.createConnector" : "true",
+#             "name" : "Parks, Arthur",
+#             "path.workWithCluster" : "/tmp/es/elasticsearch-0.5.0
+# >             /work/elasticsearch",
+#             "path.work" : "/tmp/es/elasticsearch-0.5.0/work",
+#             "path.home" : "/tmp/es/elasticsearch-0.5.0",
+#             "cluster.name" : "elasticsearch",
+#             "path.logs" : "/tmp/es/elasticsearch-0.5.0/work/logs"
+#          }
+#       },
+#       "getafix-5242" : {
+#          "httpAddress" : "inet[/127.0.0.2:9201]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9301]",
+#          "name" : "Senor Muerte / Senor Suerte",
+#          "settings" : {
+#             "jmx.createConnector" : "true",
+#             "name" : "Senor Muerte / Senor Suerte",
+#             "path.workWithCluster" : "/tmp/es/elasticsearch-0.5.0
+# >             /work/elasticsearch",
+#             "path.work" : "/tmp/es/elasticsearch-0.5.0/work",
+#             "path.home" : "/tmp/es/elasticsearch-0.5.0",
+#             "cluster.name" : "elasticsearch",
+#             "path.logs" : "/tmp/es/elasticsearch-0.5.0/work/logs"
+#          }
+#       },
+#       "getafix-64438" : {
+#          "httpAddress" : "inet[/127.0.0.2:9200]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9302]",
+#          "name" : "Quasimodo",
+#          "settings" : {
+#             "jmx.createConnector" : "true",
+#             "name" : "Quasimodo",
+#             "path.workWithCluster" : "/tmp/es/elasticsearch-0.5.0
+# >             /work/elasticsearch",
+#             "path.work" : "/tmp/es/elasticsearch-0.5.0/work",
+#             "path.home" : "/tmp/es/elasticsearch-0.5.0",
+#             "cluster.name" : "elasticsearch",
+#             "path.logs" : "/tmp/es/elasticsearch-0.5.0/work/logs"
+#          }
+#       }
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_cluster/nodes/getafix-5242,getafix-64438' 
+# {
+#    "clusterName" : "elasticsearch",
+#    "nodes" : {
+#       "getafix-5242" : {
+#          "httpAddress" : "inet[/127.0.0.2:9201]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9301]",
+#          "name" : "Senor Muerte / Senor Suerte"
+#       },
+#       "getafix-64438" : {
+#          "httpAddress" : "inet[/127.0.0.2:9200]",
+#          "dataNode" : true,
+#          "transportAddress" : "inet[getafix.traveljury.com/127.0.
+# >          0.2:9302]",
+#          "name" : "Quasimodo"
+#       }
+#    }
+# }
+
+
+curl -XDELETE 'http://127.0.0.2:9200/es_test/' 
+# {
+#    "ok" : true
+# }
+
+
+curl -XDELETE 'http://127.0.0.2:9200/es_test_2/' 
+# {
+#    "ok" : true
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/'  -d '
+{}
+'
+# {
+#    "ok" : true
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/'  -d '
+{}
+'
+# {
+#    "error" : "[es_test] Already exists"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/'  -d '
+{
+   "index" : {
+      "numberOfReplicas" : 1,
+      "numberOfShards" : 3
+   }
+}
+'
+# {
+#    "ok" : true
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 16,
+#       "total" : 16
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_status' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 16,
+#       "total" : 16
+#    },
+#    "indices" : {
+#       "es_test_2" : {
+#          "storeSizeInBytes" : 252,
+#          "shards" : {
+#             "1" : [
+#                {
+#                   "storeSizeInBytes" : 52,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "52b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   }
+#                },
+#                {
+#                   "storeSizeInBytes" : 32,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "32b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   }
+#                }
+#             ],
+#             "0" : [
+#                {
+#                   "storeSizeInBytes" : 32,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "32b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   }
+#                },
+#                {
+#                   "storeSizeInBytes" : 52,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "52b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   }
+#                }
+#             ],
+#             "2" : [
+#                {
+#                   "storeSizeInBytes" : 52,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "52b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   }
+#                },
+#                {
+#                   "storeSizeInBytes" : 32,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "32b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   }
+#                }
+#             ]
+#          },
+#          "translogOperations" : 0,
+#          "estimatedFlushableMemorySizeInBytes" : 0,
+#          "settings" : {
+#             "index.numberOfShards" : "3",
+#             "index.numberOfReplicas" : "1"
+#          },
+#          "storeSize" : "252b",
+#          "estimatedFlushableMemorySize" : "0b",
+#          "docs" : {
+#             "deletedDocs" : 0,
+#             "numDocs" : 0,
+#             "maxDoc" : 0
+#          }
+#       },
+#       "es_test" : {
+#          "storeSizeInBytes" : 420,
+#          "shards" : {
+#             "4" : [
+#                {
+#                   "storeSizeInBytes" : 32,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "32b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 4,
+#                      "state" : "STARTED"
+#                   }
+#                },
+#                {
+#                   "storeSizeInBytes" : 52,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "52b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 4,
+#                      "state" : "STARTED"
+#                   }
+#                }
+#             ],
+#             "1" : [
+#                {
+#                   "storeSizeInBytes" : 52,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "52b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   }
+#                },
+#                {
+#                   "storeSizeInBytes" : 32,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "32b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   }
+#                }
+#             ],
+#             "3" : [
+#                {
+#                   "storeSizeInBytes" : 52,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "52b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 3,
+#                      "state" : "STARTED"
+#                   }
+#                },
+#                {
+#                   "storeSizeInBytes" : 32,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "32b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 3,
+#                      "state" : "STARTED"
+#                   }
+#                }
+#             ],
+#             "0" : [
+#                {
+#                   "storeSizeInBytes" : 52,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "52b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   }
+#                },
+#                {
+#                   "storeSizeInBytes" : 32,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "32b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   }
+#                }
+#             ],
+#             "2" : [
+#                {
+#                   "storeSizeInBytes" : 32,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "32b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   }
+#                },
+#                {
+#                   "storeSizeInBytes" : 52,
+#                   "translogOperations" : 0,
+#                   "estimatedFlushableMemorySizeInBytes" : 0,
+#                   "translogId" : 1,
+#                   "state" : "STARTED",
+#                   "storeSize" : "52b",
+#                   "estimatedFlushableMemorySize" : "0b",
+#                   "docs" : {
+#                      "deletedDocs" : 0,
+#                      "numDocs" : 0,
+#                      "maxDoc" : 0
+#                   },
+#                   "routing" : {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   }
+#                }
+#             ]
+#          },
+#          "translogOperations" : 0,
+#          "estimatedFlushableMemorySizeInBytes" : 0,
+#          "settings" : {
+#             "index.numberOfShards" : "5",
+#             "index.numberOfReplicas" : "1"
+#          },
+#          "storeSize" : "420b",
+#          "estimatedFlushableMemorySize" : "0b",
+#          "docs" : {
+#             "deletedDocs" : 0,
+#             "numDocs" : 0,
+#             "maxDoc" : 0
+#          }
+#       }
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_cluster/state' 
+# {
+#    "routingNodes" : {
+#       "unassigned" : [],
+#       "nodes" : {
+#          "getafix-38291" : [
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 1,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 2,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 0,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 1,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 3,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 4,
+#                "state" : "STARTED"
+#             }
+#          ],
+#          "getafix-5242" : [
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 0,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 1,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 0,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 2,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 3,
+#                "state" : "STARTED"
+#             }
+#          ],
+#          "getafix-64438" : [
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 0,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 2,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 1,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 2,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 4,
+#                "state" : "STARTED"
+#             }
+#          ]
+#       }
+#    },
+#    "routingTable" : {
+#       "indices" : {
+#          "es_test_2" : {
+#             "shards" : {
+#                "1" : [
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "0" : [
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "2" : [
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   }
+#                ]
+#             }
+#          },
+#          "es_test" : {
+#             "shards" : {
+#                "4" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 4,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 4,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "1" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "3" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 3,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 3,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "0" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "2" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   }
+#                ]
+#             }
+#          }
+#       }
+#    },
+#    "metadata" : {
+#       "maxNumberOfShardsPerNode" : 100,
+#       "indices" : {
+#          "es_test_2" : {
+#             "mappings" : {},
+#             "settings" : {
+#                "index.numberOfShards" : "3",
+#                "index.numberOfReplicas" : "1"
+#             }
+#          },
+#          "es_test" : {
+#             "mappings" : {},
+#             "settings" : {
+#                "index.numberOfShards" : "5",
+#                "index.numberOfReplicas" : "1"
+#             }
+#          }
+#       }
+#    }
+# }
+
+
+curl -XDELETE 'http://127.0.0.2:9200/es_test_2/' 
+# {
+#    "ok" : true
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/es_test_2/_status' 
+# {
+#    "error" : "[es_test_2] missing"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/'  -d '
+{}
+'
+# {
+#    "ok" : true
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_refresh' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][2] ; nested: [es_test_2][2] N
+# >             ot active; ",
+#             "shardId" : 2
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          }
+#       ],
+#       "failed" : 9,
+#       "successful" : 11,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 9,
+#       "successful" : 11,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 9,
+#       "successful" : 11,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_optimize' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][2] ; nested: [es_test_2][2] N
+# >             ot active; ",
+#             "shardId" : 2
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          }
+#       ],
+#       "failed" : 9,
+#       "successful" : 11,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_optimize?onlyExpungeDeletes=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][2] ; nested: [es_test_2][2] N
+# >             ot active; ",
+#             "shardId" : 2
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          }
+#       ],
+#       "failed" : 9,
+#       "successful" : 11,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_optimize?flush=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][2] ; nested: [es_test_2][2] N
+# >             ot active; ",
+#             "shardId" : 2
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          }
+#       ],
+#       "failed" : 9,
+#       "successful" : 11,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_optimize?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][2] ; nested: [es_test_2][2] N
+# >             ot active; ",
+#             "shardId" : 2
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          }
+#       ],
+#       "failed" : 9,
+#       "successful" : 11,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_optimize?onlyExpungeDeletes=true&flush=true&refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][2] ; nested: [es_test_2][2] N
+# >             ot active; ",
+#             "shardId" : 2
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][0] ; nested: [es_test_2][0] N
+# >             ot active; ",
+#             "shardId" : 0
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          }
+#       ],
+#       "failed" : 7,
+#       "successful" : 13,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/es_test,es_test_2/_optimize' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][3] ; nested: [es_test_2][3] N
+# >             ot active; ",
+#             "shardId" : 3
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][2] ; nested: [es_test_2][2] N
+# >             ot active; ",
+#             "shardId" : 2
+#          }
+#       ],
+#       "failed" : 6,
+#       "successful" : 14,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/es_test,es_test_2/_optimize?onlyExpungeDeletes=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          }
+#       ],
+#       "failed" : 2,
+#       "successful" : 18,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/es_test,es_test_2/_optimize?flush=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          }
+#       ],
+#       "failed" : 2,
+#       "successful" : 18,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/es_test,es_test_2/_optimize?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          }
+#       ],
+#       "failed" : 2,
+#       "successful" : 18,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/es_test,es_test_2/_optimize?onlyExpungeDeletes=true&flush=true&refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failures" : [
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [es_test_2][1] N
+# >             ot active; ",
+#             "shardId" : 1
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][4] ; nested: [es_test_2][4] N
+# >             ot active; ",
+#             "shardId" : 4
+#          },
+#          {
+#             "index" : "es_test_2",
+#             "reason" : "[es_test_2][1] ; nested: [Parks, Arthur][
+# >             inet[/127.0.0.2:9300]][indices/optimize/shard]; nes
+# > ted: [es_test_2][1] Recovery is in progress, flush is not allow
+# > ed; ",
+#             "shardId" : 1
+#          }
+#       ],
+#       "failed" : 3,
+#       "successful" : 17,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_gateway/snapshot' 
+# {
+#    "ok" : true,
+#    "indices" : {
+#       "es_test_2" : {
+#          "totalShards" : 5,
+#          "ok" : true,
+#          "failedShards" : 0,
+#          "successfulShards" : 5
+#       },
+#       "es_test" : {
+#          "totalShards" : 5,
+#          "ok" : true,
+#          "failedShards" : 0,
+#          "successfulShards" : 5
+#       }
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_gateway/snapshot' 
+# {
+#    "ok" : true,
+#    "indices" : {
+#       "es_test_2" : {
+#          "totalShards" : 5,
+#          "ok" : true,
+#          "failedShards" : 0,
+#          "successfulShards" : 5
+#       },
+#       "es_test" : {
+#          "totalShards" : 5,
+#          "ok" : true,
+#          "failedShards" : 0,
+#          "successfulShards" : 5
+#       }
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/es_test,es_test_2/_gateway/snapshot' 
+# {
+#    "ok" : true,
+#    "indices" : {
+#       "es_test_2" : {
+#          "totalShards" : 5,
+#          "ok" : true,
+#          "failedShards" : 0,
+#          "successfulShards" : 5
+#       },
+#       "es_test" : {
+#          "totalShards" : 5,
+#          "ok" : true,
+#          "failedShards" : 0,
+#          "successfulShards" : 5
+#       }
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/es_test,es_test_2/_gateway/snapshot' 
+# {
+#    "ok" : true,
+#    "indices" : {
+#       "es_test_2" : {
+#          "totalShards" : 5,
+#          "ok" : true,
+#          "failedShards" : 0,
+#          "successfulShards" : 5
+#       },
+#       "es_test" : {
+#          "totalShards" : 5,
+#          "ok" : true,
+#          "failedShards" : 0,
+#          "successfulShards" : 5
+#       }
+#    }
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/test/1'  -d '
+{
+   "num" : "foo",
+   "text" : "123"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "1",
+#    "_type" : "test"
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 20,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/es_test/test/1' 
+# {
+#    "_source" : {
+#       "num" : "foo",
+#       "text" : "123"
+#    },
+#    "_index" : "es_test",
+#    "_id" : "1",
+#    "_type" : "test"
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/es_test/test/_search'  -d '
+{
+   "query" : {
+      "term" : {
+         "num" : "foo"
+      }
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : "foo",
+#                "text" : "123"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "test"
+#          }
+#       ],
+#       "total" : 1
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 5,
+#       "total" : 5
+#    }
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/test/1?opType=create'  -d '
+{
+   "num" : "foo",
+   "text" : "123"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "1",
+#    "_type" : "test"
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 20,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/es_test/test/_search'  -d '
+{
+   "query" : {
+      "term" : {
+         "num" : "foo"
+      }
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : "foo",
+#                "text" : "123"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "test"
+#          },
+#          {
+#             "_source" : {
+#                "num" : "foo",
+#                "text" : "123"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "test"
+#          }
+#       ],
+#       "total" : 2
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 5,
+#       "total" : 5
+#    }
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/test/1'  -d '
+{
+   "num" : "foo",
+   "text" : "123"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "1",
+#    "_type" : "test"
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 20,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/es_test/test/_search'  -d '
+{
+   "query" : {
+      "term" : {
+         "num" : "foo"
+      }
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : "foo",
+#                "text" : "123"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "test"
+#          }
+#       ],
+#       "total" : 1
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 5,
+#       "total" : 5
+#    }
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test,es_test_2/test/_mapping'  -d '
+{
+   "properties" : {
+      "num" : {
+         "type" : "integer"
+      },
+      "text" : {
+         "type" : "string"
+      }
+   }
+}
+'
+# {
+#    "ok" : true
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_cluster/state' 
+# {
+#    "routingNodes" : {
+#       "unassigned" : [],
+#       "nodes" : {
+#          "getafix-38291" : [
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 1,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 2,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 4,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 0,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 1,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 3,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-38291",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 4,
+#                "state" : "STARTED"
+#             }
+#          ],
+#          "getafix-5242" : [
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 0,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 1,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 3,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 4,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 0,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 2,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-5242",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 3,
+#                "state" : "STARTED"
+#             }
+#          ],
+#          "getafix-64438" : [
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 0,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 2,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test_2",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 3,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 1,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : false,
+#                "shardId" : 2,
+#                "state" : "STARTED"
+#             },
+#             {
+#                "index" : "es_test",
+#                "nodeId" : "getafix-64438",
+#                "relocatingNodeId" : null,
+#                "primary" : true,
+#                "shardId" : 4,
+#                "state" : "STARTED"
+#             }
+#          ]
+#       }
+#    },
+#    "routingTable" : {
+#       "indices" : {
+#          "es_test_2" : {
+#             "shards" : {
+#                "4" : [
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 4,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 4,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "1" : [
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "3" : [
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 3,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 3,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "0" : [
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "2" : [
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test_2",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   }
+#                ]
+#             }
+#          },
+#          "es_test" : {
+#             "shards" : {
+#                "4" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 4,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 4,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "1" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 1,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "3" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 3,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 3,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "0" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-38291",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 0,
+#                      "state" : "STARTED"
+#                   }
+#                ],
+#                "2" : [
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-5242",
+#                      "relocatingNodeId" : null,
+#                      "primary" : true,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   },
+#                   {
+#                      "index" : "es_test",
+#                      "nodeId" : "getafix-64438",
+#                      "relocatingNodeId" : null,
+#                      "primary" : false,
+#                      "shardId" : 2,
+#                      "state" : "STARTED"
+#                   }
+#                ]
+#             }
+#          }
+#       }
+#    },
+#    "metadata" : {
+#       "maxNumberOfShardsPerNode" : 100,
+#       "indices" : {
+#          "es_test_2" : {
+#             "mappings" : {
+#                "mapping" : {
+#                   "value" : "{\n   \"properties\" : {\n      \"nu
+# >                   m\" : {\n         \"type\" : \"integer\"\n   
+# >    },\n      \"text\" : {\n         \"type\" : \"string\"\n    
+# >   }\n   }\n}\n",
+#                   "name" : "test"
+#                }
+#             },
+#             "settings" : {
+#                "index.numberOfShards" : "5",
+#                "index.numberOfReplicas" : "1"
+#             }
+#          },
+#          "es_test" : {
+#             "mappings" : {
+#                "mapping" : {
+#                   "value" : "{\n   \"properties\" : {\n      \"nu
+# >                   m\" : {\n         \"type\" : \"integer\"\n   
+# >    },\n      \"text\" : {\n         \"type\" : \"string\"\n    
+# >   }\n   }\n}\n",
+#                   "name" : "test"
+#                }
+#             },
+#             "settings" : {
+#                "index.numberOfShards" : "5",
+#                "index.numberOfReplicas" : "1"
+#             }
+#          }
+#       }
+#    }
+# }
+
+
+curl -XDELETE 'http://127.0.0.2:9200/es_test/' 
+# {
+#    "ok" : true
+# }
+
+
+curl -XDELETE 'http://127.0.0.2:9200/es_test_2/' 
+# {
+#    "ok" : true
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 0,
+#       "total" : 0
+#    }
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/'  -d '
+{}
+'
+# {
+#    "ok" : true
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/'  -d '
+{}
+'
+# {
+#    "ok" : true
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/_all/type_1/_mapping'  -d '
+{
+   "properties" : {
+      "num" : {
+         "store" : "yes",
+         "type" : "integer"
+      },
+      "text" : {
+         "store" : "yes",
+         "type" : "string"
+      }
+   }
+}
+'
+# {
+#    "ok" : true
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/_all/type_2/_mapping'  -d '
+{
+   "properties" : {
+      "num" : {
+         "store" : "yes",
+         "type" : "integer"
+      },
+      "text" : {
+         "store" : "yes",
+         "type" : "string"
+      }
+   }
+}
+'
+# {
+#    "ok" : true
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 20,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_1/1'  -d '
+{
+   "num" : 2,
+   "text" : "foo"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "1",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_2/2'  -d '
+{
+   "num" : 3,
+   "text" : "foo"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "2",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_1/3'  -d '
+{
+   "num" : 4,
+   "text" : "foo"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "3",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_2/4'  -d '
+{
+   "num" : 5,
+   "text" : "foo"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "4",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_1/5'  -d '
+{
+   "num" : 6,
+   "text" : "foo bar"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "5",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_2/6'  -d '
+{
+   "num" : 7,
+   "text" : "foo bar"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "6",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_1/7'  -d '
+{
+   "num" : 8,
+   "text" : "foo bar"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "7",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_2/8'  -d '
+{
+   "num" : 9,
+   "text" : "foo bar"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "8",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_1/9'  -d '
+{
+   "num" : 10,
+   "text" : "foo bar baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "9",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_2/10'  -d '
+{
+   "num" : 11,
+   "text" : "foo bar baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "10",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_1/11'  -d '
+{
+   "num" : 12,
+   "text" : "foo bar baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "11",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_2/12'  -d '
+{
+   "num" : 13,
+   "text" : "foo bar baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "12",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_1/13'  -d '
+{
+   "num" : 14,
+   "text" : "bar baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "13",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_2/14'  -d '
+{
+   "num" : 15,
+   "text" : "bar baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "14",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_1/15'  -d '
+{
+   "num" : 16,
+   "text" : "bar baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "15",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_2/16'  -d '
+{
+   "num" : 17,
+   "text" : "bar baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "16",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_1/17'  -d '
+{
+   "num" : 18,
+   "text" : "baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "17",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_2/18'  -d '
+{
+   "num" : 19,
+   "text" : "baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "18",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_1/19'  -d '
+{
+   "num" : 20,
+   "text" : "baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "19",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_2/20'  -d '
+{
+   "num" : 21,
+   "text" : "baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "20",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_1/21'  -d '
+{
+   "num" : 22,
+   "text" : "bar"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "21",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_2/22'  -d '
+{
+   "num" : 23,
+   "text" : "bar"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "22",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_1/23'  -d '
+{
+   "num" : 24,
+   "text" : "bar"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "23",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_2/24'  -d '
+{
+   "num" : 25,
+   "text" : "bar"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "24",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_1/25'  -d '
+{
+   "num" : 26,
+   "text" : "foo baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "25",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test/type_2/26'  -d '
+{
+   "num" : 27,
+   "text" : "foo baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test",
+#    "_id" : "26",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_1/27'  -d '
+{
+   "num" : 28,
+   "text" : "foo baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "27",
+#    "_type" : "type_1"
+# }
+
+
+curl -XPUT 'http://127.0.0.2:9200/es_test_2/type_2/28'  -d '
+{
+   "num" : 29,
+   "text" : "foo baz"
+}
+'
+# {
+#    "ok" : true,
+#    "_index" : "es_test_2",
+#    "_id" : "28",
+#    "_type" : "type_2"
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 20,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "query" : {
+      "matchAll" : {}
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 2,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 11,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "10",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 21,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "20",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 12,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "11",
+#             "_type" : "type_1"
+#          }
+#       ],
+#       "total" : 28
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "query" : {
+      "matchAll" : {}
+   },
+   "size" : 100
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 2,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 21,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "20",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 11,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "10",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 10,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "9",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 22,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "21",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 12,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "11",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 20,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "19",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 14,
+#                "text" : "bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "13",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 16,
+#                "text" : "bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "15",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 13,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "12",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 23,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "22",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 18,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "17",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 19,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "18",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 15,
+#                "text" : "bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "14",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 17,
+#                "text" : "bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "16",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 24,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "23",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 26,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "25",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 28,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "27",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 25,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "24",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 27,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "26",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 29,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "28",
+#             "_type" : "type_2"
+#          }
+#       ],
+#       "total" : 28
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search?searchType=query_then_fetch'  -d '
+{
+   "query" : {
+      "matchAll" : {}
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 2,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 11,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "10",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 21,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "20",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 12,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "11",
+#             "_type" : "type_1"
+#          }
+#       ],
+#       "total" : 28
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search?searchType=query_and_fetch'  -d '
+{
+   "query" : {
+      "matchAll" : {}
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 2,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 21,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "20",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 11,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "10",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 10,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "9",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 22,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "21",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 12,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "11",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 20,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "19",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 14,
+#                "text" : "bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "13",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 16,
+#                "text" : "bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "15",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 13,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "12",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 23,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "22",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 18,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "17",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 19,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "18",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 15,
+#                "text" : "bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "14",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 17,
+#                "text" : "bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "16",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 24,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "23",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 26,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "25",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 28,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "27",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 25,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "24",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 27,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "26",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 29,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "28",
+#             "_type" : "type_2"
+#          }
+#       ],
+#       "total" : 28
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "query" : {
+      "term" : {
+         "text" : "foo"
+      }
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 26,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "25",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 28,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "27",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 27,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "26",
+#             "_type" : "type_2"
+#          }
+#       ],
+#       "total" : 16
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "query" : {
+      "queryString" : {
+         "defaultField" : "text",
+         "query" : "foo OR bar"
+      }
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 10,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "9",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 11,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "10",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 12,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "11",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 13,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "12",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          }
+#       ],
+#       "total" : 24
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "query" : {
+      "term" : {
+         "text" : "foo"
+      }
+   },
+   "facets" : {
+      "barFacet" : {
+         "query" : {
+            "term" : {
+               "text" : "bar"
+            }
+         }
+      },
+      "bazFacet" : {
+         "query" : {
+            "term" : {
+               "text" : "baz"
+            }
+         }
+      }
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 26,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "25",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 28,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "27",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 27,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "26",
+#             "_type" : "type_2"
+#          }
+#       ],
+#       "total" : 16
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    },
+#    "facets" : {
+#       "bazFacet" : 8,
+#       "barFacet" : 8
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "query" : {
+      "term" : {
+         "text" : "foo"
+      }
+   },
+   "explain" : true
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2",
+#             "_explanation" : {
+#                "value" : 1.287682,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.287682,
+#                      "description" : "idf(docFreq=2, maxDocs=4)"
+#                   },
+#                   {
+#                      "value" : 1,
+#                      "description" : "fieldNorm(field=text, doc=0
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 0), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2",
+#             "_explanation" : {
+#                "value" : 1.1823215,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.1823215,
+#                      "description" : "idf(docFreq=4, maxDocs=6)"
+#                   },
+#                   {
+#                      "value" : 1,
+#                      "description" : "fieldNorm(field=text, doc=0
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 0), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1",
+#             "_explanation" : {
+#                "value" : 1,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1,
+#                      "description" : "idf(docFreq=1, maxDocs=2)"
+#                   },
+#                   {
+#                      "value" : 1,
+#                      "description" : "fieldNorm(field=text, doc=0
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 0), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1",
+#             "_explanation" : {
+#                "value" : 0.8048013,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.287682,
+#                      "description" : "idf(docFreq=2, maxDocs=4)"
+#                   },
+#                   {
+#                      "value" : 0.625,
+#                      "description" : "fieldNorm(field=text, doc=1
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 1), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2",
+#             "_explanation" : {
+#                "value" : 0.76446474,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.2231436,
+#                      "description" : "idf(docFreq=3, maxDocs=5)"
+#                   },
+#                   {
+#                      "value" : 0.625,
+#                      "description" : "fieldNorm(field=text, doc=0
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 0), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2",
+#             "_explanation" : {
+#                "value" : 0.73895097,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.1823215,
+#                      "description" : "idf(docFreq=4, maxDocs=6)"
+#                   },
+#                   {
+#                      "value" : 0.625,
+#                      "description" : "fieldNorm(field=text, doc=0
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 0), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1",
+#             "_explanation" : {
+#                "value" : 0.73895097,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.1823215,
+#                      "description" : "idf(docFreq=4, maxDocs=6)"
+#                   },
+#                   {
+#                      "value" : 0.625,
+#                      "description" : "fieldNorm(field=text, doc=1
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 1), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 26,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "25",
+#             "_type" : "type_1",
+#             "_explanation" : {
+#                "value" : 0.73895097,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.1823215,
+#                      "description" : "idf(docFreq=4, maxDocs=6)"
+#                   },
+#                   {
+#                      "value" : 0.625,
+#                      "description" : "fieldNorm(field=text, doc=4
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 4), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 28,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "27",
+#             "_type" : "type_1",
+#             "_explanation" : {
+#                "value" : 0.73895097,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.1823215,
+#                      "description" : "idf(docFreq=4, maxDocs=6)"
+#                   },
+#                   {
+#                      "value" : 0.625,
+#                      "description" : "fieldNorm(field=text, doc=4
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 4), produ
+# >                ct of:"
+#             }
+#          },
+#          {
+#             "_source" : {
+#                "num" : 27,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "26",
+#             "_type" : "type_2",
+#             "_explanation" : {
+#                "value" : 0.73895097,
+#                "details" : [
+#                   {
+#                      "value" : 1,
+#                      "description" : "tf(termFreq(text:foo)=1)"
+#                   },
+#                   {
+#                      "value" : 1.1823215,
+#                      "description" : "idf(docFreq=4, maxDocs=6)"
+#                   },
+#                   {
+#                      "value" : 0.625,
+#                      "description" : "fieldNorm(field=text, doc=5
+# >                      )"
+#                   }
+#                ],
+#                "description" : "fieldWeight(text:foo in 5), produ
+# >                ct of:"
+#             }
+#          }
+#       ],
+#       "total" : 16
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "sort" : [
+      "num"
+   ],
+   "query" : {
+      "matchAll" : {}
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 2,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "1",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 10,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "9",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 11,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "10",
+#             "_type" : "type_2"
+#          }
+#       ],
+#       "total" : 28
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "sort" : [
+      {
+         "num" : {
+            "reverse" : true
+         }
+      }
+   ],
+   "query" : {
+      "matchAll" : {}
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 29,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "28",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 28,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "27",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 27,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "26",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 26,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "25",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 25,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "24",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 24,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "23",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 23,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "22",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 22,
+#                "text" : "bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "21",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 21,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "20",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 20,
+#                "text" : "baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "19",
+#             "_type" : "type_1"
+#          }
+#       ],
+#       "total" : 28
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "sort" : [
+      "num"
+   ],
+   "query" : {
+      "matchAll" : {}
+   },
+   "from" : 5,
+   "size" : 5
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "_source" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 10,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "9",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "_source" : {
+#                "num" : 11,
+#                "text" : "foo bar baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "10",
+#             "_type" : "type_2"
+#          }
+#       ],
+#       "total" : 28
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_search'  -d '
+{
+   "fields" : [
+      "text",
+      "num"
+   ],
+   "query" : {
+      "term" : {
+         "text" : "foo"
+      }
+   }
+}
+'
+# {
+#    "hits" : {
+#       "hits" : [
+#          {
+#             "fields" : {
+#                "num" : 3,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "2",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 5,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "4",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 4,
+#                "text" : "foo"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "3",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 6,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "5",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 9,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "8",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 7,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "6",
+#             "_type" : "type_2"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 8,
+#                "text" : "foo bar"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "7",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 26,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "25",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 28,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test_2",
+#             "_id" : "27",
+#             "_type" : "type_1"
+#          },
+#          {
+#             "fields" : {
+#                "num" : 27,
+#                "text" : "foo baz"
+#             },
+#             "_index" : "es_test",
+#             "_id" : "26",
+#             "_type" : "type_2"
+#          }
+#       ],
+#       "total" : 16
+#    },
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "term" : {
+      "text" : "foo"
+   }
+}
+'
+# {
+#    "count" : 16,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "range" : {
+      "num" : {
+         "to" : 20,
+         "from" : 10
+      }
+   }
+}
+'
+# {
+#    "count" : 11,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "prefix" : {
+      "text" : "ba"
+   }
+}
+'
+# {
+#    "count" : 24,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "wildcard" : {
+      "text" : "ba?"
+   }
+}
+'
+# {
+#    "count" : 24,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "matchAll" : {}
+}
+'
+# {
+#    "count" : 28,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "queryString" : {
+      "defaultField" : "text",
+      "query" : "foo AND bar AND -baz"
+   }
+}
+'
+# {
+#    "count" : 4,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "bool" : {
+      "must" : [
+         {
+            "term" : {
+               "text" : "foo"
+            }
+         },
+         {
+            "term" : {
+               "text" : "bar"
+            }
+         }
+      ]
+   }
+}
+'
+# {
+#    "count" : 8,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "disMax" : {
+      "queries" : [
+         {
+            "term" : {
+               "text" : "foo"
+            }
+         },
+         {
+            "term" : {
+               "text" : "bar"
+            }
+         }
+      ]
+   }
+}
+'
+# {
+#    "count" : 24,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "constantScore" : {
+      "filter" : {
+         "term" : {
+            "text" : "foo"
+         }
+      }
+   }
+}
+'
+# {
+#    "count" : 16,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "filteredQuery" : {
+      "filter" : {
+         "term" : {
+            "text" : "bar"
+         }
+      },
+      "query" : {
+         "term" : {
+            "text" : "foo"
+         }
+      }
+   }
+}
+'
+# {
+#    "count" : 8,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XDELETE 'http://127.0.0.2:9200/_all/_query'  -d '
+{
+   "term" : {
+      "text" : "foo"
+   }
+}
+'
+# {
+#    "ok" : true,
+#    "_indices" : {
+#       "es_test_2" : {
+#          "_shards" : {
+#             "failed" : 0,
+#             "successful" : 5,
+#             "total" : 5
+#          }
+#       },
+#       "es_test" : {
+#          "_shards" : {
+#             "failed" : 0,
+#             "successful" : 5,
+#             "total" : 5
+#          }
+#       }
+#    }
+# }
+
+
+curl -XPOST 'http://127.0.0.2:9200/_flush?refresh=true' 
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 20,
+#       "total" : 20
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "term" : {
+      "text" : "foo"
+   }
+}
+'
+# {
+#    "count" : 0,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
+curl -XGET 'http://127.0.0.2:9200/_all/_count'  -d '
+{
+   "term" : {
+      "text" : "bar"
+   }
+}
+'
+# {
+#    "count" : 8,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 10,
+#       "total" : 10
+#    }
+# }
+
+
