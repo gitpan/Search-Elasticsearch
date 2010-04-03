@@ -8,12 +8,13 @@ use HTTP::Request();
 use JSON::XS();
 use Encode qw(decode_utf8);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
-use constant { ONE_REQ     => 1,
-               ONE_OPT     => 2,
-               MULTI_ALL   => 3,
-               MULTI_BLANK => 4,
+use constant {
+    ONE_REQ     => 1,
+    ONE_OPT     => 2,
+    MULTI_ALL   => 3,
+    MULTI_BLANK => 4,
 };
 
 use constant {
@@ -27,14 +28,16 @@ use constant {
     CMD_nodes      => [ node  => MULTI_BLANK ],
 };
 
-our %QS_Format = ( boolean  => '1 | 0',
-                   duration => "'5m' | '10s'",
-                   fixed    => '',
-                   optional => "'scalar value'",
-                   flatten  => "'scalar' or ['scalar_1', 'scalar_n']",
-                   'int'    => "integer",
-                   'string' => '"string"',
-                   enum     => '"predefined_value"',
+our %QS_Format = (
+    boolean  => '1 | 0',
+    duration => "'5m' | '10s'",
+    fixed    => '',
+    optional => "'scalar value'",
+    flatten  => "'scalar' or ['scalar_1', 'scalar_n']",
+    'int'    => "integer",
+    string   => '"string"',
+    float    => 'float',
+    enum     => '"predefined_value"',
 );
 
 our %QS_Formatter = (
@@ -57,6 +60,13 @@ our %QS_Formatter = (
         my $key = shift;
         eval { $int += 0; 1 } or die "'$key' is not an integer";
         return $key . '=' . $int;
+    },
+    'float' => sub {
+        my $float = shift;
+        return unless defined $float;
+        my $key = shift;
+        eval { $float += 0; 1 } or die "'$key' is not a float";
+        return $key . '=' . $float;
     },
     'string' => sub {
         my $string = shift;
@@ -94,11 +104,13 @@ sub new {
 sub get { shift()->_do_action( 'get', { cmd => CMD_INDEX_TYPE_ID }, @_ ) }
 #===================================
 
-my %Index_Defn = ( cmd => CMD_INDEX_TYPE_id,
-                   qs  => {create  => [ 'boolean',  'opType=create' ],
-                           timeout => [ 'duration', 'timeout' ],
-                   },
-                   data => 'data',
+my %Index_Defn = (
+    cmd => CMD_INDEX_TYPE_id,
+    qs  => {
+        create  => [ 'boolean',  'opType=create' ],
+        timeout => [ 'duration', 'timeout' ],
+    },
+    data => 'data',
 );
 
 #===================================
@@ -107,6 +119,7 @@ sub index {
     my ( $self, $params ) = &_params;
     $self->_index( 'index', \%Index_Defn, $params );
 }
+
 #===================================
 sub set {
 #===================================
@@ -118,14 +131,16 @@ sub set {
 sub create {
 #===================================
     my ( $self, $params ) = &_params;
-    $self->_index( 'create',
-                   {  %Index_Defn,
-                      qs => { create  => [ 'fixed',    'opType=create' ],
-                              timeout => [ 'duration', 'timeout' ],
-                      }
-                   },
-                   ,
-                   $params
+    $self->_index(
+        'create',
+        {   %Index_Defn,
+            qs => {
+                create  => [ 'fixed',    'opType=create' ],
+                timeout => [ 'duration', 'timeout' ],
+            }
+        },
+        ,
+        $params
     );
 }
 
@@ -140,14 +155,24 @@ sub _index {
 #===================================
 sub delete {
 #===================================
-    shift()->_do_action( 'delete',
-                         {  method => 'DELETE',
-                            cmd    => CMD_INDEX_TYPE_ID,
-                         },
-                         @_
+    shift()->_do_action(
+        'delete',
+        {   method => 'DELETE',
+            cmd    => CMD_INDEX_TYPE_ID,
+        },
+        @_
     );
 }
 
+my %Search_Data = (
+    facets    => ['facets'],
+    from      => ['from'],
+    size      => ['size'],
+    explain   => ['explain'],
+    fields    => ['fields'],
+    'sort'    => ['sort'],
+    highlight => ['highlight']
+);
 my %Search_Defn = (
     cmd     => CMD_index_type,
     postfix => '_search',
@@ -155,31 +180,32 @@ my %Search_Defn = (
         search_type => [
             'enum',
             'searchType',
-            [  qw(  dfs_query_then_fetch     dfs_query_and_fetch
-                   query_then_fetch         query_and_fetch)
+            [   qw(  dfs_query_then_fetch     dfs_query_and_fetch
+                    query_then_fetch         query_and_fetch)
             ]
         ],
+        scroll    => [ 'duration', 'scroll' ],
+        scroll_id => [ 'string',   'scrollId' ],
     },
-    data => { query   => ['query'],
-              facets  => ['facets'],
-              from    => ['from'],
-              size    => ['size'],
-              explain => ['explain'],
-              fields  => ['fields'],
-              'sort'  => ['sort'],
-    }
+    data => { %Search_Data, query => ['query'] }
 );
 
-my %Query_Defn = ( term          => ['term'],
-                   range         => ['range'],
-                   prefix        => ['prefix'],
-                   wildcard      => ['wildcard'],
-                   matchAll      => [ 'match_all', 'matchAll' ],
-                   queryString   => [ 'query_string', 'queryString' ],
-                   bool          => ['bool'],
-                   disMax        => [ 'dis_max', 'disMax' ],
-                   constantScore => [ 'constant_score', 'constantScore' ],
-                   filteredQuery => [ 'filtered_query', 'filteredQuery' ]
+my %Query_Defn = (
+    bool               => ['bool'],
+    constantScore      => [ 'constant_score', 'constantScore' ],
+    disMax             => [ 'dis_max', 'disMax' ],
+    field              => ['field'],
+    filtered           => ['filtered'],
+    fuzzyLikeThis      => [ 'fuzzy_like_this', 'fuzzyLikeThis' ],
+    fuzzyLikeThisField => [ 'fuzzy_like_this_field', 'fuzzyLikeThisField' ],
+    matchAll           => [ 'match_all', 'matchAll' ],
+    moreLikeThis       => [ 'more_like_this', 'moreLikeThis' ],
+    moreLikeThisField  => [ 'more_like_this_field', 'moreLikeThisField' ],
+    prefix             => ['prefix'],
+    queryString        => [ 'query_string', 'queryString' ],
+    range              => ['range'],
+    term               => ['term'],
+    wildcard           => ['wildcard'],
 );
 
 #===================================
@@ -189,164 +215,244 @@ sub search { shift()->_do_action( 'search', \%Search_Defn, @_ ) }
 #===================================
 sub delete_by_query {
 #===================================
-    shift()->_do_action( 'delete_by_query',
-                         {  %Search_Defn,
-                            method  => 'DELETE',
-                            postfix => '_query',
-                            data    => \%Query_Defn,
-                         },
-                         @_
+    shift()->_do_action(
+        'delete_by_query',
+        {   %Search_Defn,
+            method  => 'DELETE',
+            postfix => '_query',
+            data    => \%Query_Defn,
+        },
+        @_
     );
 }
 
 #===================================
 sub count {
 #===================================
-    shift()->_do_action( 'count',
-                         {  %Search_Defn,
-                            postfix => '_count',
-                            data    => \%Query_Defn,
-                         },
-                         @_
+    shift()->_do_action(
+        'count',
+        {   %Search_Defn,
+            postfix => '_count',
+            data    => \%Query_Defn,
+        },
+        @_
     );
 }
 
 #===================================
 sub terms {
 #===================================
-    my ( $self, $params ) = &_params;
+    shift()->_do_action(
+        'terms',
+        {   cmd     => CMD_index,
+            postfix => '_terms',
+            qs      => {
+                'fields' => [ 'flatten', 'fields' ],
+                'from'   => [ 'string',  'from' ],
+                'to'     => [ 'string',  'to' ],
+                'from_inclusive' =>
+                    [ 'boolean', undef, 'fromInclusive=false' ],
+                'to_inclusive' => [ 'boolean', undef, 'toInclusive=false' ],
+                'prefix'   => [ 'string', 'prefix' ],
+                'regexp'   => [ 'string', 'regexp' ],
+                'min_freq' => [ 'int',    'minFreq' ],
+                'max_freq' => [ 'int',    'maxFreq' ],
+                'size'     => [ 'int',    'size' ],
+                'sort'     => [ 'enum',   'sort', [qw(term freq)] ],
+            }
+        },
+        @_
+    );
+}
 
-    $self->throw( 'Param', "'fields' is a required value" )
-        unless $params->{fields};
-
-    $params->{exclude_to} ||= 0;
-    $params->{exclude_to} ||= 0;
-
-    $self->_do_action( 'terms',
-                       {  cmd     => CMD_index,
-                          postfix => '_terms',
-                          qs      => {
-                                'fields' => [ 'flatten', 'fields' ],
-                                'from'   => [ 'string',  'from' ],
-                                'to'     => [ 'string',  'to' ],
-                                'exclude_from' =>
-                                    [ 'boolean', 'fromInclusive=false' ],
-                                'exclude_to' => [
-                                               'boolean', 'toInclusive=false',
-                                               'toInclusive=true'
-                                ],
-                                'prefix'   => [ 'string', 'prefix' ],
-                                'regexp'   => [ 'string', 'regexp' ],
-                                'min_freq' => [ 'int',    'minFreq' ],
-                                'max_freq' => [ 'int',    'maxFreq' ],
-                                'size'     => [ 'int',    'size' ],
-                                'sort' => [ 'enum', 'sort', [qw(term freq)] ],
-                          }
-                       },
-                       @_
+#===================================
+sub more_like_this {
+#===================================
+    shift()->_do_action(
+        'more_like_this',
+        {   cmd    => CMD_INDEX_TYPE_ID,
+            method => 'GET',
+            qs     => {
+                %{ $Search_Defn{qs} },
+                mlt_fields         => [ 'flatten', 'mltFields' ],
+                pct_terms_to_match => [ 'float',   'percentTermsToMatch ' ],
+                min_term_freq      => [ 'int',     'minTermFrequency' ],
+                max_query_terms    => [ 'int',     'maxQueryTerms' ],
+                stop_words         => [ 'flatten', 'stopWords' ],
+                min_doc_freq       => [ 'int',     'minDocFreq' ],
+                max_doc_freq       => [ 'int',     'maxDocFreq' ],
+                min_word_len       => [ 'int',     'minWordLen' ],
+                max_word_len       => [ 'int',     'maxWordLen' ],
+                boost_factor       => [ 'float',   'boostTermsFactor' ],
+                boost_terms =>
+                    [ 'boolean', 'boostTerms=true', 'boostTerms=false' ],
+            },
+            data    => 'data',
+            postfix => '_moreLikeThis',
+            data    => \%Search_Data,
+        },
+        @_
     );
 }
 
 #===================================
 sub index_status {
 #===================================
-    shift()->_do_action( 'index_status',
-                         {  cmd     => CMD_index,
-                            postfix => '_status'
-                         },
-                         @_
+    shift()->_do_action(
+        'index_status',
+        {   cmd     => CMD_index,
+            postfix => '_status'
+        },
+        @_
     );
 }
 
 #===================================
 sub create_index {
 #===================================
-    shift()->_do_action( 'create_index',
-                         {  method  => 'PUT',
-                            cmd     => CMD_INDEX,
-                            postfix => '',
-                            data    => { index => ['defn'] },
-                         },
-                         @_
+    shift()->_do_action(
+        'create_index',
+        {   method  => 'PUT',
+            cmd     => CMD_INDEX,
+            postfix => '',
+            data    => { index => ['defn'] },
+        },
+        @_
     );
 }
 
 #===================================
 sub delete_index {
 #===================================
-    shift()->_do_action( 'delete_index',
-                         {  method  => 'DELETE',
-                            cmd     => CMD_INDEX,
-                            postfix => ''
-                         },
-                         @_
+    shift()->_do_action(
+        'delete_index',
+        {   method  => 'DELETE',
+            cmd     => CMD_INDEX,
+            postfix => ''
+        },
+        @_
     );
+}
+
+#===================================
+sub clear_cache {
+#===================================
+    shift()->_do_action(
+        'clear_cache',
+        {   method  => 'POST',
+            cmd     => CMD_index,
+            postfix => '_cache/clear'
+        },
+        @_
+    );
+}
+
+#===================================
+sub aliases {
+#===================================
+    my $self    = shift;
+    my $params  = $self->_params(@_);
+    my $actions = $params->{actions};
+    if ( defined $actions && ref $actions ne 'ARRAY' ) {
+        $params->{actions} = [$actions];
+    }
+
+    $self->_do_action(
+        'aliases',
+        {   prefix => '_aliases',
+            method => 'POST',
+            cmd    => [],
+            data   => { actions => 'actions' },
+        },
+        $params
+    );
+}
+
+#===================================
+sub get_aliases {
+#===================================
+    my ( $self, $params ) = &_params;
+    my $results = $self->index_status($params);
+    my $indices = $results->{indices};
+    my %aliases = ( indices => {}, aliases => {} );
+    foreach my $index ( keys %$indices ) {
+        my $aliases = $indices->{$index}{aliases};
+        $aliases{indices}{$index} = $aliases;
+        for (@$aliases) {
+            push @{ $aliases{aliases}{$_} }, $index;
+        }
+
+    }
+    return \%aliases;
 }
 
 #===================================
 sub flush_index {
 #===================================
-    shift()->_do_action( 'flush_index',
-                         {  method  => 'POST',
-                            cmd     => CMD_index,
-                            postfix => '_flush',
-                            qs =>
-                                { refresh => [ 'boolean', 'refresh=true' ] },
-                         },
-                         @_
+    shift()->_do_action(
+        'flush_index',
+        {   method  => 'POST',
+            cmd     => CMD_index,
+            postfix => '_flush',
+            qs      => { refresh => [ 'boolean', 'refresh=true' ] },
+        },
+        @_
     );
 }
 
 #===================================
 sub refresh_index {
 #===================================
-    shift()->_do_action( 'refresh_index',
-                         {  method  => 'POST',
-                            cmd     => CMD_index,
-                            postfix => '_refresh'
-                         },
-                         @_
+    shift()->_do_action(
+        'refresh_index',
+        {   method  => 'POST',
+            cmd     => CMD_index,
+            postfix => '_refresh'
+        },
+        @_
     );
 }
 #===================================
 sub optimize_index {
 #===================================
-    shift()->_do_action( 'optimize_index',
-                         {  method  => 'POST',
-                            cmd     => CMD_index,
-                            postfix => '_optimize',
-                            qs      => {
-                                 only_deletes =>
-                                     [ 'boolean', 'onlyExpungeDeletes=true' ],
-                                 refresh => [ 'boolean', 'refresh=true' ],
-                                 flush   => [ 'boolean', 'flush=true' ]
-                            },
-                         },
-                         @_
+    shift()->_do_action(
+        'optimize_index',
+        {   method  => 'POST',
+            cmd     => CMD_index,
+            postfix => '_optimize',
+            qs      => {
+                only_deletes => [ 'boolean', 'onlyExpungeDeletes=true' ],
+                refresh      => [ 'boolean', 'refresh=true' ],
+                flush        => [ 'boolean', 'flush=true' ]
+            },
+        },
+        @_
     );
 }
 
 #===================================
 sub snapshot_index {
 #===================================
-    shift()->_do_action( 'snapshot_index',
-                         {  method  => 'POST',
-                            cmd     => CMD_index,
-                            postfix => '_gateway/snapshot'
-                         },
-                         @_
+    shift()->_do_action(
+        'snapshot_index',
+        {   method  => 'POST',
+            cmd     => CMD_index,
+            postfix => '_gateway/snapshot'
+        },
+        @_
     );
 }
 
 #===================================
 sub gateway_snapshot {
 #===================================
-    shift()->_do_action( 'gateway_snapshot',
-                         {  method  => 'POST',
-                            cmd     => CMD_index,
-                            postfix => '_gateway/snapshot'
-                         },
-                         @_
+    shift()->_do_action(
+        'gateway_snapshot',
+        {   method  => 'POST',
+            cmd     => CMD_index,
+            postfix => '_gateway/snapshot'
+        },
+        @_
     );
 }
 
@@ -356,20 +462,24 @@ sub put_mapping {
     my ( $self, $params ) = &_params;
     $params->{ignore_conflicts} = 1
         unless exists $params->{ignore_conflicts};
-    $self->_do_action( 'put_mapping',
-                       {  method  => 'PUT',
-                          cmd     => CMD_index_TYPE,
-                          postfix => '_mapping',
-                          qs      => {
-                                  timeout => [ 'duration', 'timeout' ],
-                                  ignore_conflicts => ['boolean',
-                                                       'ignoreConflicts=true',
-                                                       'ignoreConflicts=false'
-                                  ]
-                          },
-                          data => { properties => 'properties' }
-                       },
-                       $params
+    $self->_do_action(
+        'put_mapping',
+        {   method  => 'PUT',
+            cmd     => CMD_index_TYPE,
+            postfix => '_mapping',
+            qs      => {
+                timeout          => [ 'duration', 'timeout' ],
+                ignore_conflicts => [
+                    'boolean', 'ignoreConflicts=true',
+                    'ignoreConflicts=false'
+                ]
+            },
+            data => {
+                properties => 'properties',
+                allField   => [ 'all_field', 'allField' ]
+            }
+        },
+        $params
     );
 }
 
@@ -378,6 +488,17 @@ sub get_mapping {
 #===================================
     my ( $self,  $params ) = &_params;
     my ( $index, $type )   = @{$params}{qw(index type)};
+
+    my $error
+        = ref $index ? "'index' must be a single value\n"
+        : defined $index && length $index ? ''
+        :   "Parameter 'index' is a required value\n";
+
+    $self->throw(
+        'Param',
+        $error . $self->_usage( 'get_mapping', { cmd => CMD_INDEX_type } ),
+        { params => $params }
+    ) if $error;
 
     my $state = $self->cluster_state;
 
@@ -411,37 +532,48 @@ sub cluster_state {
 #===================================
 sub nodes {
 #===================================
-    shift()->_do_action( 'nodes',
-                         {  prefix => '_cluster/nodes',
-                            cmd    => CMD_nodes,
-                            qs     => {
-                                    settings => [ 'boolean', 'settings=true' ]
-                            }
-                         },
-                         @_
+    shift()->_do_action(
+        'nodes',
+        {   prefix => '_cluster/nodes',
+            cmd    => CMD_nodes,
+            qs     => { settings => [ 'boolean', 'settings=true' ] }
+        },
+        @_
+    );
+}
+
+#===================================
+sub shutdown {
+#===================================
+    shift()->_do_action(
+        'shutdown',
+        {   method  => 'POST',
+            prefix  => '_cluster/nodes',
+            cmd     => CMD_nodes,
+            postfix => '_shutdown',
+            qs      => { delay => [ 'duration', 'delay' ] }
+        },
+        @_
     );
 }
 
 #===================================
 sub cluster_health {
 #===================================
-    shift()->_do_action( 'cluster_health',
-                         {  prefix => '_cluster/health',
-                            cmd    => CMD_index,
-                            qs     => {
-                                    level => [ 'enum', 'level',
-                                               [qw(cluster indices shards)]
-                                    ],
-                                    wait_for_status => [
-                                                      'enum', 'waitForStatus',
-                                                      [qw(green yellow red)]
-                                    ],
-                                    wait_for_relocating_shards =>
-                                        [ 'int', 'waitForRelocatingShards' ],
-                                    timeout => [ 'int', 'timeout' ]
-                            }
-                         },
-                         @_
+    shift()->_do_action(
+        'cluster_health',
+        {   prefix => '_cluster/health',
+            cmd    => CMD_index,
+            qs     => {
+                level => [ 'enum', 'level', [qw(cluster indices shards)] ],
+                wait_for_status =>
+                    [ 'enum', 'waitForStatus', [qw(green yellow red)] ],
+                wait_for_relocating_shards =>
+                    [ 'int', 'waitForRelocatingShards' ],
+                timeout => [ 'duration', 'timeout' ]
+            }
+        },
+        @_
     );
 }
 
@@ -468,17 +600,18 @@ sub _do_action {
         1;
     } or $error = $@ || 'Unknown error';
 
-    $self->throw( 'Param',
-                  $error . $self->_usage( $action, $defn ),
-                  { params => $original_params } )
-        if $error;
+    $self->throw(
+        'Param',
+        $error . $self->_usage( $action, $defn ),
+        { params => $original_params }
+    ) if $error;
 
-    return
-        $self->request( { method => $defn->{method} || 'GET',
-                          cmd    => $cmd,
-                          data   => $data,
-                        }
-        );
+    return $self->request( {
+            method => $defn->{method} || 'GET',
+            cmd    => $cmd,
+            data   => $data,
+        }
+    );
 }
 
 #===================================
@@ -498,14 +631,14 @@ sub _usage {
             :                    "\$$key | [\$${key}_1,\$${key}_n]";
 
         my $required = $type == ONE_REQ ? 'required' : 'optional';
-        $usage .= sprintf( "  - %-15s =>  %-45s # %s\n",
-                           $key, $arg_format, $required );
+        $usage .= sprintf( "  - %-20s =>  %-45s # %s\n",
+            $key, $arg_format, $required );
     }
     if ( my $qs = $defn->{qs} ) {
         for ( sort keys %$qs ) {
             my $arg_format = $QS_Format{ $qs->{$_}[0] };
-            $usage .= sprintf( "  - %-15s =>  %-45s # optional\n", $_,
-                               $arg_format );
+            $usage .= sprintf( "  - %-20s =>  %-45s # optional\n", $_,
+                $arg_format );
         }
     }
 
@@ -516,10 +649,11 @@ sub _usage {
             values %$data;
 
         for (@keys) {
-            $usage .=
-                sprintf( "  - %-15s =>  %-45s # %s\n",
-                         $_->[0], '{' . $_->[0] . '}',
-                         $_->[1] );
+            $usage .= sprintf(
+                "  - %-20s =>  %-45s # %s\n",
+                $_->[0], '{' . $_->[0] . '}',
+                $_->[1]
+            );
         }
     }
     return $usage;
@@ -535,6 +669,8 @@ sub _build_qs {
     foreach my $key ( keys %$defn ) {
         my ( $format_name, @args ) = @{ $defn->{$key} || [] };
         $format_name ||= '';
+
+        next unless exists $params->{$key} || $format_name eq 'fixed';
 
         my $formatter = $QS_Formatter{$format_name}
             or die "Unknown QS formatter '$format_name'";
@@ -645,10 +781,11 @@ sub refresh_servers {
         last if @live_servers;
     }
 
-    $self->throw( 'NoServers',
-                  "Could not retrieve a list of active servers: $@",
-                  { servers => \@servers } )
-        unless @live_servers;
+    $self->throw(
+        'NoServers',
+        "Could not retrieve a list of active servers: $@",
+        { servers => \@servers }
+    ) unless @live_servers;
     for (@live_servers) {
         $_ =~ m{inet\[(\S*)/(\S+):(\d+)\]};
         $_ = 'http://' . ( $1 || $2 ) . ':' . $3;
@@ -821,7 +958,8 @@ sub _log_result {
     while (@lines) {
         my $line = shift @lines;
         if ( length $line > 65 ) {
-            my ($spaces) = ( $line =~ /^(\s*)/ );
+            my ($spaces) = ( $line =~ /^(?:> )?(\s*)/ );
+            $spaces = substr( $spaces, 0, 20 ) if length $spaces > 20;
             unshift @lines, '> ' . $spaces . substr( $line, 65 );
             $line = substr $line, 0, 65;
         }
@@ -836,10 +974,11 @@ sub _params {
     my $self = shift;
     my $params;
     if ( @_ % 2 ) {
-        $self->throw( "Param",
-                      'Expecting a HASH ref or a list of key-value pairs',
-                      { params => \@_ } )
-            unless ref $_[0] eq 'HASH';
+        $self->throw(
+            "Param",
+            'Expecting a HASH ref or a list of key-value pairs',
+            { params => \@_ }
+        ) unless ref $_[0] eq 'HASH';
         $params = shift;
     }
     else {
@@ -863,11 +1002,12 @@ sub throw {
 
     my $debug = ref $self ? $self->debug : 1;
     my ( undef, $file, $line ) = caller(0);
-    my $error = bless { -text       => $msg,
-                        -line       => $line,
-                        -file       => $file,
-                        -vars       => $vars,
-                        -stacktrace => $debug ? _stack_trace() : ''
+    my $error = bless {
+        -text       => $msg,
+        -line       => $line,
+        -file       => $file,
+        -vars       => $vars,
+        -stacktrace => $debug ? _stack_trace() : ''
     }, $error_class;
 
     die $error;
@@ -880,7 +1020,7 @@ sub _stack_trace {
     my $line = ( '-' x 60 ) . "\n";
     my $o    = $line
         . sprintf( "%-4s %-30s %-5s %s\n",
-                   ( '#', 'Package', 'Line', 'Sub-routine' ) )
+        ( '#', 'Package', 'Line', 'Sub-routine' ) )
         . $line;
     while ( my @caller = caller($i) ) {
         $o .= sprintf( "%-4d %-30s %4d  %s\n", $i++, @caller[ 0, 2, 3 ] );
@@ -905,9 +1045,9 @@ sub trace_calls {
         if ( my $file = shift ) {
             $file = '&STDERR' if $file eq "1";
 
-            open my $fh, ">$file"
+            open my $fh, ">>$file"
                 or $self->throw( 'Internal',
-                              "Couldn't open '$file' for trace logging: $!" );
+                "Couldn't open '$file' for trace logging: $!" );
             binmode( $fh, ':utf8' );
             $fh->autoflush(1);
             $self->JSON->pretty(1);
@@ -951,9 +1091,10 @@ sub stringify {
         . ' line '
         . $error->{-line} . " : \n"
         . ( $error->{-text} || 'Missing error message' ) . "\n"
-        . ( $error->{-vars}
-            ? "With vars:\n" . Dumper( $error->{-vars} ) . "\n"
-            : ''
+        . (
+        $error->{-vars}
+        ? "With vars:\n" . Dumper( $error->{-vars} ) . "\n"
+        : ''
         ) . $error->{-stacktrace};
     return $msg;
 }
@@ -964,7 +1105,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.05 - this is an alpha release
+Version 0.06 - this is an alpha release
 
 =cut
 
@@ -1038,10 +1179,10 @@ L<http://www.elasticsearch.com/download/>, or to build from source on Unix:
     cd ~
     git clone git://github.com/elasticsearch/elasticsearch.git
     cd elasticsearch
-    ./gradlew clean devRelease
+    ./gradlew
 
     cd /path/where/you/want/elasticsearch
-    unzip ~/elasticsearch/distributions/elasticsearch*
+    unzip ~/elasticsearch/build/distributions/elasticsearch*
 
 To start a test server in the foreground:
 
@@ -1176,7 +1317,9 @@ C<set()> is a synonym for L</"index()">
 
 =head3 C<create()>
 
-C<create> is a synonym for L</"index()"> but sets C<create> to C<true>
+C<create> is a synonym for L</"index()"> but sets C<create> to C<true>. This
+means that ElasticSearch doesn't need to check whether the index/type/id already
+exists, and speeds up the indexing process.
 
 =head3 C<get()>
 
@@ -1205,7 +1348,7 @@ Example:
     }
 
 See also: L<KNOWN ISSUES>,
-          L<http://www.elasticsearch.com/docs/elasticsearch/json_api/get>
+          L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/get>
 
 =head3 C<delete()>
 
@@ -1222,7 +1365,7 @@ Example:
 
     $e->delete( index => 'twitter', type => 'tweet', id => 1);
 
-See also: L<http://www.elasticsearch.com/docs/elasticsearch/json_api/delete>
+See also: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/delete>
 
 =cut
 
@@ -1241,6 +1384,9 @@ See also: L<http://www.elasticsearch.com/docs/elasticsearch/json_api/delete>
         from            => $start_from          # optional
         size            => $no_of_results       # optional
         sort            => ['score',$field_1]   # optional
+        scroll          => '5m' | '30s'         # optional
+        scroll_id       => $scroll_id           # optional
+        highlight       => { highlight }        # optional
     );
 
 Searches for all documents matching the query. Documents can be matched
@@ -1253,9 +1399,10 @@ against multiple indices and multiple types, eg:
     );
 
 For all of the options that can be included in the C<query> parameter, see
-L<ElasticSearch::QueryDSL>,
-L<http://www.elasticsearch.com/docs/elasticsearch/json_api/search> and
-L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
+L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/search>,
+L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>,
+L<http://github.com/elasticsearch/elasticsearch/issues/closed#issue/77> and
+L<http://github.com/elasticsearch/elasticsearch/issues/closed#issue/69>
 
 
 =head3 C<count()>
@@ -1264,16 +1411,21 @@ L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
         index           => multi,
         type            => multi,
 
-        term
-      | range
-      | prefix
-      | wildcard
-      | match_all
-      | query_string
-      | bool
-      | disMax
+        bool
       | constantScore
-      | filteredQuery   => { query }
+      | disMax
+      | field
+      | filtered
+      | fuzzy_like_this
+      | fuzzy_like_this_field
+      | match_all
+      | more_like_this
+      | more_like_this_field
+      | query_string
+      | prefix
+      | range
+      | term
+      | wildcard
     );
 
 Counts the number of documents matching the query. Documents can be matched
@@ -1285,8 +1437,8 @@ against multiple indices and multiple types, eg
         query   => { term => {user => 'kimchy' }}
     );
 
-See also L</"search()">, L<ElasticSearch::QueryDSL>,
-L<http://www.elasticsearch.com/docs/elasticsearch/json_api/delete_by_query>
+See also L</"search()">,
+L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/count>
 and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
 
 
@@ -1296,16 +1448,21 @@ and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
         index           => multi,
         type            => multi,
 
-        term
-      | range
-      | prefix
-      | wildcard
-      | match_all
-      | query_string
-      | bool
-      | disMax
+        bool
       | constantScore
-      | filteredQuery   => { query }
+      | disMax
+      | field
+      | filtered
+      | fuzzy_like_this
+      | fuzzy_like_this_field
+      | match_all
+      | more_like_this
+      | more_like_this_field
+      | query_string
+      | prefix
+      | range
+      | term
+      | wildcard
     );
 
 Deletes any documents matching the query. Documents can be matched against
@@ -1317,8 +1474,8 @@ multiple indices and multiple types, eg
         term    => {user => 'kimchy' }
     );
 
-See also L</"search()">, L<ElasticSearch::QueryDSL>,
-L<http://www.elasticsearch.com/docs/elasticsearch/json_api/delete_by_query>
+See also L</"search()">,
+L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/delete_by_query>
 and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
 
 
@@ -1335,8 +1492,8 @@ and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
         ## A range of terms eg alpha - omega
         from            => 'first term',           # optional
         to              => 'last term',            # optional
-        exclude_from    => 1 | 0,                  # exclude 'from' term
-        exclude_to      => 1 | 0,                  # exclude 'to' term
+        from_inclusive  => 1 | 0                   # optional
+        to_inclusive    => 1 | 0                   # optional
 
         prefix          => 'prefix',               # terms starting with
         regexp          => 'regexp',               # terms matching ^regexp$
@@ -1353,6 +1510,54 @@ eg:
         prefix      => 'arnol'
     )
 
+See also L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/terms>
+and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
+
+=head3 C<more_like_this()>
+
+    $results = $e->more_like_this(
+        index               => single,              # required
+        type                => single,              # required
+        id                  => $id,                 # required
+
+        # optional more-like-this params
+        boost_factor         =>  float
+        boost_terms          =>  1 | 0
+        mlt_fields           =>  'scalar' or ['scalar_1', 'scalar_n']
+        max_doc_freq         =>  integer
+        max_query_terms      =>  integer
+        max_word_len         =>  integer
+        min_doc_freq         =>  integer
+        min_term_freq        =>  integer
+        min_word_len         =>  integer
+        pct_terms_to_match   =>  float
+        stop_words           =>  'scalar' or ['scalar_1', 'scalar_n']
+
+        # optional search params
+        scroll               =>  '5m' | '10s'
+        scroll_id            =>  "string"
+        search_type          =>  "predefined_value"
+        explain              =>  {explain}
+        facets               =>  {facets}
+        fields               =>  {fields}
+        from                 =>  {from}
+        highlight            =>  {highlight}
+        size                 =>  {size}
+        sort                 =>  {sort}
+
+    )
+
+More-like-this (mlt) finds related/similar documents. It is possible to run
+a search query with a C<moreLikeThis> clause (where you pass in the text
+you're trying to match), or to use this method, which uses the text of
+the document referred to by C<index/type/id>.
+
+This gets transformed into a search query, so all of the search parameters
+are also available.
+
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/more_like_this/>
+and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/moreLikeThis_query/>
+
 =cut
 
 =head2 Index Admin methods
@@ -1368,7 +1573,8 @@ Returns the status of
     $result = $e->index_status( index => ['twitter','buzz'] );
     $result = $e->index_status( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/indices/status>
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/status>
+
 =head3 C<create_index()>
 
     $result = $e->create_index(
@@ -1388,7 +1594,7 @@ Creates a new index, optionally setting certain paramters, eg:
 
 Throws an exception if the index already exists.
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/indices/create_index>
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/create_index>
 
 =head3 C<delete_index()>
 
@@ -1400,7 +1606,42 @@ Deletes an existing index, or throws an exception if the index doesn't exist, eg
 
     $result = $e->delete_index( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/indices/delete_index>
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/delete_index>
+
+=head3 C<aliases()>
+
+    $result = $e->aliases( actions => [actions] | {actions} )
+
+Adds or removes an alias for an index, eg:
+
+    $result = $e->aliases( actions => [
+                { remove => { index => 'foo', alias => 'bar' }},
+                { add    => { index => 'foo', alias => 'baz'  }}
+              ]);
+
+C<actions> can be a single HASH ref, or an ARRAY ref containing multiple HASH
+refs.
+
+See L<http://github.com/elasticsearch/elasticsearch/issues/closed#issue/88>
+
+=head3 C<get_aliases()>
+
+    $result = $e->get_aliases( index => multi )
+
+Returns a hashref listing all indices and their corresponding aliases, and
+all aliases and their corresponding indices, eg:
+
+    {
+      aliases => {
+         bar => ["foo"],
+         baz => ["foo"],
+      },
+      indices => { foo => ["baz", "bar"] },
+    }
+
+If you pass in the optional C<index> argument, which can be an index name
+or an alias name, then it will only return the indices and aliases related
+to that argument.
 
 =head3 C<flush_index()>
 
@@ -1418,7 +1659,7 @@ Example:
 
     $result = $e->flush_index( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/indices/flush>
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/flush>
 
 =head3 C<refresh_index()>
 
@@ -1435,7 +1676,15 @@ Example:
 
     $result = $e->refresh_index( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/indices/refresh>
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/refresh>
+
+=head3 C<clear_cache()>
+
+    $result = $e->clear_cache( index => multi );
+
+Clears the caches for the specified indices (currently only the filter cache).
+
+See L<http://github.com/elasticsearch/elasticsearch/issues/issue/101>
 
 =head3 C<gateway_snapshot()>
 
@@ -1451,7 +1700,7 @@ Example:
 
     $result = $e->gateway_snapshot( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/indices/gateway_snapshot>
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/gateway_snapshot>
 and L<http://www.elasticsearch.com/docs/elasticsearch/modules/gateway>
 
 =head3 C<snapshot_index()>
@@ -1467,14 +1716,17 @@ C<snapshot_index()> is a synonym for L</"gateway_snapshot()">
         refresh         => 1 | 0,  # refresh after optmization
     )
 
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/optimize>
+
 =head3 C<put_mapping()>
 
     $result = $e->put_mapping(
         index               => multi,
         type                => single,
-        properties          => { ... }      # required
-        timeout             => '5m' | '10s' # optional,
-        ignore_conflicts    => 1 | 0,       # optional, default '1'
+        all_field           => { ... },
+        properties          => { ... },      # required
+        timeout             => '5m' | '10s', # optional
+        ignore_conflicts    => 1 | 0,        # optional, default '1'
     );
 
 A C<mapping> is the data definition of a C<type>.  If no mapping has been
@@ -1500,7 +1752,7 @@ to specify an official C<mapping> instead, eg:
         }
     );
 
-See also: L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/indices/put_mapping>
+See also: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/put_mapping>
 and L<http://www.elasticsearch.com/docs/elasticsearch/mapping>
 
 =head3 C<get_mapping()>
@@ -1524,6 +1776,8 @@ type(s), eg:
     );
     # { tweet => {mapping}, user => {mapping}}
 
+The index argument must be an index name, and not an alias name.
+
 =cut
 
 =head2 Cluster admin methods
@@ -1534,19 +1788,7 @@ type(s), eg:
 
 Returns cluster state information.
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/cluster/state/>
-
-=head3 C<nodes()>
-
-    $result = $e->nodes(
-        nodes       => multi,
-        settings    => 1 | 0        # optional
-    );
-
-Returns information about one or more nodes or servers in the cluster. If
-C<settings> is C<true>, then it includes the node settings information.
-
-See: L<http://www.elasticsearch.com/docs/elasticsearch/json_api/admin/cluster/nodes_info>
+See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/state/>
 
 =head3 C<cluster_health()>
 
@@ -1580,6 +1822,29 @@ If waiting, then a timeout can be specified.
 For example:
 
     $result = $e->cluster_health( wait_for_status => 'green', timeout => 10)
+
+=head3 C<nodes()>
+
+    $result = $e->nodes(
+        nodes       => multi,
+        settings    => 1 | 0        # optional
+    );
+
+Returns information about one or more nodes or servers in the cluster. If
+C<settings> is C<true>, then it includes the node settings information.
+
+See: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/nodes_info>
+
+=head3 C<shutdown()>
+
+    $result = $e->shutdown(
+        nodes       => multi,
+        delay       => '5s' | '10m'        # optional
+    );
+
+
+Shuts down one or more nodes (or the whole cluster if no nodes specified),
+optionally with a delay.
 
 =cut
 

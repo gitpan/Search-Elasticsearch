@@ -3,6 +3,10 @@ abstract: 'An API for communicating with ElasticSearch'
 author:
   - 'Clinton Gormley <drtech@cpan.org>'
 build_requires:
+  Alien::ElasticSearch: 0.08
+  File::Temp: 0.22
+  IO::Socket: 0
+  POSIX: 0
   Test::Most: 0
 configure_requires:
   Module::Build: 0.36
@@ -15,11 +19,11 @@ name: ElasticSearch
 provides:
   ElasticSearch:
     file: lib/ElasticSearch.pm
-    version: 0.05
+    version: 0.06
   ElasticSearch::Error:
     file: lib/ElasticSearch.pm
 requires:
-  Data::Dump: 0
+  Data::Dumper: 0
   Encode: 0
   HTTP::Request: 0
   JSON::XS: 0
@@ -27,4 +31,4 @@ requires:
   LWP::UserAgent: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.05
+version: 0.06
