@@ -1,7 +1,9 @@
 #!perl
 
 #use Test::Most qw(defer_plan);
-use Test::Most tests => 135;
+our $test_num;
+BEGIN { $test_num = 150 }
+use Test::Most tests => $test_num;
 use Module::Build;
 use File::Spec::Functions qw(catfile);
 use POSIX 'setsid';
@@ -23,7 +25,8 @@ local $SIG{INT} = sub { shutdown_servers(); };
 
 my $es = connect_to_es();
 SKIP: {
-    skip "ElasticSearch server not available for testing", 134 unless $es;
+    skip "ElasticSearch server not available for testing", $test_num - 1
+        unless $es;
 
     ok $es, 'Connected to an ES cluster';
     like $es->current_server, qr{http://}, 'Current server set';
@@ -158,8 +161,7 @@ SKIP: {
 
     ### INDEX ALIASES ###
     ok $es->aliases(
-        actions => { add => { alias => 'alias_1', index => $Index } }
-        ),
+        actions => { add => { alias => 'alias_1', index => $Index } } ),
         'add alias_1';
     wait_for_es(1);
     is $es->get_aliases->{aliases}{alias_1}[0], $Index, 'alias_1 added';
@@ -393,6 +395,16 @@ SKIP: {
         sort => [ { num => { reverse => \1 } } ],
     )->{hits}{hits}[0]{_source}{num}, 29, " - reverse sort";
 
+    is $es->search(
+        query => { match_all => {} },
+        sort  => { 'num'     => 'asc' },
+    )->{hits}{hits}[0]{_source}{num}, 2, " - asc";
+
+    is $es->search(
+        query => { match_all => {} },
+        sort => [ { num => 'desc' } ],
+    )->{hits}{hits}[0]{_source}{num}, 29, " - desc";
+
     # FROM / TO
     ok $r= $es->search(
         query => { match_all => {} },
@@ -416,6 +428,50 @@ SKIP: {
         highlight => { fields => { _all => {} } }
         )->{hits}{hits}[0]{highlight}{_all}[0], qr{<em>foo</em>},
         'Highlighting';
+
+    # SCROLL
+    ok $r = $es->search(
+        query  => { match_all => {} },
+        sort   => ['num'],
+        scroll => '5m',
+        size   => 2
+        ),
+        'Scroll search';
+    my $scroll_id = $r->{_scrollId};
+    ok $scroll_id, ' - has scroll ID';
+    is $r->{hits}{hits}[0]{_id}, 1, ' - first hit is ID 1';
+    is $r->{hits}{hits}[1]{_id}, 2, ' - second hit is ID 2';
+
+SKIP: {
+        skip "Scroll ID tests - broken on server", 3;
+        ok $r = $es->scroll( scroll_id => $scroll_id ), ' - next tranche';
+        is $r->{hits}{hits}[0]{_id}, 3, ' - first hit is ID 3';
+        is $r->{hits}{hits}[1]{_id}, 4, ' - second hit is ID 4';
+    }
+
+    # INDICES_BOOST
+
+SKIP: {
+        skip "indices_boost not having any affect - broken on server", 6;
+        ok $r= $es->search(
+            query => { field => { text => 'foo' } },
+            sort  => ['score'],
+            size  => 2,
+            indices_boost => { es_test_1 => 5000, es_test_2 => 0.1 }
+            ),
+            'boost index 1';
+        is $r->{hits}{hits}[0]{_id}, 2, ' - first id 2';
+        is $r->{hits}{hits}[1]{_id}, 4, ' - second id 4';
+        ok $r= $es->search(
+            query => { field => { text => 'foo' } },
+            sort  => ['score'],
+            size  => 2,
+            indices_boost => { es_test_1 => 0.1, es_test_2 => 5000 }
+            ),
+            'boost index 2';
+        is $r->{hits}{hits}[0]{_id}, 4, ' - first id 4';
+        is $r->{hits}{hits}[1]{_id}, 2, ' - second id 2';
+    }
 
     ## COUNT ###
 
@@ -668,7 +724,7 @@ sub wait_for_es {
 my @PIDs;
 
 sub connect_to_es {
-    my $install_dir = Alien::ElasticSearch->install_dir;
+    my $install_dir = $ENV{ES_SERVER} || Alien::ElasticSearch->install_dir;
     if ( !$install_dir ) {
         diag "";
         diag "**** The ElasticSearch server is not installed ****";
@@ -693,6 +749,8 @@ sub connect_to_es {
     }
 
     my $server = $servers[0];
+
+    diag "Testing server installed in $install_dir";
 
     my $cmd = catfile( $install_dir, 'bin', 'elasticsearch' );
     my $pid_file = File::Temp->new;
