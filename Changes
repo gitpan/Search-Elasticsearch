@@ -1,7 +1,10 @@
 Revision history for ElasticSearch
+0.25    2010-10-20
+        Another ambiguous use of localtime in ElasticSearch::Transport
+
 0.24    2010-10-20
         Corrected an ambiguous use of localtime in ElasticSearch::Transport
-        Addex examples/search_issues.pl
+        Added examples/search_issues.pl
         Minor tidying to tests
 
 0.23    2010-10-19
