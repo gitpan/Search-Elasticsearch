@@ -16,17 +16,19 @@ use constant {
     CMD_INDEX_TYPE_id => [ index => ONE_REQ, type => ONE_REQ, id => ONE_OPT ],
     CMD_index      => [ index => MULTI_BLANK ],
     CMD_INDEX      => [ index => ONE_REQ ],
+    CMD_INDEX_TYPE => [ index => ONE_REQ, type => ONE_REQ ],
     CMD_INDEX_type => [ index => ONE_REQ, type => MULTI_BLANK ],
     CMD_index_TYPE => [ index => MULTI_ALL, type => ONE_REQ ],
     CMD_index_type => [ index => MULTI_ALL, type => MULTI_BLANK ],
     CMD_RIVER      => [ river => ONE_REQ ],
     CMD_nodes      => [ node  => MULTI_BLANK ],
+    CMD_NAME       => [ name  => ONE_REQ ],
+    CMD_INDEX_PERC => [ index => ONE_REQ, percolator => ONE_REQ ],
 };
 
 our %QS_Format = (
     boolean  => '1 | 0',
     duration => "'5m' | '10s'",
-    fixed    => '',
     optional => "'scalar value'",
     flatten  => "'scalar' or ['scalar_1', 'scalar_n']",
     'int'    => "integer",
@@ -36,42 +38,48 @@ our %QS_Format = (
 );
 
 our %QS_Formatter = (
-    fixed   => sub { return $_[1] },
-    boolean => sub { return $_[0] ? $_[1] : $_[2] },
+    boolean => sub {
+        my $key = shift;
+        my $val = $_[0] ? $_[1] : $_[2];
+        return unless defined $val;
+        return ref $val ? $val : [ $key, $val ? 'true' : 'false' ];
+    },
     duration => sub {
-        my ( $t, $k ) = @_;
+        my ( $k, $t ) = @_;
         return unless defined $t;
-        return [ $k, $t ] if $t =~ /^\d+[smh]$/i;
+        return [ $k, $t ] if $t =~ /^\d+([smh]|ms)$/i;
         die "$k '$t' is not in the form $QS_Format{duration}\n";
     },
     flatten => sub {
-        my $array = shift or return;
         my $key = shift;
+        my $array = shift or return;
         return [ $key, ref $array ? join( ',', @$array ) : $array ];
     },
     'int' => sub {
+        my $key = shift;
         my $int = shift;
         return unless defined $int;
-        my $key = shift;
         eval { $int += 0; 1 } or die "'$key' is not an integer";
         return [ $key, $int ];
     },
     'float' => sub {
+        my $key   = shift;
         my $float = shift;
         return unless defined $float;
-        my $key = shift;
+        $key = shift if @_;
         eval { $float += 0; 1 } or die "'$key' is not a float";
         return [ $key, $float ];
     },
     'string' => sub {
+        my $key    = shift;
         my $string = shift;
         return unless defined $string;
-        return [ shift(), $string ];
+        return [ $key, $string ];
     },
     'enum' => sub {
+        my $key = shift;
         my $val = shift;
         return unless defined $val;
-        my $key  = shift;
         my $vals = $_[0];
         for (@$vals) {
             return [ $key, $val ] if $val eq $_;
@@ -87,15 +95,32 @@ our %QS_Formatter = (
 ##################################
 
 #===================================
-sub get { shift()->_do_action( 'get', { cmd => CMD_INDEX_TYPE_ID }, @_ ) }
+sub get {
 #===================================
+    shift()->_do_action(
+        'get',
+        {   cmd => CMD_INDEX_TYPE_ID,
+            qs  => {
+                fields         => ['flatten'],
+                ignore_missing => [ 'boolean', 1 ],
+                refresh        => [ 'boolean', 1 ],
+                routing        => ['string'],
+            },
+        },
+        @_
+    );
+}
 
 my %Index_Defn = (
     cmd => CMD_INDEX_TYPE_id,
     qs  => {
-        create  => [ 'boolean', [ op_type => 'create' ] ],
-        refresh => [ 'boolean', [ refresh => 'true' ] ],
-        timeout => [ 'duration', 'timeout' ],
+        create => [ 'boolean', [ op_type => 'create' ] ],
+        refresh   => [ 'boolean', 1 ],
+        timeout   => ['duration'],
+        routing   => ['string'],
+        parent    => ['string'],
+        percolate => ['string'],
+        version   => ['int'],
     },
     data => 'data',
 );
@@ -121,7 +146,21 @@ sub create {
 #===================================
     my ( $self, $params ) = parse_params(@_);
 
-    $self->_index( 'create', { %Index_Defn, postfix => '_create' }, $params );
+    $self->_index(
+        'create',
+        {   cmd     => CMD_INDEX_TYPE_id,
+            data    => 'data',
+            postfix => '_create',
+            qs      => {
+                refresh   => [ 'boolean', 1 ],
+                timeout   => ['duration'],
+                routing   => ['string'],
+                parent    => ['string'],
+                percolate => ['string'],
+            },
+        },
+        $params
+    );
 }
 
 #===================================
@@ -139,7 +178,33 @@ sub delete {
         'delete',
         {   method => 'DELETE',
             cmd    => CMD_INDEX_TYPE_ID,
-            qs     => { refresh => [ 'boolean', [ refresh => 'true' ] ], }
+            qs     => {
+                consistency => [ 'enum', [ 'one', 'quorom', 'all' ] ],
+                ignore_missing => [ 'boolean', 1 ],
+                refresh        => [ 'boolean', 1 ],
+                routing        => ['string'],
+                version        => ['int'],
+                replication => [ 'enum', [ 'async', 'sync' ] ],
+            }
+        },
+        @_
+    );
+}
+
+#===================================
+sub analyze {
+#===================================
+    shift()->_do_action(
+        'analyze',
+        {   method  => 'GET',
+            cmd     => CMD_INDEX,
+            postfix => '_analyze',
+            qs      => {
+                text         => ['string'],
+                analyzer     => ['string'],
+                format       => [ 'enum', [ 'detailed', 'text' ] ],
+                prefer_local => [ 'boolean', undef, 0 ],
+            }
         },
         @_
     );
@@ -150,18 +215,45 @@ sub delete {
 ##################################
 
 my %Bulk_Actions = (
-    'delete' => { index => ONE_REQ, type => ONE_REQ, id => ONE_REQ },
-    'create' =>
-        { index => ONE_REQ, type => ONE_REQ, id => ONE_OPT, data => ONE_REQ },
-    'index' =>
-        { index => ONE_REQ, type => ONE_REQ, id => ONE_OPT, data => ONE_REQ },
+    'delete' => {
+        index   => ONE_REQ,
+        type    => ONE_REQ,
+        id      => ONE_REQ,
+        parent  => ONE_OPT,
+        routing => ONE_OPT,
+        version => ONE_OPT,
+    },
+    'index' => {
+        index     => ONE_REQ,
+        type      => ONE_REQ,
+        id        => ONE_OPT,
+        data      => ONE_REQ,
+        routing   => ONE_OPT,
+        parent    => ONE_OPT,
+        percolate => ONE_OPT,
+        version   => ONE_OPT,
+    },
+);
+$Bulk_Actions{create} = $Bulk_Actions{index};
+
+my %Bulk_QS = (
+    consistency => [ 'enum', [ 'one', 'quorom', 'all' ] ],
+    refresh => [ 'boolean', 1 ],
 );
 
 #===================================
 sub bulk {
 #===================================
     my $self = shift;
-    my $actions = ref $_[0] eq 'ARRAY' ? shift() : [@_];
+    my ( $actions, $qs );
+    if ( ref $_[0] eq 'ARRAY' ) {
+        $actions = shift;
+        my $params = ref $_[0] eq 'HASH' ? shift : {@_};
+        $qs = $self->_build_qs( $params, \%Bulk_QS );
+    }
+    else {
+        $actions = [@_];
+    }
 
     return { actions => [], results => [] } unless @$actions;
 
@@ -169,30 +261,58 @@ sub bulk {
     my $indenting = $json->get_indent;
     $json->indent(0);
 
-    my $json_docs = eval { $self->_build_bulk_query($actions) }
-        || do { $json->indent($indenting); die $@ };
+    my $json_docs = eval { $self->_build_bulk_query($actions) };
+    my $error = $@;
+    $json->indent($indenting);
+    die $error unless $json_docs;
 
     my $results = $self->request( {
             method => 'POST',
             cmd    => '/_bulk',
+            qs     => $qs,
             data   => $json_docs
         }
     );
     my $items = $results->{items}
         || $self->throw( 'Request', 'Malformed response to bulk query',
         $results );
-    my @errors;
+
+    my ( @errors, %matches );
 
     for ( my $i = 0; $i < @$actions; $i++ ) {
-        my ($action) = ( keys %{ $items->[$i] } );
+        my ( $action, $item ) = ( %{ $items->[$i] } );
+        if ( my $match = $item->{matches} ) {
+            push @{ $matches{$_} }, $item for @$match;
+        }
         my $error = $items->[$i]{$action}{error} or next;
         push @errors, { action => $actions->[$i], error => $error };
     }
+
     return {
         actions => $actions,
         results => $items,
+        matches => \%matches,
+        took    => $results->{took},
         ( @errors ? ( errors => \@errors ) : () )
     };
+}
+
+#===================================
+sub bulk_index  { shift->_bulk_action( 'index',  @_ ) }
+sub bulk_create { shift->_bulk_action( 'create', @_ ) }
+sub bulk_delete { shift->_bulk_action( 'delete', @_ ) }
+#===================================
+
+#===================================
+sub _bulk_action {
+#===================================
+    my $self    = shift;
+    my $action  = shift;
+    my $docs    = ref $_[0] eq 'ARRAY' ? shift : [@_];
+    my @actions = map {
+        { $action => $_ }
+    } @$docs;
+    return $self->bulk( \@actions, @_ );
 }
 
 #===================================
@@ -209,15 +329,18 @@ sub _build_bulk_query {
             unless ref $data eq 'HASH';
 
         my ( $action, $params ) = %$data;
-
+        $action ||= '';
         my $defn = $Bulk_Actions{$action}
             || $self->throw( "Param", "Unknown bulk action '$action'" );
 
         my %metadata;
         $params = {%$params};
+        delete @{$params}{qw(_score sort)};
+        $params->{data} ||= delete $params->{_source}
+            if $params->{_source};
 
         for my $key ( keys %$defn ) {
-            my $val = delete $params->{$key};
+            my $val = delete $params->{$key} || delete $params->{"_$key"};
             unless ( defined $val ) {
                 next if $defn->{$key} == ONE_OPT;
                 $self->throw(
@@ -226,7 +349,10 @@ sub _build_bulk_query {
                     $data
                 );
             }
-            $metadata{ '_' . $key } = $val;
+            $metadata{"_$key"} = $val;
+        }
+        if ( exists $metadata{_percolate} ) {
+            $metadata{percolate} = delete $metadata{_percolate};
         }
         $self->throw(
             'Param',
@@ -249,15 +375,16 @@ sub _build_bulk_query {
 ##################################
 
 my %Search_Data = (
-    facets        => ['facets'],
-    from          => ['from'],
-    size          => ['size'],
     explain       => ['explain'],
+    facets        => ['facets'],
     fields        => ['fields'],
-    'sort'        => ['sort'],
+    filter        => ['filter'],
+    from          => ['from'],
     highlight     => ['highlight'],
     indices_boost => ['indices_boost'],
     script_fields => ['script_fields'],
+    size          => ['size'],
+    'sort'        => ['sort'],
 );
 
 my %Search_Defn = (
@@ -266,39 +393,45 @@ my %Search_Defn = (
     qs      => {
         search_type => [
             'enum',
-            'search_type',
-            [   qw(  dfs_query_then_fetch     dfs_query_and_fetch
-                    query_then_fetch         query_and_fetch)
+            [   qw( dfs_query_then_fetch    dfs_query_and_fetch
+                    query_then_fetch         query_and_fetch
+                    count                   scan)
             ]
         ],
-        scroll => [ 'duration', 'scroll' ],
+        routing => ['flatten'],
+        scroll  => ['duration'],
+        timeout => ['duration'],
+        version => [ 'boolean', 1 ],
     },
-    data => { %Search_Data, query => ['query'] }
+    data => { %Search_Data, query => 'query' }
 );
 
 my %Query_Defn = (
-    bool           => ['bool'],
-    constant_score => ['constant_score'],
-    custom_score   => ['custom_score'],
-    dis_max        => ['dis_max'],
-    field          => ['field'],
-    filtered       => ['filtered'],
-    flt            => [ 'flt', 'fuzzy_like_this' ],
-    flt_field      => [ 'flt_field', 'fuzzy_like_this_field' ],
-    fuzzy          => ['fuzzy'],
-    match_all      => ['match_all'],
-    mlt            => [ 'mlt', 'more_like_this' ],
-    mlt_field      => [ 'mlt_field', 'more_like_this_field' ],
-    prefix         => ['prefix'],
-    query_string   => ['query_string'],
-    range          => ['range'],
-    span_term      => ['span_term'],
-    span_first     => ['span_first'],
-    span_near      => ['span_near'],
-    span_not       => ['span_not'],
-    span_or        => ['span_or'],
-    term           => ['term'],
-    wildcard       => ['wildcard'],
+    bool               => ['bool'],
+    constant_score     => ['constant_score'],
+    custom_score       => ['custom_score'],
+    dis_max            => ['dis_max'],
+    field              => ['field'],
+    field_masking_span => ['field_masking_span'],
+    filtered           => ['filtered'],
+    flt                => [ 'flt', 'fuzzy_like_this' ],
+    flt_field          => [ 'flt_field', 'fuzzy_like_this_field' ],
+    fuzzy              => ['fuzzy'],
+    match_all          => ['match_all'],
+    min_score          => ['min_score'],
+    mlt                => [ 'mlt', 'more_like_this' ],
+    mlt_field          => [ 'mlt_field', 'more_like_this_field' ],
+    prefix             => ['prefix'],
+    query_string       => ['query_string'],
+    range              => ['range'],
+    span_term          => ['span_term'],
+    span_first         => ['span_first'],
+    span_near          => ['span_near'],
+    span_not           => ['span_not'],
+    span_or            => ['span_or'],
+    term               => ['term'],
+    terms              => [ 'terms', 'in' ],
+    wildcard           => ['wildcard'],
 );
 
 #===================================
@@ -312,7 +445,7 @@ sub scroll {
         'scroll',
         {   cmd    => [],
             prefix => '_search/scroll',
-            qs     => { scroll_id => [ 'string', 'scroll_id' ] }
+            qs     => { scroll_id => ['string'] }
         },
         @_
     );
@@ -326,7 +459,12 @@ sub delete_by_query {
         {   %Search_Defn,
             method  => 'DELETE',
             postfix => '_query',
-            data    => \%Query_Defn,
+            qs      => {
+                consistency => [ 'enum', [ 'one', 'quorom', 'all' ] ],
+                replication => [ 'enum', [ 'async', 'sync' ] ],
+                routing => ['flatten'],
+            },
+            data => \%Query_Defn,
         },
         @_
     );
@@ -340,6 +478,7 @@ sub count {
         {   %Search_Defn,
             postfix => '_count',
             data    => \%Query_Defn,
+            qs      => { routing => ['flatten'] },
         },
         @_
     );
@@ -354,20 +493,95 @@ sub mlt {
             method => 'GET',
             qs     => {
                 %{ $Search_Defn{qs} },
-                mlt_fields => [ 'flatten', 'mlt_fields' ],
-                pct_terms_to_match => [ 'float', 'percent_terms_to_match ' ],
-                min_term_freq      => [ 'int',   'min_term_freq' ],
-                max_query_terms    => [ 'int',   'max_query_terms' ],
-                stop_words   => [ 'flatten', 'stop_words' ],
-                min_doc_freq => [ 'int',     'min_doc_freq' ],
-                max_doc_freq => [ 'int',     'max_doc_freq' ],
-                min_word_len => [ 'int',     'min_word_len' ],
-                max_word_len => [ 'int',     'max_word_len' ],
-                boost_terms  => [ 'float',   'boost_terms' ],
+                mlt_fields         => ['flatten'],
+                pct_terms_to_match => [ 'float', 'percent_terms_to_match' ],
+                min_term_freq      => ['int'],
+                max_query_terms    => ['int'],
+                stop_words         => ['flatten'],
+                min_doc_freq       => ['int'],
+                max_doc_freq       => ['int'],
+                min_word_len       => ['int'],
+                max_word_len       => ['int'],
+                boost_terms        => ['float'],
             },
-            data    => 'data',
             postfix => '_mlt',
             data    => \%Search_Data,
+        },
+        @_
+    );
+}
+
+##################################
+## PERCOLATOR
+##################################
+#===================================
+sub create_percolator {
+#===================================
+    shift()->_do_action(
+        'create_percolator',
+        {   cmd    => CMD_INDEX_PERC,
+            prefix => '_percolator',
+            method => 'PUT',
+            data   => { query => 'query', data => ['data'] },
+            fixup  => sub {
+                my $args = shift;
+                die 'The "data" param cannot include a "query" key'
+                    if $args->{data}{data}{query};
+                $args->{data} = {
+                    query => $args->{data}{query},
+                    %{ $args->{data}{data} }
+                };
+                }
+        },
+        @_
+    );
+
+}
+
+#===================================
+sub delete_percolator {
+#===================================
+    shift()->_do_action(
+        'delete_percolator',
+        {   cmd    => CMD_INDEX_PERC,
+            prefix => '_percolator',
+            method => 'DELETE',
+            qs     => { ignore_missing => [ 'boolean', 1 ], }
+        },
+        @_
+    );
+}
+
+#===================================
+sub get_percolator {
+#===================================
+    my $result = shift()->_do_action(
+        'get_percolator',
+        {   cmd    => CMD_INDEX_PERC,
+            prefix => '_percolator',
+            method => 'GET',
+            qs     => { ignore_missing => [ 'boolean', 1 ], }
+        },
+        @_
+    );
+    return {
+        index      => $result->{_type},
+        percolator => $result->{_id},
+        query      => delete $result->{_source}{query},
+        data       => $result->{_source},
+    };
+}
+
+#===================================
+sub percolate {
+#===================================
+    shift()->_do_action(
+        'percolate',
+        {   cmd     => CMD_INDEX_TYPE,
+            postfix => '_percolate',
+            method  => 'GET',
+            qs      => { prefer_local => [ 'boolean', undef, 0 ] },
+            data    => { doc => 'doc', query => ['query'] },
         },
         @_
     );
@@ -397,7 +611,10 @@ sub create_index {
         {   method  => 'PUT',
             cmd     => CMD_INDEX,
             postfix => '',
-            data    => { index => ['defn'] },
+            data    => {
+                settings => [ 'settings', 'defn' ],
+                mappings => ['mappings'],
+            },
         },
         @_
     );
@@ -410,7 +627,34 @@ sub delete_index {
         'delete_index',
         {   method  => 'DELETE',
             cmd     => CMD_INDEX,
+            qs      => { ignore_missing => [ 'boolean', 1 ], },
             postfix => ''
+        },
+        @_
+    );
+}
+
+#===================================
+sub open_index {
+#===================================
+    shift()->_do_action(
+        'open_index',
+        {   method  => 'POST',
+            cmd     => CMD_INDEX,
+            postfix => '_open'
+        },
+        @_
+    );
+}
+
+#===================================
+sub close_index {
+#===================================
+    shift()->_do_action(
+        'close_index',
+        {   method  => 'POST',
+            cmd     => CMD_INDEX,
+            postfix => '_close'
         },
         @_
     );
@@ -456,6 +700,51 @@ sub get_aliases {
 }
 
 #===================================
+sub create_index_template {
+#===================================
+    shift()->_do_action(
+        'create_index_template',
+        {   method => 'PUT',
+            cmd    => CMD_NAME,
+            prefix => '_template',
+            data   => {
+                template => 'template',
+                settings => ['settings'],
+                mappings => ['mappings']
+            },
+        },
+        @_
+    );
+}
+
+#===================================
+sub delete_index_template {
+#===================================
+    shift()->_do_action(
+        'delete_index_template',
+        {   method => 'DELETE',
+            cmd    => CMD_NAME,
+            prefix => '_template',
+            qs     => { ignore_missing => [ 'boolean', 1 ] },
+        },
+        @_
+    );
+}
+
+#===================================
+sub index_template {
+#===================================
+    shift()->_do_action(
+        'index_template',
+        {   method => 'GET',
+            cmd    => CMD_NAME,
+            prefix => '_template',
+        },
+        @_
+    );
+}
+
+#===================================
 sub flush_index {
 #===================================
     shift()->_do_action(
@@ -464,8 +753,8 @@ sub flush_index {
             cmd     => CMD_index,
             postfix => '_flush',
             qs      => {
-                refresh => [ 'boolean', [ refresh => 'true' ] ],
-                full    => [ 'boolean', [ full    => 'true' ] ]
+                refresh => [ 'boolean', 1 ],
+                full    => [ 'boolean', 1 ],
             },
         },
         @_
@@ -495,13 +784,10 @@ sub optimize_index {
             qs      => {
                 only_deletes =>
                     [ 'boolean', [ only_expunge_deletes => 'true' ] ],
-                refresh => [
-                    'boolean',
-                    [ refresh => 'true' ],
-                    [ refresh => 'false' ]
-                ],
-                flush =>
-                    [ 'boolean', [ flush => 'true' ], [ flush => 'false' ] ]
+                max_num_segments => ['int'],
+                refresh          => [ 'boolean', undef, 0 ],
+                flush            => [ 'boolean', undef, 0 ],
+                wait_for_merge   => [ 'boolean', undef, 0 ],
             },
         },
         @_
@@ -538,39 +824,34 @@ sub gateway_snapshot {
 sub put_mapping {
 #===================================
     my ( $self, $params ) = parse_params(@_);
+    $self->_do_action(
+        'put_mapping',
+        {   method  => 'PUT',
+            cmd     => CMD_index_TYPE,
+            postfix => '_mapping',
+            qs      => { ignore_conflicts => [ 'boolean', 1 ] },
+            data    => {
+                dynamic    => ['dynamic'],
+                properties => 'properties',
+                _all       => ['_all'],
+                _analyzer  => ['_analyzer'],
+                _boost     => ['_boost'],
+                _id        => ['_id'],
+                _index     => ['_index'],
+                _meta      => ['_meta'],
+                _parent    => ['_parent'],
+                _routing   => ['_routing'],
+                _source    => ['_source'],
+            },
+            fixup => sub {
+                my $args = shift;
+                $args->{data} = { $params->{type} => $args->{data} };
+                }
 
-    my $action = 'put_mapping';
-    my $defn   = {
-        method  => 'PUT',
-        cmd     => CMD_index_TYPE,
-        postfix => '_mapping',
-        qs      => {
-            ignore_conflicts => [ 'boolean', [ ignore_conflicts => 'true' ] ]
         },
-        data => {
-            properties => 'properties',
-            _all       => ['_all'],
-            _source    => ['_source'],
-        }
-    };
+        $params
+    );
 
-    my $type_name = $params->{type} || '';
-    my $type_val = {};
-    $type_val->{properties} = delete $params->{properties}
-        or $self->throw(
-        'Param',
-        "Missing required param 'properties'\n"
-            . $self->_usage( $action, $defn ),
-        { params => $params }
-        );
-
-    for (qw(_all _source)) {
-        $type_val->{$_} = delete $params->{$_}
-            if exists $params->{$_};
-    }
-    $params->{$type_name} = $type_val;
-    $defn->{data} = { $type_name => $type_name };
-    $self->_do_action( $action, $defn, $params );
 }
 
 #===================================
@@ -582,6 +863,7 @@ sub delete_mapping {
         'delete_mapping',
         {   method => 'DELETE',
             cmd    => CMD_index_TYPE,
+            qs     => { ignore_missing => [ 'boolean', 1 ], }
         },
         $params
     );
@@ -609,7 +891,13 @@ sub clear_cache {
         'clear_cache',
         {   method  => 'POST',
             cmd     => CMD_index,
-            postfix => '_cache/clear'
+            postfix => '_cache/clear',
+            qs      => {
+                id         => [ 'boolean', 1 ],
+                filter     => [ 'boolean', 1 ],
+                field_data => [ 'boolean', 1 ],
+                bloom      => [ 'boolean', 1 ],
+            }
         },
         @_
     );
@@ -664,6 +952,7 @@ sub get_river {
             prefix  => '_river',
             cmd     => CMD_RIVER,
             postfix => '_meta',
+            qs      => { ignore_missing => [ 'boolean', 1 ] }
         },
         $params
     );
@@ -683,6 +972,22 @@ sub delete_river {
     );
 }
 
+#===================================
+sub river_status {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+    $self->_do_action(
+        'river_status',
+        {   method  => 'GET',
+            prefix  => '_river',
+            cmd     => CMD_RIVER,
+            postfix => '_status',
+            qs      => { ignore_missing => [ 'boolean', 1 ] }
+        },
+        $params
+    );
+}
+
 ##################################
 ## CLUSTER MANAGEMENT
 ##################################
@@ -694,12 +999,11 @@ sub cluster_state {
         'cluster_state',
         {   prefix => '_cluster/state',
             qs     => {
-                filter_nodes => [ 'boolean', [ filter_nodes => 'true' ] ],
-                filter_metadata =>
-                    [ 'boolean', [ filter_metadata => 'true' ] ],
-                filter_routing_table =>
-                    [ 'boolean', [ filter_routing_table => 'true' ] ],
-                filter_indices => [ 'flatten', 'filter_indices' ],
+                filter_blocks        => [ 'boolean', 1 ],
+                filter_nodes         => [ 'boolean', 1 ],
+                filter_metadata      => [ 'boolean', 1 ],
+                filter_routing_table => [ 'boolean', 1 ],
+                filter_indices       => ['flatten'],
                 }
 
         },
@@ -722,7 +1026,7 @@ sub nodes {
         'nodes',
         {   prefix => '_cluster/nodes',
             cmd    => CMD_nodes,
-            qs     => { settings => [ 'boolean', [ settings => 'true' ] ] }
+            qs     => { settings => [ 'boolean', 1 ] }
         },
         @_
     );
@@ -750,7 +1054,7 @@ sub shutdown {
             prefix  => '_cluster/nodes',
             cmd     => CMD_nodes,
             postfix => '_shutdown',
-            qs      => { delay => [ 'duration', 'delay' ] }
+            qs      => { delay => ['duration'] }
         },
         @_
     );
@@ -765,7 +1069,7 @@ sub restart {
             prefix  => '_cluster/nodes',
             cmd     => CMD_nodes,
             postfix => '_restart',
-            qs      => { delay => [ 'duration', 'delay' ] }
+            qs      => { delay => ['duration'] }
         },
         @_
     );
@@ -779,13 +1083,11 @@ sub cluster_health {
         {   prefix => '_cluster/health',
             cmd    => CMD_index,
             qs     => {
-                level => [ 'enum', 'level', [qw(cluster indices shards)] ],
-                wait_for_status =>
-                    [ 'enum', 'wait_for_status', [qw(green yellow red)] ],
-                wait_for_relocating_shards =>
-                    [ 'int', 'wait_for_relocating_shards' ],
-                wait_for_nodes => [ 'string',   'wait_for_nodes' ],
-                timeout        => [ 'duration', 'timeout' ]
+                level           => [ 'enum', [qw(cluster indices shards)] ],
+                wait_for_status => [ 'enum', [qw(green yellow red)] ],
+                wait_for_relocating_shards => ['int'],
+                wait_for_nodes             => ['string'],
+                timeout                    => ['duration']
             }
         },
         @_
@@ -816,7 +1118,12 @@ sub error_trace {
 #===================================
     my $self = shift;
     if (@_) {
-        $self->{_base_qs}{error_trace} = !!shift();
+        if ( shift() ) {
+            $self->{_base_qs}{error_trace} = 'true';
+        }
+        else {
+            delete $self->{_base_qs}{error_trace};
+        }
     }
     return $self->{_base_qs}{error_trace} ? 1 : 0;
 }
@@ -833,7 +1140,7 @@ sub _do_action {
     my $defn            = shift || {};
     my $original_params = $self->parse_params(@_);
 
-    my ( $cmd, $data, $error );
+    my $error;
 
     my $params = {%$original_params};
     my %args = ( method => $defn->{method} || 'GET' );
@@ -843,7 +1150,9 @@ sub _do_action {
             = $self->_build_cmd( $params, @{$defn}{qw(prefix cmd postfix)} );
         $args{qs} = $self->_build_qs( $params, $defn->{qs} );
         $args{data} = $self->_build_data( $params, $defn->{data} );
-
+        if ( my $fixup = $defn->{fixup} ) {
+            $fixup->( \%args );
+        }
         die "Unknown parameters: " . join( ', ', keys %$params ) . "\n"
             if keys %$params;
         1;
@@ -875,15 +1184,8 @@ sub _usage {
             :                    "\$$key | [\$${key}_1,\$${key}_n]";
 
         my $required = $type == ONE_REQ ? 'required' : 'optional';
-        $usage .= sprintf( "  - %-20s =>  %-45s # %s\n",
+        $usage .= sprintf( "  - %-26s =>  %-45s # %s\n",
             $key, $arg_format, $required );
-    }
-    if ( my $qs = $defn->{qs} ) {
-        for ( sort keys %$qs ) {
-            my $arg_format = $QS_Format{ $qs->{$_}[0] };
-            $usage .= sprintf( "  - %-20s =>  %-45s # optional\n", $_,
-                $arg_format );
-        }
     }
 
     if ( my $data = $defn->{data} ) {
@@ -894,12 +1196,21 @@ sub _usage {
 
         for (@keys) {
             $usage .= sprintf(
-                "  - %-20s =>  %-45s # %s\n",
+                "  - %-26s =>  %-45s # %s\n",
                 $_->[0], '{' . $_->[0] . '}',
                 $_->[1]
             );
         }
     }
+
+    if ( my $qs = $defn->{qs} ) {
+        for ( sort keys %$qs ) {
+            my $arg_format = $QS_Format{ $qs->{$_}[0] };
+            $usage .= sprintf( "  - %-26s =>  %-45s # optional\n", $_,
+                $arg_format );
+        }
+    }
+
     return $usage;
 }
 
@@ -908,18 +1219,18 @@ sub _build_qs {
 #===================================
     my $self   = shift;
     my $params = shift;
-    my $defn   = shift or return;
+    my $defn   = shift || {};
     my %qs     = %{ $self->{_base_qs} };
     foreach my $key ( keys %$defn ) {
         my ( $format_name, @args ) = @{ $defn->{$key} || [] };
         $format_name ||= '';
 
-        next unless exists $params->{$key} || $format_name eq 'fixed';
+        next unless exists $params->{$key};
 
         my $formatter = $QS_Formatter{$format_name}
             or die "Unknown QS formatter '$format_name'";
 
-        my $val = $formatter->( delete $params->{$key}, @args )
+        my $val = $formatter->( $key, delete $params->{$key}, @args )
             or next;
         $qs{ $val->[0] } = $val->[1];
     }

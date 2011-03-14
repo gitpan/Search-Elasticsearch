@@ -138,8 +138,10 @@ This tidies up a string to be used as a query string in (eg)
 L<ElasticSearch/"search()"> so that user input won't cause a search query
 to return an error.
 
-It is not flexible at all, and may or may not be useful to you. I hope to
-replace this later with a proper query string parser.
+It is not flexible at all, and may or may not be useful to you.
+
+Have a look at L<ElasticSearch::QueryParser> which gives you much more control
+over your query strings.
 
 The current implementation does the following:
 
@@ -171,7 +173,7 @@ YMMV
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Clinton Gormley.
+Copyright 2010 - 2011 Clinton Gormley.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

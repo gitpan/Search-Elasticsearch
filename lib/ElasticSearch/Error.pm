@@ -1,14 +1,17 @@
-#===================================
 package ElasticSearch::Error;
-#===================================
 
-@ElasticSearch::Error::Internal::ISA   = __PACKAGE__;
-@ElasticSearch::Error::Param::ISA      = __PACKAGE__;
-@ElasticSearch::Error::NoServers::ISA  = __PACKAGE__;
-@ElasticSearch::Error::Request::ISA    = __PACKAGE__;
-@ElasticSearch::Error::Timeout::ISA    = __PACKAGE__;
-@ElasticSearch::Error::Connection::ISA = __PACKAGE__;
-@ElasticSearch::Error::JSON::ISA       = __PACKAGE__;
+@ElasticSearch::Error::Internal::ISA    = __PACKAGE__;
+@ElasticSearch::Error::Param::ISA       = __PACKAGE__;
+@ElasticSearch::Error::NoServers::ISA   = __PACKAGE__;
+@ElasticSearch::Error::Request::ISA     = __PACKAGE__;
+@ElasticSearch::Error::Timeout::ISA     = __PACKAGE__;
+@ElasticSearch::Error::Connection::ISA  = __PACKAGE__;
+@ElasticSearch::Error::JSON::ISA        = __PACKAGE__;
+@ElasticSearch::Error::QueryParser::ISA = __PACKAGE__;
+@ElasticSearch::Error::Conflict::ISA
+    = ( 'ElasticSearch::Error::Request', __PACKAGE__ );
+@ElasticSearch::Error::Missing::ISA
+    = ( 'ElasticSearch::Error::Request', __PACKAGE__ );
 
 use strict;
 use warnings FATAL => 'all', NONFATAL => 'redefine';
@@ -82,6 +85,18 @@ There was an error connecting to the current server
 
 There was some other error performing the request
 
+=item * ElasticSearch::Error::Conflict
+
+There was a versioning conflict while performing an index/create/delete
+operation.  C<ElasticSearch::Error::Conflict> inherits from
+C<ElasticSearch::Error::Request>.
+
+=item * ElasticSearch::Error::Missing
+
+Tried to get/delete a document or index that doesn't exist.
+C<ElasticSearch::Error::Missing> inherits from
+C<ElasticSearch::Error::Request>.
+
 =item * ElasticSearch::Error::NoServers
 
 No servers are available
@@ -98,7 +113,7 @@ An internal error - you shouldn't see these
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Clinton Gormley.
+Copyright 2010 - 2011 Clinton Gormley.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

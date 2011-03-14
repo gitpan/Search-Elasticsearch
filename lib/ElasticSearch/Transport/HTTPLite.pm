@@ -7,6 +7,11 @@ use Encode qw(decode_utf8);
 
 use parent 'ElasticSearch::Transport';
 
+my $Connection_Error = qr/ Connection.(?:timed.out|re(?:set|fused))
+                       | No.route.to.host
+                       | temporarily.unavailable
+                       /x;
+
 #===================================
 sub protocol {'http'}
 #===================================
@@ -30,20 +35,22 @@ sub send_request {
     my $code    = $client->request($uri) || 500;
     my $msg     = $!;
     my $content = decode_utf8( $client->body || '' );
-    return $content if $code && $code == 200;
+    return $content if $code && $code >= 200 && $code <= 209;
 
     $msg ||= $client->status_message || 'read timeout';
     my $type
-        = $msg eq 'read timeout' ? 'Timeout'
-        : $msg =~ /Connection (?:reset|refused)/ ? 'Connection'
-        :                                          'Request';
+        = $code eq '409' ? 'Conflict'
+        : $code eq '404' ? 'Missing'
+        : $msg =~ /$Connection_Error/ ? 'Connection'
+        : $msg =~ /read timeout/      ? 'Timeout'
+        :                               'Request';
     my $error_params = {
         server      => $server,
         status_code => $code,
         status_msg  => $msg,
     };
 
-    if ( $type eq 'Request' ) {
+    if ( $type eq 'Request' or $type eq 'Conflict' or $type eq 'Missing' ) {
         $error_params->{content} = $content;
     }
     $self->throw( $type, $msg . ' (' . ( $code || 500 ) . ')',
@@ -56,7 +63,6 @@ sub client {
     my $self = shift;
     unless ( $self->{_client}{$$} ) {
         my $client = HTTP::Lite->new;
-        $client->http11_mode(1);
         $client->{timeout} = $self->timeout || 10000;
         $self->{_client}{$$} = $client;
     }
@@ -103,7 +109,7 @@ faster than L<ElasticSearch::Transport.:HTTP>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Clinton Gormley.
+Copyright 2010 - 2011 Clinton Gormley.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

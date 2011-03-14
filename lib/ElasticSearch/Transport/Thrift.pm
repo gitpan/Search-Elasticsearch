@@ -109,21 +109,22 @@ sub send_request {
     $content = decode_utf8($content) if defined $content;
 
     my $code = $response->status;
-    my $msg  = $Statuses{$code};
+    return $content if $code && $code >= 200 && $code <= 209;
 
-    return $content if $msg eq 'OK';
+    my $msg = $Statuses{$code};
 
     my $type
-        = $msg eq 'REQUEST_TIMEOUT' || $msg eq 'GATEWAY_TIMEOUT'
-        ? 'Timeout'
-        : 'Request';
+        = $code eq 'CONFLICT'  ? 'Conflict'
+        : $code eq 'NOT_FOUND' ? 'Missing'
+        : $msg eq 'REQUEST_TIMEOUT' || $msg eq 'GATEWAY_TIMEOUT' ? 'Timeout'
+        :                                                          'Request';
     my $error_params = {
         server      => $server,
         status_code => $code,
         status_msg  => $msg,
     };
 
-    if ( $type eq 'Request' ) {
+    if ( $type eq 'Request' or $type eq 'Conflict' or $type eq 'Missing' ) {
         $error_params->{content} = $content;
     }
     $self->throw( $type, $msg . ' (' . $code . ')', $error_params );
@@ -216,7 +217,7 @@ ElasticSearch server for this to work.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Clinton Gormley.
+Copyright 2010 - 2011 Clinton Gormley.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

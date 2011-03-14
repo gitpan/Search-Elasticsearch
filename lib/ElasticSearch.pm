@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.27';
+our $VERSION = '0.28';
 our $DEBUG   = 0;
 
 #===================================
@@ -30,9 +30,19 @@ sub request {
 }
 
 #===================================
-sub transport   { shift()->{_transport} }
-sub trace_calls { shift->transport->trace_calls(@_) }
+sub transport       { shift()->{_transport} }
+sub trace_calls     { shift->transport->trace_calls(@_) }
+sub timeout         { shift->transport->timeout(@_) }
+sub refresh_servers { shift->transport->refresh_servers(@_) }
 #===================================
+
+#===================================
+sub query_parser {
+#===================================
+    require ElasticSearch::QueryParser;
+    shift;    # drop class/$self
+    ElasticSearch::QueryParser->new(@_);
+}
 
 =head1 NAME
 
@@ -40,7 +50,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.27, tested against ElasticSearch server version 0.12.0.
+Version 0.28, tested against ElasticSearch server version 0.15.2.
 
 NOTE: This version has been completely refactored, to provide multiple
 Transport backends, and some methods have moved to subclasses.
@@ -50,14 +60,15 @@ Transport backends, and some methods have moved to subclasses.
 ElasticSearch is an Open Source (Apache 2 license), distributed, RESTful
 Search Engine based on Lucene, and built for the cloud, with a JSON API.
 
-Check out its features: L<http://www.elasticsearch.com/products/elasticsearch/>
+Check out its features: L<http://www.elasticsearch.org/>
 
 This module is a thin API which makes it easy to communicate with an
 ElasticSearch cluster.
 
 It maintains a list of all servers/nodes in the ElasticSearch cluster, and
-spreads the load randomly across these nodes.  If the current active node
-disappears, then it attempts to connect to another node in the list.
+spreads the load across these nodes in round-robin fashion.
+If the current active node disappears, then it attempts to connect to another
+node in the list.
 
 Forking a process triggers a server list refresh, and a new connection to
 a randomly chosen node in the list.
@@ -69,9 +80,10 @@ a randomly chosen node in the list.
 
     use ElasticSearch;
     my $e = ElasticSearch->new(
-        servers     => 'search.foo.com:9200',
-        transport   => 'http' | 'httplite' | 'thrift', # default 'http'
-        trace_calls => 'log_file',
+        servers      => 'search.foo.com:9200',
+        transport    => 'http' | 'httplite' | 'thrift', # default 'http'
+        max_requests => 10_000,                         # default 10_000
+        trace_calls  => 'log_file',
     );
 
     $e->index(
@@ -107,6 +119,17 @@ a randomly chosen node in the list.
         }
     );
 
+    $dodgy_qs = "foo AND AND bar";
+    $results = $e->search(
+        index => 'twitter',
+        type  => 'tweet',
+        query => {
+            query_string => {
+                query => $e->query_parser->filter($dodgy_qs)
+            },
+        }
+    );
+
 See the C<examples/> directory for a simple working example.
 
 =cut
@@ -114,10 +137,10 @@ See the C<examples/> directory for a simple working example.
 =head1 GETTING ElasticSearch
 
 You can download the latest released version of ElasticSearch from
-L<http://github.com/elasticsearch/elasticsearch/downloads>.
+L<http://www.elasticsearch.org/download/>.
 
 See here for setup instructions:
-L<http://github.com/elasticsearch/elasticsearch/wiki/Setting-up-ElasticSearch>
+L<http://www.elasticsearch.org/tutorials/2010/07/01/setting-up-elasticsearch.html>
 
 =cut
 
@@ -162,18 +185,32 @@ a non-existent index.
 =head3 C<new()>
 
     $e = ElasticSearch->new(
-            transport   =>  'http|httplite|thrift',     # default 'http'
-            servers     =>  '127.0.0.1:9200'            # single server
-                            | ['es1.foo.com:9200',
-                               'es2.foo.com:9200'],     # multiple servers
-            trace_calls => 1 | '/path/to/log/file',
-            timeout     => 30,
+            transport    =>  'http|httplite|thrift',    # default 'http'
+            servers      =>  '127.0.0.1:9200'           # single server
+                              | ['es1.foo.com:9200',
+                                 'es2.foo.com:9200'],   # multiple servers
+            trace_calls  => 1 | '/path/to/log/file',
+            timeout      => 30,
+            max_requests => 10_000,                     # refresh server list
+                                                        # after max_requests
      );
 
 C<servers> is a required parameter and can be either a single server or an
-ARRAY ref with a list of servers.  These servers are used to retrieve a list
-of all servers in the cluster, after which one is chosen at random to be
-the L</"current_server()">.
+ARRAY ref with a list of servers.
+
+These servers are used in a round-robin fashion. If any server fails to
+connect, then the other servers in the list are tried, and if any
+succeeds, then a list of all servers/nodes currently known to the
+ElasticSearch cluster are retrieved and stored.
+
+Every C<max_requests> (default 10,000) this list of known nodes is refreshed
+automatically.  To disable this automatic refresh, you can set C<max_requests>
+to C<0>.
+
+To force a lookup of live nodes, you can do:
+
+    $e->refresh_servers();
+
 
 There are various C<transport> backends that ElasticSearch can use:
 C<http> (the default, based on LWP), C<httplite> (based on L<HTTP::Lite>)
@@ -187,8 +224,8 @@ The C<httplite> backend is about 30% faster than the default C<http> backend,
 and will probably become the default after more testing in production.
 
 See also: L<ElasticSearch::Transport>, L</"timeout()">, L</"trace_calls()">,
-L<http://www.elasticsearch.com/docs/elasticsearch/modules/http>
-and L<http://www.elasticsearch.com/docs/elasticsearch/modules/thrift>
+L<http://www.elasticsearch.org/guide/reference/modules/http.html>
+and L<http://www.elasticsearch.org/guide/reference/modules/thrift.html>
 
 =cut
 
@@ -197,16 +234,22 @@ and L<http://www.elasticsearch.com/docs/elasticsearch/modules/thrift>
 =head3 C<index()>
 
     $result = $e->index(
-        index   => single,
-        type    => single,
-        id      => $document_id,        # optional, otherwise auto-generated
-        data    => {
+        index       => single,
+        type        => single,
+        id          => $document_id,        # optional, otherwise auto-generated
+        data        => {
             key => value,
             ...
         },
-        timeout => eg '1m' or '10s'     # optional
-        create  => 1 | 0                # optional
-        refresh => 1 | 0                # optional
+
+        # optional
+        create      => 0 | 1,
+        parent      => $parent,
+        percolate   => $percolate,
+        refresh     => 0 | 1,
+        routing     => $routing,
+        timeout     => eg '1m' or '10s'
+        version     => int,
     );
 
 eg:
@@ -237,16 +280,13 @@ ID and a new document is always created.
 
 =item *
 
-If C<create> is C<true>, then a new document is created, even if the same
-C<index/type/id> combination already exists!  C<create> can be used to
-slightly increase performance when creating documents that are known not
-to exists in the index.
+If C<version> is passed, and the current version in ElasticSearch is
+different, then a C<Conflict> error will be thrown.
 
 =back
 
-See also: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/index>,
+See also: L<http://www.elasticsearch.org/guide/reference/api/index_.html>,
 L</"bulk()"> and L</"put_mapping()">
-
 
 =head3 C<set()>
 
@@ -255,8 +295,44 @@ C<set()> is a synonym for L</"index()">
 
 =head3 C<create()>
 
-C<create> is a synonym for L</"index()"> but creates instead of first checking
-whether the doc already exists. This speeds up the indexing process.
+    $result = $e->create(
+        index       => single,
+        type        => single,
+        id          => $document_id,        # optional, otherwise auto-generated
+        data        => {
+            key => value,
+            ...
+        },
+
+        # optional
+        parent      => $parent,
+        percolate   => $percolate,
+        refresh     => 0 | 1,
+        routing     => $routing,
+        timeout     => eg '1m' or '10s'
+    );
+
+eg:
+
+    $result = $e->create(
+        index   => 'twitter',
+        type    => 'tweet',
+        id      => 1,
+        data    => {
+            user        => 'kimchy',
+            post_date   => '2009-11-15T14:12:12',
+            message     => 'trying out Elastic Search'
+        },
+    );
+
+Used to add a NEW document to a specific C<index> as a specific C<type> with
+a specific C<id>. If the C<index/type/id> combination already exists,
+then a C<Conflict> error is thrown.
+
+If the C<id> is not specified, then ElasticSearch autogenerates a unique
+ID.
+
+See also: L</"index()">
 
 =head3 C<get()>
 
@@ -264,6 +340,13 @@ whether the doc already exists. This speeds up the indexing process.
         index   => single,
         type    => single,
         id      => single,
+
+        # optional
+        fields          => 'field' or ['field1',...]
+        refresh         => 0 | 1,
+        routing         => $routing,
+        ignore_missing  => 0 | 1,
+
     );
 
 Returns the document stored at C<index/type/id> or throws an exception if
@@ -272,7 +355,9 @@ the document doesn't exist.
 Example:
 
     $e->get( index => 'twitter', type => 'tweet', id => 1)
-    Returns:
+
+Returns:
+
     {
       _id     => 1,
       _index  => "twitter",
@@ -284,37 +369,85 @@ Example:
       _type   => "tweet",
     }
 
-See also: L</"bulk()">, L<KNOWN ISSUES>,
-          L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/get>
+By default the C<_source> field is returned.  Use C<fields> to specify
+a list of (stored) fields to return instead, or C<[]> to return no fields.
+
+Pass a true value for C<refresh> to force an index refresh before performing
+the get.
+
+If the requested C<index>, C<type> or C<id> is not found, then a C<Missing>
+exception is thrown, unless C<ignore_missing> is true.
+
+See also: L</"bulk()">, L<http://www.elasticsearch.org/guide/reference/api/get.html>
 
 =head3 C<delete()>
 
     $result = $e->delete(
-        index   => single,
-        type    => single,
-        id      => single,
-        refresh => 1 | 0                # optional
+        index           => single,
+        type            => single,
+        id              => single,
+
+        # optional
+        consistency     => 'quorum' | 'one' | 'all'
+        ignore_missing  => 0 | 1
+        refresh         => 0 | 1
+        routing         => $routing,
+        replication     => 'sync' | 'async'
+        version         => int
     );
 
-Deletes the document stored at C<index/type/id> or throws an exception if
-the document doesn't exist.
+Deletes the document stored at C<index/type/id> or throws an C<Missing>
+exception if the document doesn't exist and C<ignore_missing> is not true.
+
+If you specify a C<version> and the current version of the document is
+different (or if the document is not found), a C<Conflict> error will
+be thrown.
+
+If C<refresh> is true, an index refresh will be forced after the delete has
+completed.
 
 Example:
 
     $e->delete( index => 'twitter', type => 'tweet', id => 1);
 
 See also: L</"bulk()">,
-L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/delete>
+L<http://www.elasticsearch.org/guide/reference/api/delete.html>
 
 =head3 C<bulk()>
 
-    $result = $e->bulk([
-        { create => { index => 'foo', type => 'bar', id => 123,
-                      data => { text => 'foo bar'}              }},
-        { index  => { index => 'foo', type => 'bar', id => 123,
-                      data => { text => 'foo bar'}              }},
-        { delete => { index => 'foo', type => 'bar', id => 123  }},
-    ]);
+    $result = $e->bulk(
+        [
+            { create => { index => 'foo', type => 'bar', id => 123,
+                          data => { text => 'foo bar'},
+
+                          # optional
+                          routing   => $routing,
+                          parent    => $parent,
+                          percolate => $percolate,
+            }},
+
+            { index  => { index => 'foo', type => 'bar', id => 123,
+                          data => { text => 'foo bar'},
+
+                          # optional
+                          routing   => $routing,
+                          parent    => $parent,
+                          percolate => $percolate,
+                          version   => $version
+            }},
+
+            { delete => { index => 'foo', type => 'bar', id => 123,
+
+                          # optional
+                          routing   => $routing,
+                          parent    => $parent,
+                          version   => $version
+            }},
+
+        ],
+        consistency     => 'quorum' | 'one' | 'all'     # optional
+        refresh         => 0 | 1                        # optional
+    );
 
 Perform multiple C<index>,C<create> or C<delete> operations in a single
 request.  In my benchmarks, this is 10 times faster than serial operations.
@@ -324,9 +457,9 @@ For the above example, the C<$result> will look like:
     {
         actions => [ the list of actions you passed in ],
         results => [
-                 { create => { id => 123, index => "foo", type => "bar" } },
-                 { index  => { id => 123, index => "foo", type => "bar" } },
-                 { delete => { id => 123, index => "foo", type => "bar" } },
+             { create => { _id => 123, _index => "foo", _type => "bar", _version => 1 } },
+             { index  => { _id => 123, _index => "foo", _type => "bar", _version => 2 } },
+             { delete => { _id => 123, _index => "foo", _type => "bar", _version => 3 } },
         ]
     }
 
@@ -356,7 +489,7 @@ action, eg:
             },
         ],
         results => [
-            { index => { id => 123, index => "bar", type => "bar" } },
+            { index => { _id => 123, _index => "bar", _type => "bar", _version => 1 }},
             {   index => {
                     error => "MapperParsingException[Failed to parse [num]];...",
                     id    => 123, index => "bar", type  => "bar",
@@ -366,8 +499,68 @@ action, eg:
 
     };
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/bulk> for
+NOTE: C<bulk()> also accepts the C<_index>, C<_type>, C<_id>, C<_source>,
+C<_parent>, C<_routing> and C<_version> parameters so that you can pass search
+results directly to C<bulk()>.  See L<examples/reindex.pl> for an example script.
+
+See L<http://www.elasticsearch.org/guide/reference/api/bulk.html> for
 more details.
+
+=head3 C<bulk_index()>, C<bulk_create()>, C<bulk_delete()>
+
+These are convenience methods which allow you to pass just the data, without
+the C<index>, C<create> or C<index> action for each record, eg:
+
+    $e->bulk_index([
+        { id => 123, index => 'bar', type => 'bar', data => { text=>'foo'} },
+        { id => 124, index => 'bar', type => 'bar', data => { text=>'bar'} },
+    ],  { refresh => 1 });
+
+is the equivalent of:
+
+    $e->bulk([
+        { index =>
+            { id => 123, index => 'bar', type => 'bar', data => { text=>'foo'}}
+        },
+        { index =>
+            { id => 124, index => 'bar', type => 'bar', data => { text=>'bar'}}
+        }
+    ],  { refresh => 1 });
+
+
+=head3 C<analyze()>
+
+    $result = $e->analyze(
+      index         =>  single,
+      text          =>  $text_to_analyze,           # required
+
+      # optional
+      analyzer      =>  $analyzer,
+      format        =>  'detailed' | 'text',
+      prefer_local  =>  1 | 0
+    );
+
+The C<analyze()> method allows you to see how ElasticSearch is analyzing
+the text that you pass in, eg:
+
+    $result = $e->analyze( text => 'The Man', index => 'foo')
+
+returns:
+
+    {
+      tokens => [
+        {
+          end_offset        => 7,
+          position          => 2,
+          start_offset      => 4,
+          token             => "man",
+          type              => "<ALPHANUM>",
+        },
+      ],
+    }
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-analyze.html> for
+more.
 
 =cut
 
@@ -379,17 +572,22 @@ more details.
         index           => multi,
         type            => multi,
         query           => {query},
-        search_type     => $search_type             # optional
-        explain         => 1 | 0                    # optional
-        facets          => { facets }               # optional
-        fields          => [$field_1,$field_n]      # optional
-        from            => $start_from              # optional
-        script_fields   => { script_fields }        # optional
-        size            => $no_of_results           # optional
-        sort            => ['_score',$field_1]      # optional
-        scroll          => '5m' | '30s'             # optional
-        highlight       => { highlight }            # optional
-        indices_boost   => { index_1 => 1.5,... }   # optional
+
+        # optional
+        explain         => 1 | 0
+        facets          => { facets }
+        fields          => [$field_1,$field_n]
+        from            => $start_from
+        highlight       => { highlight }
+        indices_boost   => { index_1 => 1.5,... }
+        routing         => [$routing, ...]
+        script_fields   => { script_fields }
+        search_type     => $search_type
+        size            => $no_of_results
+        sort            => ['_score',$field_1]
+        scroll          => '5m' | '30s'
+        timeout         => '10s'
+        version         => 0 | 1
     );
 
 Searches for all documents matching the query. Documents can be matched
@@ -402,8 +600,8 @@ against multiple indices and multiple types, eg:
     );
 
 For all of the options that can be included in the C<query> parameter, see
-L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/search> and
-L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
+L<http://www.elasticsearch.org/guide/reference/api/search> and
+L<http://www.elasticsearch.org/guide/reference/query-dsl>
 
 =head3 C<scroll()>
 
@@ -413,9 +611,9 @@ If a search has been executed with a C<scroll> parameter, then the returned
 C<scroll_id> can be used like a cursor to scroll through the rest of the
 results.
 
-Note - this doesn't seem to work correctly in version 0.12.0 of ElasticSearch.
+Note - this doesn't work correctly in version 0.15.2 of ElasticSearch.
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/search/#Scrolling>
+See L<http://www.elasticsearch.org/guide/reference/api/search/scroll.html>
 
 =head3 C<count()>
 
@@ -423,14 +621,20 @@ See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/search/#Scrolling
         index           => multi,
         type            => multi,
 
+        # optional
+        routing         => [$routing,...]
+
+        # one of:
         bool
       | constant_score
       | custom_score
       | dis_max
       | field
+      | field_masking_span
       | filtered
       | flt
       | flt_field
+      | has_child
       | fuzzy
       | match_all
       | mlt
@@ -444,6 +648,7 @@ See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/search/#Scrolling
       | span_not
       | span_or
       | term
+      | top_children
       | wildcard
     );
 
@@ -457,8 +662,8 @@ against multiple indices and multiple types, eg
     );
 
 See also L</"search()">,
-L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/count>
-and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
+L<http://www.elasticsearch.org/guide/reference/api/count.html>
+and L<http://www.elasticsearch.org/guide/reference/query-dsl>
 
 
 =head3 C<delete_by_query()>
@@ -467,14 +672,22 @@ and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
         index           => multi,
         type            => multi,
 
+        # optional
+        consistency     => 'quorum' | 'one' | 'all'
+        replication     => 'sync' | 'async'
+        routing         => [$routing,...]
+
+        # one of :
         bool
       | constant_score
       | custom_score
       | dis_max
       | field
+      | field_masking_span
       | filtered
       | flt
       | flt_field
+      | has_child
       | fuzzy
       | match_all
       | mlt
@@ -488,6 +701,7 @@ and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
       | span_not
       | span_or
       | term
+      | top_children
       | wildcard
     );
 
@@ -501,8 +715,8 @@ multiple indices and multiple types, eg
     );
 
 See also L</"search()">,
-L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/delete_by_query>
-and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
+L<http://www.elasticsearch.org/guide/reference/api/delete-by-query.html>
+and L<http://www.elasticsearch.org/guide/reference/query-dsl>
 
 
 =head3 C<mlt()>
@@ -527,15 +741,21 @@ and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/>
         stop_words           =>  'scalar' or ['scalar_1', 'scalar_n']
 
         # optional search params
-        scroll               =>  '5m' | '10s'
-        search_type          =>  "predefined_value"
         explain              =>  {explain}
         facets               =>  {facets}
         fields               =>  {fields}
         from                 =>  {from}
         highlight            =>  {highlight}
+        indices_boost        =>  { index_1 => 1.5,... }
+        routing              =>  [$routing,...]
+        script_fields        =>  { script_fields }
+        scroll               =>  '5m' | '10s'
+        search_type          =>  $search_type
         size                 =>  {size}
         sort                 =>  {sort}
+        scroll               =>  '5m' | '30s'
+        timeout              =>  '10s'
+        version              =>  0 | 1
 
     )
 
@@ -547,8 +767,8 @@ the document referred to by C<index/type/id>.
 This gets transformed into a search query, so all of the search parameters
 are also available.
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/more_like_this/>
-and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/more_like_this_query/>
+See L<http://www.elasticsearch.org/guide/reference/api/more-like-this.html>
+and L<http://www.elasticsearch.org/guide/reference/query-dsl/mlt-query.html>
 
 =cut
 
@@ -557,7 +777,7 @@ and L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/query_dsl/more_li
 =head3 C<index_status()>
 
     $result = $e->index_status(
-        index   => multi,
+        index           => multi,
     );
 
 Returns the status of
@@ -565,46 +785,71 @@ Returns the status of
     $result = $e->index_status( index => ['twitter','buzz'] );
     $result = $e->index_status( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/status>
+Throws a C<Missing> exception if the specified indices do not exist.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-status.html>
 
 =head3 C<create_index()>
 
     $result = $e->create_index(
-        index   => single,
-        defn    => {...}        # optional
+        index       => single,
+
+        # optional
+        settings    => {...},
+        mappings    => {...},
     );
 
-Creates a new index, optionally setting certain paramters, eg:
+Creates a new index, optionally passing index settings and mappings, eg:
 
     $result = $e->create_index(
         index   => 'twitter',
-        defn    => {
-                number_of_shards      => 3,
-                number_of_replicas    => 2,
+        settings => {
+            number_of_shards      => 3,
+            number_of_replicas    => 2,
+            analysis => {
+                analyzer => {
+                    default => {
+                        tokenizer   => 'standard',
+                        char_filter => ['html_strip'],
+                        filter      => [qw(standard lowercase stop asciifolding)],
+                    }
+                }
+            }
+        },
+        mappings => {
+            tweet   => {
+                properties  => {
+                    user    => { type => 'string' },
+                    content => { type => 'string' },
+                    date    => { type => 'date'   }
+                }
+            }
         }
     );
 
 Throws an exception if the index already exists.
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/create_index>
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-create-index.html>
 
 =head3 C<delete_index()>
 
     $result = $e->delete_index(
-        index   => single
+        index           => single,
+        ignore_missing  => 0 | 1        # optional
     );
 
-Deletes an existing index, or throws an exception if the index doesn't exist, eg:
+Deletes an existing index, or throws a C<Missing> exception if the index
+doesn't exist and C<ignore_missing> is not true:
 
     $result = $e->delete_index( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/delete_index>
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-index.html>
 
 =head3 C<update_index_settings()>
 
     $result = $e->update_index_settings(
-        index       => multi,
-        settings    => { ... settings ...}
+        index           => multi,
+        settings        => { ... settings ...},
     );
 
 Update the settings for all, one or many indices.  Currently only the
@@ -614,7 +859,9 @@ C<number_of_replicas> is exposed:
         settings    => {  number_of_replicas => 1 }
     );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/update_settings/>
+Throws a C<Missing> exception if the specified indices do not exist.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-update-settings.html>
 
 =head3 C<aliases()>
 
@@ -630,7 +877,7 @@ Adds or removes an alias for an index, eg:
 C<actions> can be a single HASH ref, or an ARRAY ref containing multiple HASH
 refs.
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/aliases/>
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases.html>
 
 =head3 C<get_aliases()>
 
@@ -651,12 +898,79 @@ If you pass in the optional C<index> argument, which can be an index name
 or an alias name, then it will only return the indices and aliases related
 to that argument.
 
+=head3 C<open_index()>
+
+    $result = $e->open_index( index => single);
+
+Opens a closed index.
+
+The open and close index APIs allow you to close an index, and later on open
+it.
+
+A closed index has almost no overhead on the cluster (except for maintaining
+its metadata), and is blocked for read/write operations. A closed index can
+be opened which will then go through the normal recovery process.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-open-close.html> for more
+
+=head3 C<close_index()>
+
+    $result = $e->close_index( index => single);
+
+Closes an open index.  See
+L<http://www.elasticsearch.org/guide/reference/api/admin-indices-open-close.html> for more
+
+=head3 C<create_index_template()>
+
+    $result = $e->create_index_template(
+        name     => single,
+        template => $template,  # required
+        mappings => {...},      # optional
+        settings => {...},      # optional
+    );
+
+Index templates allow you to define templates that will automatically be
+applied to newly created indices. You can specify both C<settings> and
+C<mappings>, and a simple pattern C<template> that controls whether
+the template will be applied to a new index.
+
+For example:
+
+    $result = $e->create_index_template(
+        name        => 'my_template',
+        template    => 'small_*',
+        settings    =>  { number_of_shards => 1 }
+    );
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html> for more.
+
+=head3 C<index_template()>
+
+    $result = $e->index_template(
+        name    => single
+    );
+
+Retrieves the named index template.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html#GETting_a_Template>
+
+=head3 C<delete_index_template()>
+
+    $result = $e->delete_index_template(
+        name            => single,
+        ignore_missing  => 0 | 1    # optional
+    );
+
+Deletes the named index template.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html#Deleting_a_Template>
+
 =head3 C<flush_index()>
 
     $result = $e->flush_index(
-        index   => multi,
-        full    => 1 | 0,       # optional
-        refresh => 1 | 0,       # optional
+        index           => multi,
+        full            => 0 | 1,       # optional
+        refresh         => 0 | 1,       # optional
     );
 
 Flushes one or more indices, which frees
@@ -669,12 +983,14 @@ Example:
 
     $result = $e->flush_index( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/flush>
+Throws a C<Missing> exception if the specified indices do not exist.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-flush.html>
 
 =head3 C<refresh_index()>
 
     $result = $e->refresh_index(
-        index   => multi
+        index           => multi,
     );
 
 Explicitly refreshes one or more indices, making all operations performed
@@ -686,20 +1002,29 @@ Example:
 
     $result = $e->refresh_index( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/refresh>
+Throws a C<Missing> exception if the specified indices do not exist.
 
-=head3 C<clear_cache()>
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-refresh.html>
 
-    $result = $e->clear_cache( index => multi );
+=head3 C<optimize_index()>
 
-Clears the caches for the specified indices (currently only the filter cache).
+    $result = $e->optimize_index(
+        index               => multi,
+        only_deletes        => 0 | 1,  # only_expunge_deletes
+        flush               => 0 | 1,  # flush after optmization
+        refresh             => 0 | 1,  # refresh after optmization
+        wait_for_merge      => 1 | 0,  # wait for merge to finish
+        max_num_segments    => int,    # number of segments to optimize to
+    )
 
-See L<http://github.com/elasticsearch/elasticsearch/issues/issue/101>
+Throws a C<Missing> exception if the specified indices do not exist.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-optimize.html>
 
 =head3 C<gateway_snapshot()>
 
     $result = $e->gateway_snapshot(
-        index   => multi
+        index           => multi,
     );
 
 Explicitly performs a snapshot through the gateway of one or more indices
@@ -710,34 +1035,53 @@ Example:
 
     $result = $e->gateway_snapshot( index => 'twitter' );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/gateway_snapshot>
-and L<http://www.elasticsearch.com/docs/elasticsearch/modules/gateway>
+Throws a C<Missing> exception if the specified indices do not exist.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-gateway-snapshot.html>
+and L<http://www.elasticsearch.org/guide/reference/modules/gateway>
 
 =head3 C<snapshot_index()>
 
 C<snapshot_index()> is a synonym for L</"gateway_snapshot()">
 
-=head3 C<optimize_index()>
+=head3 C<clear_cache()>
 
-    $result = $e->optimize_index(
+    $result = $e->clear_cache(
         index           => multi,
-        only_deletes    => 1 | 0,  # only_expunge_deletes
-        flush           => 1 | 0,  # flush after optmization
-        refresh         => 1 | 0,  # refresh after optmization
-    )
+        bloom           => 0 | 1,
+        field_data      => 0 | 1,
+        filter          => 0 | 1,
+        id              => 0 | 1,
+    );
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/optimize>
+Clears the caches for the specified indices. By default, clears all caches,
+but if any of C<id>, C<field>, C<field_data> or C<bloom> are true, then
+it clears just the specified caches.
+
+Throws a C<Missing> exception if the specified indices do not exist.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-clearcache.html>
+
 
 =head3 C<put_mapping()>
 
     $result = $e->put_mapping(
         index               => multi,
         type                => single,
-        _all                => { ... },
-        _source             => { ... },
         properties          => { ... },      # required
-        timeout             => '5m' | '10s', # optional
-        ignore_conflicts    => 1 | 0,        # optional
+
+        # optional
+        _all                => { ... },
+        _analyzer           => { ... },
+        _boost              => { ... },
+        _id                 => { ... },
+        _index              => { ... },
+        _meta               => { ... },
+        _parent             => { ... },
+        _routing            => { ... },
+        _source             => { ... },
+        dynamic             => 1 | 0 | 'strict',
+        ignore_conflicts    => 0 | 1,
     );
 
 A C<mapping> is the data definition of a C<type>.  If no mapping has been
@@ -764,18 +1108,22 @@ to specify an official C<mapping> instead, eg:
         }
     );
 
-See also: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/put_mapping>
-and L<http://www.elasticsearch.com/docs/elasticsearch/mapping>
+See also: L<http://www.elasticsearch.org/guide/reference/api/admin-indices-put-mapping.html>
+and L<http://www.elasticsearch.org/guide/reference/mapping>
 
 =head3 C<delete_mapping()>
 
     $result = $e->delete_mapping(
-        index   => multi,
-        type    => single,
+        index           => multi,
+        type            => single,
+        ignore_missing  => 0 | 1,
     );
 
 Deletes a mapping/type in one or more indices.
-See also L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/indices/delete_mapping>
+See also L<http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-mapping.html>
+
+Throws a C<Missing> exception if the indices or type don't exist and
+C<ignore_missing> is false.
 
 =head3 C<mapping()>
 
@@ -802,10 +1150,14 @@ Note: the index name which as used in the results is the actual index name. If
 you pass an alias name as the C<index> name, then this key will be the
 index (or indices) that the alias points to.
 
+See also: L<http://www.elasticsearch.org/guide/reference/api/admin-indices-get-mapping.html>
 
 =cut
 
 =head2 River admin methods
+
+See L<http://www.elasticsearch.org/guide/reference/river/>
+and L<http://www.elasticsearch.org/guide/reference/river/twitter.html>.
 
 =head3 C<create_river()>
 
@@ -832,22 +1184,19 @@ Creates a new river with name C<$name>, eg:
         }
     )
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/river/>
-and L<http://www.elasticsearch.com/docs/elasticsearch/river/twitter/>.
-
-
 =head3 C<get_river()>
 
-    $result = $e->get_river( river => $river_name );
+    $result = $e->get_river(
+        river           => $river_name,
+        ignore_missing  => 0 | 1        # optional
+    );
 
 Returns the river details eg
 
     $result = $e->get_river ( river => 'my_twitter_river' )
 
-Throws an exception if the river doesn't exist.
-
-See L<http://www.elasticsearch.com/docs/elasticsearch/river/>.
-
+Throws a C<Missing> exception if the river doesn't exist and C<ignore_missing>
+is false.
 
 =head3 C<delete_river()>
 
@@ -857,32 +1206,138 @@ Deletes the corresponding river, eg:
 
     $result = $e->delete_river ( river => 'my_twitter_river' )
 
-Throws an exception if the river doesn't exist.
+See L<http://www.elasticsearch.org/guide/reference/river/>.
+
+=head3 C<river_status()>
+
+    $result = $e->river_status(
+        river           => $river_name,
+        ignore_missing  => 0 | 1        # optional
+    );
+
+Returns the status doc for the named river.
+
+Throws a C<Missing> exception if the river doesn't exist and C<ignore_missing>
+is false.
+
+=cut
+
+=head2 Percolate methods
+
+See also: L<http://www.elasticsearch.org/guide/reference/api/percolate.html>
+and L<http://www.elasticsearch.org/blog/2011/02/08/percolator.html>
+
+=head3 C<create_percolator()>
+
+    $e->create_percolator(
+        index           =>  single
+        percolator      =>  $percolator
+        query           =>  {query}                                       # required
+        data            =>  {data}                                        # optional
+    )
+
+Create a percolator, eg:
+
+    $e->create_percolator(
+        index           => 'myindex',
+        percolator      => 'mypercolator',
+        query           => { field => { text => 'foo' }},
+        data            => { color => 'blue' }
+    )
+
+=head3 C<get_percolator()>
+
+    $e->get_percolator(
+        index           =>  single
+        percolator      =>  $percolator,
+        ignore_missing  =>  0 | 1,
+    )
+
+Retrieves a percolator, eg:
+
+    $e->get_percolator(
+        index           => 'myindex',
+        percolator      => 'mypercolator',
+    )
+
+Throws a C<Missing> exception if the specified index or percolator does not exist,
+and C<ignore_missing> is false.
+
+=head3 C<delete_percolator()>
+
+    $e->delete_percolator(
+        index           =>  single
+        percolator      =>  $percolator,
+        ignore_missing  =>  0 | 1,
+    )
+
+Deletes a percolator, eg:
+
+    $e->delete_percolator(
+        index           => 'myindex',
+        percolator      => 'mypercolator',
+    )
+
+Throws a C<Missing> exception if the specified index or percolator does not exist,
+and C<ignore_missing> is false.
+
+=head3 C<percolate()>
+
+    $result = $e->percolate(
+        index           => single,
+        type            => single,
+        doc             => { doc to percolate },
+
+        # optional
+        query           => { query to filter percolators },
+        prefer_local    => 1 | 0,
+    )
+
+Check for any percolators which match a document, optionally filtering
+which percolators could match by passing a C<query> param, for instance:
+
+    $result = $e->percolate(
+        index           => 'myindex',
+        type            => 'mytype',
+        doc             => { text => 'foo' },
+        query           => { term => { color => 'blue' }}
+    );
+
+Returns:
+
+    {
+        ok      => 1,
+        matches => ['mypercolator']
+    }
+
+=cut
 
 =head2 Cluster admin methods
 
 =head3 C<cluster_state()>
 
     $result = $e->cluster_state(
-         filter_nodes           => 1 | 0,                        # optional
-         filter_metadata        => 1 | 0,                        # optional
-         filter_routing_table   => 1 | 0,                        # optional
-         filter_indices         => [ 'index_1', ... 'index_n' ], # optional
+         # optional
+         filter_blocks          => 0 | 1,
+         filter_nodes           => 0 | 1,
+         filter_metadata        => 0 | 1,
+         filter_routing_table   => 0 | 1,
+         filter_indices         => [ 'index_1', ... 'index_n' ],
     );
 
 Returns cluster state information.
 
-See L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/state/>
+See L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-state.html>
 
 =head3 C<cluster_health()>
 
     $result = $e->cluster_health(
         index                         => multi,
         level                         => 'cluster' | 'indices' | 'shards',
+        timeout                       => $seconds
         wait_for_status               => 'red' | 'yellow' | 'green',
         | wait_for_relocating_shards  => $number_of_shards,
         | wait_for_nodes              => eg '>=2',
-        timeout                       => $seconds
     );
 
 Returns the status of the cluster, or index|indices or shards, where the
@@ -890,11 +1345,11 @@ returned status means:
 
 =over
 
-=item red: Data not allocated
+=item C<red>: Data not allocated
 
-=item yellow: Primary shard allocated
+=item C<yellow>: Primary shard allocated
 
-=item green: All shards allocated
+=item C<green>: All shards allocated
 
 =back
 
@@ -908,7 +1363,7 @@ For example:
 
     $result = $e->cluster_health( wait_for_status => 'green', timeout => '10s')
 
-See: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/health/>
+See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-health.html>
 
 =head3 C<nodes()>
 
@@ -920,22 +1375,22 @@ See: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/he
 Returns information about one or more nodes or servers in the cluster. If
 C<settings> is C<true>, then it includes the node settings information.
 
-See: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/nodes_info>
+See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-info.html>
 
 =head3 C<nodes_stats()>
 
     $result = $e->nodes_stats(
-        nodes       => multi,
+        node    => multi,
     );
 
 Returns various statistics about one or more nodes in the cluster.
 
-See: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/nodes_stats/>
+See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-stats.html>
 
 =head3 C<shutdown()>
 
     $result = $e->shutdown(
-        nodes       => multi,
+        node        => multi,
         delay       => '5s' | '10m'        # optional
     );
 
@@ -945,12 +1400,12 @@ optionally with a delay.
 
 C<node> can also have the values C<_local>, C<_master> or C<_all>.
 
-See: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/nodes_shutdown/>
+See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-shutdown.html>
 
 =head3 C<restart()>
 
     $result = $e->restart(
-        nodes       => multi,
+        node        => multi,
         delay       => '5s' | '10m'        # optional
     );
 
@@ -960,7 +1415,7 @@ optionally with a delay.
 
 C<node> can also have the values C<_local>, C<_master> or C<_all>.
 
-See: L<http://www.elasticsearch.com/docs/elasticsearch/rest_api/admin/cluster/nodes_restart>
+See: L</"KNOWN ISSUES">
 
 =head3 C<current_server_version()>
 
@@ -970,7 +1425,6 @@ Returns a HASH containing the version C<number> string, the build C<date> and
 whether or not the current server is a C<snapshot_build>.
 
 =cut
-
 
 =head2 Other methods
 
@@ -1004,11 +1458,54 @@ Example: C<< $e->cluster_health >> is logged as:
     #    "unassigned_shards" : 0
     # }
 
+=head3 C<query_parser()>
+
+    $qp = $e->query_parser(%opts);
+
+Returns an L<ElasticSearch::QueryParser> object for tidying up
+query strings so that they won't cause an error when passed to ElasticSearch.
+
+See L<ElasticSearch::QueryParser> for more information.
+
 =head3 C<transport()>
 
     $transport = $e->transport
 
 Returns the Transport object, eg L<ElasticSearch::Transport::HTTP>.
+
+=head3 C<timeout()>
+
+    $timeout = $e->timeout($timeout)
+
+Convenience method which does the same as:
+
+   $e->transport->timeout($timeout)
+
+=head3 C<refresh_servers()>
+
+    $e->refresh_servers()
+
+Convenience method which does the same as:
+
+    $e->transport->refresh_servers()
+
+This tries to retrieve a list of all known live servers in the ElasticSearch
+cluster by connecting to each of the last known live servers (and the initial
+list of servers passed to C<new()>) until it succeeds.
+
+This list of live servers is then used in a round-robin fashion.
+
+C<refresh_servers()> is called on the first request and every C<max_requests>.
+This automatic refresh can be disabled by setting C<max_requests> to C<0>:
+
+    $e->transport->max_requests(0)
+
+Or:
+
+    $e = ElasticSearch->new(
+            servers         => '127.0.0.1:9200',
+            max_requests    => 0,
+    );
 
 =head3 C<camel_case()>
 
@@ -1019,8 +1516,6 @@ ElasticSearch are in camelCase, instead of with_underscores.  This flag
 does not apply to the source document being indexed or fetched.
 
 Defaults to false.
-
-=cut
 
 =head3 C<error_trace()>
 
@@ -1049,23 +1544,6 @@ Clinton Gormley, C<< <drtech at cpan.org> >>
 
 =over
 
-=item   L</"set()">, L</"index()"> and L</"create()">
-
-If one of the fields that you are trying to index has the same name as the
-type, then you need change the format as follows:
-
-Instead of:
-
-     $e->set(index=>'twitter', type=>'tweet',
-             data=> { tweet => 'My tweet', date => '2010-01-01' }
-     );
-
-you should include the type name in the data:
-
-     $e->set(index=>'twitter', type=>'tweet',
-             data=> { tweet=> { tweet => 'My tweet', date => '2010-01-01' }}
-     );
-
 =item   L</"get()">
 
 The C<_source> key that is returned from a L</"get()"> contains the original JSON
@@ -1078,9 +1556,15 @@ Any documents indexed via this module will be not susceptible to this problem.
 
 =item L</"scroll()">
 
-C<scroll()> is broken in version 0.12.0 and earlier versions of ElasticSearch.
+C<scroll()> is broken in version 0.15.2 and earlier versions of ElasticSearch.
 
-See L<http://github.com/elasticsearch/elasticsearch/issues/issue/136>
+See L<http://github.com/elasticsearch/elasticsearch/issues/issue/589>
+
+=item L</"restart()">
+
+C<restart()> is currently disabled in ElasticSearch as it doesn't work
+correctly.  Instead you can L</"shutdown()"> one or all nodes and then
+start them up from the command line.
 
 =back
 
@@ -1102,6 +1586,9 @@ for ElasticSearch.
 
 Also, a non-blocking L<AnyEvent> module has been written, but needs
 integrating with the new L<ElasticSearch::Transport>.
+
+This version is missing tests for C<parent>, C<routing> and C<percolator>.
+Will follow soon.
 
 =head1 SUPPORT
 
@@ -1144,7 +1631,7 @@ easy to use search engine.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Clinton Gormley.
+Copyright 2010 - 2011 Clinton Gormley.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

@@ -36,7 +36,9 @@ sub send_request {
     my $msg  = $server_response->message;
     my $code = $server_response->code;
     my $type
-        = $msg eq 'read timeout' ? 'Timeout'
+        = $code eq '409'          ? 'Conflict'
+        : $code eq '404'          ? 'Missing'
+        : $msg  eq 'read timeout' ? 'Timeout'
         : $msg =~ /Can't connect|Server closed connection/ ? 'Connection'
         :                                                    'Request';
     my $error_params = {
@@ -45,7 +47,7 @@ sub send_request {
         status_msg  => $msg,
     };
 
-    if ( $type eq 'Request' ) {
+    if ( $type eq 'Request' or $type eq 'Conflict' or $type eq 'Missing' ) {
         $error_params->{content} = $content;
     }
     $self->throw( $type, $msg . ' (' . $code . ')', $error_params );
@@ -59,14 +61,15 @@ sub client {
         $self->{_client} = {
             $$ => LWP::UserAgent->new(
                 timeout    => $self->timeout,
-                conn_cache => LWP::ConnCache->new
+                conn_cache => LWP::ConnCache->new(
+                    total_capacity => 0 + $self->servers
+                )
             )
         };
 
     }
     return $self->{_client}{$$};
 }
-
 
 =head1 NAME
 
@@ -78,7 +81,7 @@ ElasticSearch::Transport::HTTP uses L<LWP> to talk to ElasticSearch
 over HTTP.
 
 It is currently the default backend if no C<transport> is specified, but
-consider trying L<ElasticSearch::Transport.:HTTPLite> instead - it is
+consider trying L<ElasticSearch::Transport:HTTPLite> instead - it is
 30% faster.
 
 
@@ -108,7 +111,7 @@ consider trying L<ElasticSearch::Transport.:HTTPLite> instead - it is
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Clinton Gormley.
+Copyright 2010 - 2011 Clinton Gormley.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
