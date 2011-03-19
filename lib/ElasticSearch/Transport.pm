@@ -113,9 +113,15 @@ ATTEMPT:
         $self->throw( 'Request', $error, { request => $params } );
     }
 
-    my $result = $json->decode($response_json);
+    my $as_json = $params->{as_json};
+
+    my $result;
+    $result = $json->decode($response_json)
+        unless $as_json && $Skip_Log;
+
     $self->log_response( $result || $response_json ) unless $Skip_Log;
-    return $result;
+
+    return $as_json ? $response_json : $result;
 }
 
 #===================================
@@ -452,7 +458,7 @@ and L<http://www.elasticsearch.org/guide/reference/modules/thrift.html>
 If you want to add a new transport backend, then these are the methods
 that you should subclass:
 
-=head2 C<init()>
+=head2 init()
 
     $t->init($params)
 
@@ -461,7 +467,7 @@ C<new()>, less C<servers>, C<transport> and C<timeout>.
 
 Any parameters specific to your module should be deleted from C<$params>
 
-=head2 C<send_request()>
+=head2 send_request()
 
     $json = $t->send_request($server,$params)
 
@@ -477,7 +483,7 @@ actually talk to the server.
 
 See L<ElasticSearch::Transport::HTTP> for an example implementation.
 
-=head2 C<protocol()>
+=head2 protocol()
 
     $t->protocol
 
@@ -485,7 +491,7 @@ This must return the protocol in use, eg C<"http"> or C<"thrift">. It is
 used to extract the list of bound addresses from ElasticSearch, eg
 C<http_address> or C<thrift_address>.
 
-=head2 C<client()>
+=head2 client()
 
     $client = $t->client($server)
 

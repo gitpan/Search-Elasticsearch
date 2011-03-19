@@ -34,6 +34,7 @@ ElasticSearch::TestServer - Start an ElasticSearh cluster for testing
         transport   => 'http',
         ip          => '127.0.0.1',
         trace_calls => 'logfile',
+        port        => '9200',
         config      => { values to override}
     );
 
@@ -44,7 +45,8 @@ ElasticSearch cluster intended for testing, and shut the cluster
 down at the end, even if your code exits abnormally.
 
 By default, it uses C<http> transport, the C<local> gateway, and
-starts 3 instances on C<localhost>.
+starts 3 instances on C<localhost>, starting with C<port> 9200 if
+the C<transport> is C<http> or C<httplite>, or 9500 if C<thrift>.
 
 C<connect_to_es> returns an ElasticSearch instance.
 
@@ -81,7 +83,7 @@ NO_HOME
         %{ $params{config} || {} }
     );
     my $transport = $params{transport};
-    my $port      = $params{port} || $transport eq 'thrift' ? 9500 : 9200;
+    my $port      = $params{port} || ( $transport eq 'thrift' ? 9500 : 9200 );
     my $instances = $params{instances};
     my $ip        = $config{network}{host} = $params{ip};
     my @servers   = map {"$ip:$_"} $port .. $port + $instances - 1;
@@ -121,7 +123,8 @@ RUNNING
 
     for ( 1 .. $instances ) {
         print "Starting test node $_\n";
-        if (fork) {
+        defined( my $pid = fork ) or die "Couldn't fork a new process: $!";
+        if ( $pid == 0 ) {
             die "Can't start a new session: $!" if setsid == -1;
             exec( $cmd, '-p', $pid_file->filename,
                 '-Des.config=' . $config_path );
@@ -158,7 +161,7 @@ RUNNING
             transport   => $transport,
         );
         $es->refresh_servers;
-        }
+    }
         or die("**** Couldn't connect to ElasticSearch at $server ****");
     return $es;
 }

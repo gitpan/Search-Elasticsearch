@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 our $DEBUG   = 0;
 
 #===================================
@@ -165,6 +165,12 @@ C<single> values must be a scalar, and are required parameters
 
       type  => 'tweet'
 
+=head2 as_json
+
+If you pass C<< as_json => 1 >> to any request to the ElasticSearch server,
+it will return the raw UTF8-decodeed JSON response, rather than a Perl
+datastructure.
+
 =cut
 
 =head1 RETURN VALUES AND EXCEPTIONS
@@ -182,7 +188,7 @@ a non-existent index.
 
 =head2 Creating a new ElasticSearch instance
 
-=head3 C<new()>
+=head3 new()
 
     $e = ElasticSearch->new(
             transport    =>  'http|httplite|thrift',    # default 'http'
@@ -231,7 +237,7 @@ and L<http://www.elasticsearch.org/guide/reference/modules/thrift.html>
 
 =head2 Document-indexing methods
 
-=head3 C<index()>
+=head3 index()
 
     $result = $e->index(
         index       => single,
@@ -288,12 +294,12 @@ different, then a C<Conflict> error will be thrown.
 See also: L<http://www.elasticsearch.org/guide/reference/api/index_.html>,
 L</"bulk()"> and L</"put_mapping()">
 
-=head3 C<set()>
+=head3 set()
 
 C<set()> is a synonym for L</"index()">
 
 
-=head3 C<create()>
+=head3 create()
 
     $result = $e->create(
         index       => single,
@@ -334,7 +340,7 @@ ID.
 
 See also: L</"index()">
 
-=head3 C<get()>
+=head3 get()
 
     $result = $e->get(
         index   => single,
@@ -380,7 +386,7 @@ exception is thrown, unless C<ignore_missing> is true.
 
 See also: L</"bulk()">, L<http://www.elasticsearch.org/guide/reference/api/get.html>
 
-=head3 C<delete()>
+=head3 delete()
 
     $result = $e->delete(
         index           => single,
@@ -413,7 +419,7 @@ Example:
 See also: L</"bulk()">,
 L<http://www.elasticsearch.org/guide/reference/api/delete.html>
 
-=head3 C<bulk()>
+=head3 bulk()
 
     $result = $e->bulk(
         [
@@ -506,7 +512,7 @@ results directly to C<bulk()>.  See L<examples/reindex.pl> for an example script
 See L<http://www.elasticsearch.org/guide/reference/api/bulk.html> for
 more details.
 
-=head3 C<bulk_index()>, C<bulk_create()>, C<bulk_delete()>
+=head3 bulk_index(), C<bulk_create()>, C<bulk_delete()>
 
 These are convenience methods which allow you to pass just the data, without
 the C<index>, C<create> or C<index> action for each record, eg:
@@ -528,7 +534,7 @@ is the equivalent of:
     ],  { refresh => 1 });
 
 
-=head3 C<analyze()>
+=head3 analyze()
 
     $result = $e->analyze(
       index         =>  single,
@@ -566,7 +572,7 @@ more.
 
 =head2 Query commands
 
-=head3 C<search()>
+=head3 search()
 
     $result = $e->search(
         index           => multi,
@@ -603,7 +609,7 @@ For all of the options that can be included in the C<query> parameter, see
 L<http://www.elasticsearch.org/guide/reference/api/search> and
 L<http://www.elasticsearch.org/guide/reference/query-dsl>
 
-=head3 C<scroll()>
+=head3 scroll()
 
     $result = $e->scroll(
         scroll_id => $scroll_id,
@@ -636,7 +642,7 @@ should be passed as well.  For instance;
 
 See L<http://www.elasticsearch.org/guide/reference/api/search/scroll.html>
 
-=head3 C<count()>
+=head3 count()
 
     $result = $e->count(
         index           => multi,
@@ -687,7 +693,7 @@ L<http://www.elasticsearch.org/guide/reference/api/count.html>
 and L<http://www.elasticsearch.org/guide/reference/query-dsl>
 
 
-=head3 C<delete_by_query()>
+=head3 delete_by_query()
 
     $result = $e->delete_by_query(
         index           => multi,
@@ -740,7 +746,7 @@ L<http://www.elasticsearch.org/guide/reference/api/delete-by-query.html>
 and L<http://www.elasticsearch.org/guide/reference/query-dsl>
 
 
-=head3 C<mlt()>
+=head3 mlt()
 
     # mlt == more_like_this
 
@@ -795,7 +801,7 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl/mlt-query.html>
 
 =head2 Index Admin methods
 
-=head3 C<index_status()>
+=head3 index_status()
 
     $result = $e->index_status(
         index           => multi,
@@ -810,7 +816,7 @@ Throws a C<Missing> exception if the specified indices do not exist.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-status.html>
 
-=head3 C<create_index()>
+=head3 create_index()
 
     $result = $e->create_index(
         index       => single,
@@ -852,7 +858,7 @@ Throws an exception if the index already exists.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-create-index.html>
 
-=head3 C<delete_index()>
+=head3 delete_index()
 
     $result = $e->delete_index(
         index           => single,
@@ -866,7 +872,7 @@ doesn't exist and C<ignore_missing> is not true:
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-index.html>
 
-=head3 C<update_index_settings()>
+=head3 update_index_settings()
 
     $result = $e->update_index_settings(
         index           => multi,
@@ -884,7 +890,7 @@ Throws a C<Missing> exception if the specified indices do not exist.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-update-settings.html>
 
-=head3 C<aliases()>
+=head3 aliases()
 
     $result = $e->aliases( actions => [actions] | {actions} )
 
@@ -900,7 +906,7 @@ refs.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases.html>
 
-=head3 C<get_aliases()>
+=head3 get_aliases()
 
     $result = $e->get_aliases( index => multi )
 
@@ -919,7 +925,9 @@ If you pass in the optional C<index> argument, which can be an index name
 or an alias name, then it will only return the indices and aliases related
 to that argument.
 
-=head3 C<open_index()>
+Note: C<get_aliases()> does not support L</"as_json">
+
+=head3 open_index()
 
     $result = $e->open_index( index => single);
 
@@ -934,14 +942,14 @@ be opened which will then go through the normal recovery process.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-open-close.html> for more
 
-=head3 C<close_index()>
+=head3 close_index()
 
     $result = $e->close_index( index => single);
 
 Closes an open index.  See
 L<http://www.elasticsearch.org/guide/reference/api/admin-indices-open-close.html> for more
 
-=head3 C<create_index_template()>
+=head3 create_index_template()
 
     $result = $e->create_index_template(
         name     => single,
@@ -965,7 +973,7 @@ For example:
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html> for more.
 
-=head3 C<index_template()>
+=head3 index_template()
 
     $result = $e->index_template(
         name    => single
@@ -975,7 +983,7 @@ Retrieves the named index template.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html#GETting_a_Template>
 
-=head3 C<delete_index_template()>
+=head3 delete_index_template()
 
     $result = $e->delete_index_template(
         name            => single,
@@ -986,7 +994,7 @@ Deletes the named index template.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html#Deleting_a_Template>
 
-=head3 C<flush_index()>
+=head3 flush_index()
 
     $result = $e->flush_index(
         index           => multi,
@@ -1008,7 +1016,7 @@ Throws a C<Missing> exception if the specified indices do not exist.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-flush.html>
 
-=head3 C<refresh_index()>
+=head3 refresh_index()
 
     $result = $e->refresh_index(
         index           => multi,
@@ -1027,7 +1035,7 @@ Throws a C<Missing> exception if the specified indices do not exist.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-refresh.html>
 
-=head3 C<optimize_index()>
+=head3 optimize_index()
 
     $result = $e->optimize_index(
         index               => multi,
@@ -1042,7 +1050,7 @@ Throws a C<Missing> exception if the specified indices do not exist.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-optimize.html>
 
-=head3 C<gateway_snapshot()>
+=head3 gateway_snapshot()
 
     $result = $e->gateway_snapshot(
         index           => multi,
@@ -1061,11 +1069,11 @@ Throws a C<Missing> exception if the specified indices do not exist.
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-gateway-snapshot.html>
 and L<http://www.elasticsearch.org/guide/reference/modules/gateway>
 
-=head3 C<snapshot_index()>
+=head3 snapshot_index()
 
 C<snapshot_index()> is a synonym for L</"gateway_snapshot()">
 
-=head3 C<clear_cache()>
+=head3 clear_cache()
 
     $result = $e->clear_cache(
         index           => multi,
@@ -1084,7 +1092,7 @@ Throws a C<Missing> exception if the specified indices do not exist.
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-clearcache.html>
 
 
-=head3 C<put_mapping()>
+=head3 put_mapping()
 
     $result = $e->put_mapping(
         index               => multi,
@@ -1132,7 +1140,7 @@ to specify an official C<mapping> instead, eg:
 See also: L<http://www.elasticsearch.org/guide/reference/api/admin-indices-put-mapping.html>
 and L<http://www.elasticsearch.org/guide/reference/mapping>
 
-=head3 C<delete_mapping()>
+=head3 delete_mapping()
 
     $result = $e->delete_mapping(
         index           => multi,
@@ -1146,7 +1154,7 @@ See also L<http://www.elasticsearch.org/guide/reference/api/admin-indices-delete
 Throws a C<Missing> exception if the indices or type don't exist and
 C<ignore_missing> is false.
 
-=head3 C<mapping()>
+=head3 mapping()
 
     $mapping = $e->mapping(
         index       => single,
@@ -1180,7 +1188,7 @@ See also: L<http://www.elasticsearch.org/guide/reference/api/admin-indices-get-m
 See L<http://www.elasticsearch.org/guide/reference/river/>
 and L<http://www.elasticsearch.org/guide/reference/river/twitter.html>.
 
-=head3 C<create_river()>
+=head3 create_river()
 
     $result = $e->create_river(
         river   => $river_name,     # required
@@ -1205,7 +1213,7 @@ Creates a new river with name C<$name>, eg:
         }
     )
 
-=head3 C<get_river()>
+=head3 get_river()
 
     $result = $e->get_river(
         river           => $river_name,
@@ -1219,7 +1227,7 @@ Returns the river details eg
 Throws a C<Missing> exception if the river doesn't exist and C<ignore_missing>
 is false.
 
-=head3 C<delete_river()>
+=head3 delete_river()
 
     $result = $e->delete_river( river => $river_name );
 
@@ -1229,7 +1237,7 @@ Deletes the corresponding river, eg:
 
 See L<http://www.elasticsearch.org/guide/reference/river/>.
 
-=head3 C<river_status()>
+=head3 river_status()
 
     $result = $e->river_status(
         river           => $river_name,
@@ -1248,7 +1256,7 @@ is false.
 See also: L<http://www.elasticsearch.org/guide/reference/api/percolate.html>
 and L<http://www.elasticsearch.org/blog/2011/02/08/percolator.html>
 
-=head3 C<create_percolator()>
+=head3 create_percolator()
 
     $e->create_percolator(
         index           =>  single
@@ -1266,7 +1274,7 @@ Create a percolator, eg:
         data            => { color => 'blue' }
     )
 
-=head3 C<get_percolator()>
+=head3 get_percolator()
 
     $e->get_percolator(
         index           =>  single
@@ -1284,7 +1292,7 @@ Retrieves a percolator, eg:
 Throws a C<Missing> exception if the specified index or percolator does not exist,
 and C<ignore_missing> is false.
 
-=head3 C<delete_percolator()>
+=head3 delete_percolator()
 
     $e->delete_percolator(
         index           =>  single
@@ -1302,7 +1310,7 @@ Deletes a percolator, eg:
 Throws a C<Missing> exception if the specified index or percolator does not exist,
 and C<ignore_missing> is false.
 
-=head3 C<percolate()>
+=head3 percolate()
 
     $result = $e->percolate(
         index           => single,
@@ -1335,7 +1343,7 @@ Returns:
 
 =head2 Cluster admin methods
 
-=head3 C<cluster_state()>
+=head3 cluster_state()
 
     $result = $e->cluster_state(
          # optional
@@ -1350,7 +1358,7 @@ Returns cluster state information.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-state.html>
 
-=head3 C<cluster_health()>
+=head3 cluster_health()
 
     $result = $e->cluster_health(
         index                         => multi,
@@ -1386,7 +1394,7 @@ For example:
 
 See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-health.html>
 
-=head3 C<nodes()>
+=head3 nodes()
 
     $result = $e->nodes(
         nodes       => multi,
@@ -1398,7 +1406,7 @@ C<settings> is C<true>, then it includes the node settings information.
 
 See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-info.html>
 
-=head3 C<nodes_stats()>
+=head3 nodes_stats()
 
     $result = $e->nodes_stats(
         node    => multi,
@@ -1408,7 +1416,7 @@ Returns various statistics about one or more nodes in the cluster.
 
 See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-stats.html>
 
-=head3 C<shutdown()>
+=head3 shutdown()
 
     $result = $e->shutdown(
         node        => multi,
@@ -1423,7 +1431,7 @@ C<node> can also have the values C<_local>, C<_master> or C<_all>.
 
 See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-shutdown.html>
 
-=head3 C<restart()>
+=head3 restart()
 
     $result = $e->restart(
         node        => multi,
@@ -1438,7 +1446,7 @@ C<node> can also have the values C<_local>, C<_master> or C<_all>.
 
 See: L</"KNOWN ISSUES">
 
-=head3 C<current_server_version()>
+=head3 current_server_version()
 
     $version = $e->current_server_version()
 
@@ -1449,7 +1457,7 @@ whether or not the current server is a C<snapshot_build>.
 
 =head2 Other methods
 
-=head3 C<trace_calls()>
+=head3 trace_calls()
 
     $es->trace_calls(1);            # log to STDERR
     $es->trace_calls($filename);    # log to $filename.$PID
@@ -1479,7 +1487,7 @@ Example: C<< $e->cluster_health >> is logged as:
     #    "unassigned_shards" : 0
     # }
 
-=head3 C<query_parser()>
+=head3 query_parser()
 
     $qp = $e->query_parser(%opts);
 
@@ -1488,13 +1496,13 @@ query strings so that they won't cause an error when passed to ElasticSearch.
 
 See L<ElasticSearch::QueryParser> for more information.
 
-=head3 C<transport()>
+=head3 transport()
 
     $transport = $e->transport
 
 Returns the Transport object, eg L<ElasticSearch::Transport::HTTP>.
 
-=head3 C<timeout()>
+=head3 timeout()
 
     $timeout = $e->timeout($timeout)
 
@@ -1502,7 +1510,7 @@ Convenience method which does the same as:
 
    $e->transport->timeout($timeout)
 
-=head3 C<refresh_servers()>
+=head3 refresh_servers()
 
     $e->refresh_servers()
 
@@ -1528,7 +1536,7 @@ Or:
             max_requests    => 0,
     );
 
-=head3 C<camel_case()>
+=head3 camel_case()
 
     $bool = $e->camel_case($bool)
 
@@ -1538,7 +1546,7 @@ does not apply to the source document being indexed or fetched.
 
 Defaults to false.
 
-=head3 C<error_trace()>
+=head3 error_trace()
 
     $bool = $e->error_trace($bool)
 
@@ -1615,7 +1623,6 @@ Will follow soon.
 You can find documentation for this module with the perldoc command.
 
     perldoc ElasticSearch
-
 
 You can also look for information at:
 
