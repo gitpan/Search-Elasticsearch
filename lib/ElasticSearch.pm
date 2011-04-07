@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.34';
+our $VERSION = '0.35';
 our $DEBUG   = 0;
 
 #===================================
@@ -574,7 +574,7 @@ more.
 
 =cut
 
-=head2 Query commands
+=head2 Query methods
 
 =head3 search()
 
@@ -1095,6 +1095,9 @@ Throws a C<Missing> exception if the specified indices do not exist.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-clearcache.html>
 
+=cut
+
+=head2 Mapping methods
 
 =head3 put_mapping()
 
@@ -1114,6 +1117,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-clearcache.
         _routing            => { ... },
         _source             => { ... },
         dynamic             => 1 | 0 | 'strict',
+        dynamic_templates   => [ ... ],
         ignore_conflicts    => 0 | 1,
     );
 
