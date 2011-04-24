@@ -7,14 +7,14 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.35';
+our $VERSION = '0.36';
 our $DEBUG   = 0;
 
 #===================================
 sub new {
 #===================================
     my ( $proto, $params ) = parse_params(@_);
-    my $self = { _base_qs => {}, };
+    my $self = { _base_qs => {}, _default => {} };
 
     bless $self, ref $proto || $proto;
     $self->{_transport} = ElasticSearch::Transport->new($params);
@@ -27,6 +27,70 @@ sub request {
 #===================================
     my ( $self, $params ) = parse_params(@_);
     return $self->transport->request($params);
+}
+
+#===================================
+sub use_index {
+#===================================
+    my $self = shift;
+    if (@_) {
+        $self->{_default}{index} = shift;
+    }
+    return $self->{_default}{index};
+}
+
+#===================================
+sub use_type {
+#===================================
+    my $self = shift;
+    if (@_) {
+        $self->{_default}{type} = shift;
+    }
+    return $self->{_default}{type};
+}
+
+#===================================
+sub reindex {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+
+    my $source = $params->{source}
+        or $self->throw( 'Param', 'Missing source param' );
+
+    my $transform  = $params->{transform} || sub { shift() };
+    my $verbose    = !$params->{quiet};
+    my $dest_index = $params->{dest_index};
+    my $bulk_size  = $params->{bulk_size} || 1000;
+
+    local $| = $verbose;
+    printf( "Reindexing %d docs\n", $source->total )
+        if $verbose;
+
+    my @docs;
+    while (1) {
+        my $doc = $source->next(1);
+        if ( !$doc or @docs == $bulk_size ) {
+            my $results = $self->bulk_index( \@docs );
+            if ( my $err = $results->{errors} ) {
+                my @errors = splice @$err, 0, 5;
+                push @errors, sprintf "...and %d more", scalar @$err
+                    if @$err;
+                $self->throw( 'Request', "Errors occurred while reindexing:",
+                    \@errors );
+            }
+            @docs = ();
+            print "." if $verbose;
+        }
+        last unless $doc;
+
+        $doc = $transform->($doc) or next;
+        $doc->{version_type} = 'external';
+        $doc->{_index}       = $dest_index
+            if $dest_index;
+        push @docs, $doc;
+    }
+
+    print "\nDone\n" if $verbose;
 }
 
 #===================================
@@ -50,10 +114,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.28, tested against ElasticSearch server version 0.15.2.
-
-NOTE: This version has been completely refactored, to provide multiple
-Transport backends, and some methods have moved to subclasses.
+Version 0.36, tested against ElasticSearch server version 0.16.0.
 
 =head1 DESCRIPTION
 
@@ -81,9 +142,13 @@ a randomly chosen node in the list.
     use ElasticSearch;
     my $e = ElasticSearch->new(
         servers      => 'search.foo.com:9200',
-        transport    => 'http' | 'httplite' | 'httptiny' | 'thrift', # default 'http'
-        max_requests => 10_000,                                      # default 10_000
+        transport    => 'http'                  # default 'http'
+                        | 'httplite'
+                        | 'httptiny'
+                        | 'thrift',
+        max_requests => 10_000,                 # default 10_000
         trace_calls  => 'log_file',
+        no_refresh   => 0 | 1,
     );
 
     $e->index(
@@ -165,6 +230,8 @@ C<single> values must be a scalar, and are required parameters
 
       type  => 'tweet'
 
+Also, see L</"use_index()/use_type()">.
+
 =head2 as_json
 
 If you pass C<< as_json => 1 >> to any request to the ElasticSearch server,
@@ -199,6 +266,10 @@ a non-existent index.
             timeout      => 30,
             max_requests => 10_000,                             # refresh server list
                                                                 # after max_requests
+
+            no_refresh   => 0 | 1                               # don't retrieve the live
+                                                                # server list. Instead, use
+                                                                # just the servers specified
      );
 
 C<servers> is a required parameter and can be either a single server or an
@@ -217,6 +288,19 @@ To force a lookup of live nodes, you can do:
 
     $e->refresh_servers();
 
+=head4 no_refresh()
+
+Regardless of the C<max_requests> setting, a list of live nodes will still be
+retrieved on the first request.  This may not be desirable behaviour
+if, for instance, you are connecting to remote servers which use internal
+IP addresses, or which don't allow remote C<nodes()> requests.
+
+If you want to disable this behaviour completely, set C<no_refresh> to C<1>,
+in which case the transport module will round robin through the
+C<servers> list only. Failed nodes will be removed from the list
+(but added back in every C<max_requests> or when all nodes have failed).
+
+=head4 Transport Backends
 
 There are various C<transport> backends that ElasticSearch can use:
 C<http> (the default, based on LWP), C<httplite> (based on L<HTTP::Lite>),
@@ -253,13 +337,14 @@ and L<http://www.elasticsearch.org/guide/reference/modules/thrift.html>
         },
 
         # optional
-        create      => 0 | 1,
-        parent      => $parent,
-        percolate   => $percolate,
-        refresh     => 0 | 1,
-        routing     => $routing,
-        timeout     => eg '1m' or '10s'
-        version     => int,
+        create       => 0 | 1,
+        parent       => $parent,
+        percolate    => $percolate,
+        refresh      => 0 | 1,
+        routing      => $routing,
+        timeout      => eg '1m' or '10s'
+        version      => int,
+        version_type => 'internal' | 'external',
     );
 
 eg:
@@ -315,11 +400,13 @@ C<set()> is a synonym for L</"index()">
         },
 
         # optional
-        parent      => $parent,
-        percolate   => $percolate,
-        refresh     => 0 | 1,
-        routing     => $routing,
-        timeout     => eg '1m' or '10s'
+        parent       => $parent,
+        percolate    => $percolate,
+        refresh      => 0 | 1,
+        routing      => $routing,
+        timeout      => eg '1m' or '10s',
+        version      => int,
+        version_type => 'internal' | 'external',
     );
 
 eg:
@@ -342,6 +429,9 @@ then a C<Conflict> error is thrown.
 If the C<id> is not specified, then ElasticSearch autogenerates a unique
 ID.
 
+If you pass a C<version> parameter to C<create>, then it must be C<0> unless
+you also set C<version_type> to C<external>.
+
 See also: L</"index()">
 
 =head3 get()
@@ -353,6 +443,7 @@ See also: L</"index()">
 
         # optional
         fields          => 'field' or ['field1',...]
+        preference      => '_local' | '_primary' | $string,
         refresh         => 0 | 1,
         routing         => $routing,
         ignore_missing  => 0 | 1,
@@ -401,6 +492,7 @@ See also: L</"bulk()">, L<http://www.elasticsearch.org/guide/reference/api/get.h
         consistency     => 'quorum' | 'one' | 'all'
         ignore_missing  => 0 | 1
         refresh         => 0 | 1
+        parent          => $parent,
         routing         => $routing,
         replication     => 'sync' | 'async'
         version         => int
@@ -431,27 +523,30 @@ L<http://www.elasticsearch.org/guide/reference/api/delete.html>
                           data => { text => 'foo bar'},
 
                           # optional
-                          routing   => $routing,
-                          parent    => $parent,
-                          percolate => $percolate,
+                          routing       => $routing,
+                          parent        => $parent,
+                          percolate     => $percolate,
+                          version       => $version,
+                          version_type  => 'internal' | 'external'
             }},
 
             { index  => { index => 'foo', type => 'bar', id => 123,
                           data => { text => 'foo bar'},
 
                           # optional
-                          routing   => $routing,
-                          parent    => $parent,
-                          percolate => $percolate,
-                          version   => $version
+                          routing       => $routing,
+                          parent        => $parent,
+                          percolate     => $percolate,
+                          version       => $version,
+                          version_type  => 'internal' | 'external'
             }},
 
             { delete => { index => 'foo', type => 'bar', id => 123,
 
                           # optional
-                          routing   => $routing,
-                          parent    => $parent,
-                          version   => $version
+                          routing       => $routing,
+                          parent        => $parent,
+                          version       => $version
             }},
 
         ],
@@ -511,7 +606,7 @@ action, eg:
 
 NOTE: C<bulk()> also accepts the C<_index>, C<_type>, C<_id>, C<_source>,
 C<_parent>, C<_routing> and C<_version> parameters so that you can pass search
-results directly to C<bulk()>.  See L<examples/reindex.pl> for an example script.
+results directly to C<bulk()>.
 
 See L<http://www.elasticsearch.org/guide/reference/api/bulk.html> for
 more details.
@@ -537,6 +632,98 @@ is the equivalent of:
         }
     ],  { refresh => 1 });
 
+=head3 reindex()
+
+    $es->reindex(
+        source      => $scrolled_search,
+
+        # optional
+        bulk_size   => 1000,
+        dest_index  => $index,
+        quiet       => 0 | 1,
+        transform   => sub {....},
+    )
+
+C<reindex()> is a utility method which can be used for reindexing data
+from one index to another (eg if the mapping has changed), or copying
+data from one cluster to another.
+
+=head4 Params
+
+=over
+
+=item *
+
+C<source> is a required parameter, and should be an instance of
+L<ElasticSearch::ScrolledSearch>.
+
+=item *
+
+C<dest_index> is the name of the destination index, ie where the docs are
+indexed to.  If you are indexing your data from one cluster to another,
+and you want to use the same index name in your destination cluster, then
+you can leave this blank.
+
+=item *
+
+C<bulk_size> - the number of docs that will be indexed at a time. Defaults
+to 1,000
+
+=item *
+
+Set C<quiet> to C<1> if you don't want any progress information to be
+printed to C<STDOUT>
+
+=item *
+
+C<transform> should be a sub-ref which will be called for each doc, allowing
+you to transform some element of the doc, or to skip the doc by returning
+C<undef>.
+
+=back
+
+=head4 Examples:
+
+To copy the ElasticSearch website index locally, you could do:
+
+    my $local = ElasticSearch->new(
+        servers => 'localhost:9200'
+    );
+    my $remote = ElasticSearch->new(
+        servers    => 'search.elasticsearch.org:80',
+        no_refresh => 1
+    );
+
+    my $source = $remote->scrolled_search(
+        search_type => 'scan',
+        scroll      => '5m'
+    );
+    $local->reindex(source=>$source);
+
+To copy one local index to another, make the title upper case,
+exclude docs of type C<boring>, and to preserve the version numbers
+from the original index:
+
+    my $source = $es->scrolled_search(
+        index       => 'old_index',
+        search_type => 'scan',
+        scroll      => '5m',
+        version     => 1
+    );
+
+    $es->reindex(
+        source      => $source,
+        dest_index  => 'new_index',
+        transform   => sub {
+            my $doc = shift;
+            return if $doc->{_type} eq 'boring';
+            $doc->{_source}{title} = uc( $doc->{_source}{title} );
+            return $doc;
+        }
+    );
+
+See also L</"scrolled_search()">, L<ElasticSearch::ScrolledSearch>,
+and L</"search()">.
 
 =head3 analyze()
 
@@ -581,27 +768,36 @@ more.
     $result = $e->search(
         index           => multi,
         type            => multi,
-        query           => {query},
 
         # optional
-        explain         => 1 | 0
-        facets          => { facets }
-        fields          => [$field_1,$field_n]
+        explain         => 1 | 0,
+        facets          => { facets },
+        fields          => [$field_1,$field_n],
+        filter          => $filter,
         from            => $start_from
         highlight       => { highlight }
-        indices_boost   => { index_1 => 1.5,... }
+        indices_boost   => { index_1 => 1.5,... },
+        min_score       => $score,
+        preference      => '_local' | '_primary' | $string,
+        query           => {query},
         routing         => [$routing, ...]
         script_fields   => { script_fields }
-        search_type     => $search_type
+        search_type     => 'dfs_query_then_fetch'
+                           | 'dfs_query_and_fetch'
+                           | 'query_then_fetch'
+                           | 'query_and_fetch'
+                           | 'count'
+                           | 'scan'
         size            => $no_of_results
         sort            => ['_score',$field_1]
-        scroll          => '5m' | '30s'
+        scroll          => '5m' | '30s',
+        track_scores    => 0 | 1,
         timeout         => '10s'
         version         => 0 | 1
     );
 
-Searches for all documents matching the query. Documents can be matched
-against multiple indices and multiple types, eg:
+Searches for all documents matching the query, with a request-body search.
+Documents can be matched against multiple indices and multiple types, eg:
 
     $result = $e->search(
         index   => undef,                           # all
@@ -610,8 +806,45 @@ against multiple indices and multiple types, eg:
     );
 
 For all of the options that can be included in the C<query> parameter, see
+L<http://www.elasticsearch.org/guide/reference/api/search>,
+L<http://www.elasticsearch.org/guide/reference/api/search/request-body.html>
+and L<http://www.elasticsearch.org/guide/reference/query-dsl>
+
+=head3 searchqs()
+
+    $result = $e->searchqs(
+        index               => multi,
+        type                => multi,
+
+        # optional
+        q                   => $query_string,
+        analyzer            => $analyzer,
+        default_operator    => 'OR | AND ',
+        df                  => $default_field,
+        explain             => 1 | 0,
+        fields              => [$field_1,$field_n],
+        from                => $start_from
+        preference          => '_local' | '_primary' | $string,
+        routing             => [$routing, ...]
+        search_type         => $search_type
+        size                => $no_of_results
+        sort                => ['_score:asc','last_modified:desc'],
+        scroll              => '5m' | '30s',
+        timeout             => '10s'
+        version             => 0 | 1
+
+Searches for all documents matching the C<q> query_string, with a URI request.
+Documents can be matched against multiple indices and multiple types, eg:
+
+    $result = $e->searchqs(
+        index   => undef,                           # all
+        type    => ['user','tweet'],
+        q       => 'john smith'
+    );
+
+For all of the options that can be included in the C<query> parameter, see
 L<http://www.elasticsearch.org/guide/reference/api/search> and
-L<http://www.elasticsearch.org/guide/reference/query-dsl>
+L<http://www.elasticsearch.org/guide/reference/api/search/uri-request.html>.
 
 =head3 scroll()
 
@@ -646,6 +879,21 @@ should be passed as well.  For instance;
 
 See L<http://www.elasticsearch.org/guide/reference/api/search/scroll.html>
 
+=head3 scrolled_search()
+
+C<scrolled_search()> returns a convenience iterator for scrolled
+searches. It accepts the standard search parameters that would be passed
+to L</"search()"> and requires a C<scroll> parameter, eg:
+
+    $scroller = $es->scrolled_search(
+                    query  => {match_all=>{}},
+                    scroll => '5m'               # keep the scroll request
+                                                 # live for 5 minutes
+                );
+
+See L<ElasticSearch::ScrolledSearch>, L</"search()">, L</"searchqs()">
+and L</"scroll()">.
+
 =head3 count()
 
     $result = $e->count(
@@ -657,6 +905,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/search/scroll.html>
 
         # one of:
         bool
+      | boosting
       | constant_score
       | custom_score
       | dis_max
@@ -667,6 +916,8 @@ See L<http://www.elasticsearch.org/guide/reference/api/search/scroll.html>
       | flt_field
       | has_child
       | fuzzy
+      | has_child
+      | ids
       | match_all
       | mlt
       | mlt_field
@@ -679,6 +930,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/search/scroll.html>
       | span_not
       | span_or
       | term
+      | terms
       | top_children
       | wildcard
     );
@@ -710,6 +962,7 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
 
         # one of :
         bool
+      | boosting
       | constant_score
       | custom_score
       | dis_max
@@ -720,6 +973,8 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
       | flt_field
       | has_child
       | fuzzy
+      | has_child
+      | ids
       | match_all
       | mlt
       | mlt_field
@@ -732,6 +987,7 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
       | span_not
       | span_or
       | term
+      | terms
       | top_children
       | wildcard
     );
@@ -776,18 +1032,19 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
         facets               =>  {facets}
         fields               =>  {fields}
         from                 =>  {from}
-        highlight            =>  {highlight}
         indices_boost        =>  { index_1 => 1.5,... }
+        min_score            =>  $score
+        preference           =>  '_local' | '_primary' | $string
         routing              =>  [$routing,...]
         script_fields        =>  { script_fields }
-        scroll               =>  '5m' | '10s'
+        search_scroll        =>  '5m' | '10s',
+        search_indices       =>  ['index1','index2],
         search_type          =>  $search_type
+        search_types         =>  ['type1','type],
         size                 =>  {size}
         sort                 =>  {sort}
         scroll               =>  '5m' | '30s'
         timeout              =>  '10s'
-        version              =>  0 | 1
-
     )
 
 More-like-this (mlt) finds related/similar documents. It is possible to run
@@ -809,6 +1066,8 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl/mlt-query.html>
 
     $result = $e->index_status(
         index           => multi,
+        recovery        => 0 | 1,
+        snapshot        => 0 | 1,
     );
 
 Returns the status of
@@ -865,16 +1124,29 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-create-inde
 =head3 delete_index()
 
     $result = $e->delete_index(
-        index           => single,
+        index           => multi,
         ignore_missing  => 0 | 1        # optional
     );
 
-Deletes an existing index, or throws a C<Missing> exception if the index
-doesn't exist and C<ignore_missing> is not true:
+Deletes one or more existing indices, or throws a C<Missing> exception if a
+specified index doesn't exist and C<ignore_missing> is not true:
 
     $result = $e->delete_index( index => 'twitter' );
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-index.html>
+
+=head3 index_settings()
+
+    $result = $e->index_settings(
+        index           => multi,
+    );
+
+Returns the current settings for all, one or many indices.
+
+    $result = $e->index_settings( index=> ['index_1','index_2'] );
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-get-settings.html>
+
 
 =head3 update_index_settings()
 
@@ -1464,6 +1736,26 @@ whether or not the current server is a C<snapshot_build>.
 =cut
 
 =head2 Other methods
+
+=head3 use_index()/use_type()
+
+C<use_index()> and C<use_type()> can be used to set default values for
+any C<index> or C<type> parameter. The default value can be overridden
+by passing a parameter (including C<undef>) to any request.
+
+    $es->use_index('one');
+    $es->use_type(['foo','bar']);
+
+    $es->index(                         # index: one, types: foo,bar
+        data=>{ text => 'my text' }
+    );
+
+    $es->index(                         # index: two, type: foo,bar
+        index=>'two',
+        data=>{ text => 'my text' }
+    )
+
+    $es->search( type => undef );       # index: one, type: all
 
 =head3 trace_calls()
 

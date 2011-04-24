@@ -32,9 +32,17 @@ our %QS_Format = (
     optional => "'scalar value'",
     flatten  => "'scalar' or ['scalar_1', 'scalar_n']",
     'int'    => "integer",
-    string   => '"string"',
-    float    => 'float',
-    enum     => '"predefined_value"',
+    string   => sub {
+        my $k = shift;
+        return
+              $k eq 'preference' ? '_local | _primary | $string'
+            : $k eq 'percolate' || $k eq 'q' ? '$query_string'
+            : $k eq 'scroll_id' ? '$scroll_id'
+            : $k eq 'df'        ? '$default_field'
+            :                     '$string';
+    },
+    float => 'float',
+    enum  => sub { join " | ", @{ $_[1][1] } },
 );
 
 our %QS_Formatter = (
@@ -103,6 +111,7 @@ sub get {
             qs  => {
                 fields         => ['flatten'],
                 ignore_missing => [ 'boolean', 1 ],
+                preference     => ['string'],
                 refresh        => [ 'boolean', 1 ],
                 routing        => ['string'],
             },
@@ -121,6 +130,7 @@ my %Index_Defn = (
         parent    => ['string'],
         percolate => ['string'],
         version   => ['int'],
+        version_type => [ 'enum', [ 'internal', 'external' ] ],
     },
     data => 'data',
 );
@@ -157,6 +167,8 @@ sub create {
                 routing   => ['string'],
                 parent    => ['string'],
                 percolate => ['string'],
+                version   => ['int'],
+                version_type => [ 'enum', [ 'internal', 'external' ] ],
             },
         },
         $params
@@ -182,6 +194,7 @@ sub delete {
                 consistency => [ 'enum', [ 'one', 'quorom', 'all' ] ],
                 ignore_missing => [ 'boolean', 1 ],
                 refresh        => [ 'boolean', 1 ],
+                parent         => ['string'],
                 routing        => ['string'],
                 version        => ['int'],
                 replication => [ 'enum', [ 'async', 'sync' ] ],
@@ -224,14 +237,15 @@ my %Bulk_Actions = (
         version => ONE_OPT,
     },
     'index' => {
-        index     => ONE_REQ,
-        type      => ONE_REQ,
-        id        => ONE_OPT,
-        data      => ONE_REQ,
-        routing   => ONE_OPT,
-        parent    => ONE_OPT,
-        percolate => ONE_OPT,
-        version   => ONE_OPT,
+        index        => ONE_REQ,
+        type         => ONE_REQ,
+        id           => ONE_OPT,
+        data         => ONE_REQ,
+        routing      => ONE_OPT,
+        parent       => ONE_OPT,
+        percolate    => ONE_OPT,
+        version      => ONE_OPT,
+        version_type => ONE_OPT,
     },
 );
 $Bulk_Actions{create} = $Bulk_Actions{index};
@@ -343,7 +357,10 @@ sub _build_bulk_query {
             if $params->{_source};
 
         for my $key ( keys %$defn ) {
-            my $val = delete $params->{$key} || delete $params->{"_$key"};
+            my $val
+                = exists $params->{$key}    ? delete $params->{$key}
+                : exists $params->{"_$key"} ? delete $params->{"_$key"}
+                :                             $self->{_default}{$key};
             unless ( defined $val ) {
                 next if $defn->{$key} == ONE_OPT;
                 $self->throw(
@@ -385,34 +402,63 @@ my %Search_Data = (
     from          => ['from'],
     highlight     => ['highlight'],
     indices_boost => ['indices_boost'],
+    min_score     => ['min_score'],
     script_fields => ['script_fields'],
     size          => ['size'],
     'sort'        => ['sort'],
+    track_scores => [ 'track_scores' ],
+);
+
+my %SearchQS = (
+    search_type => [
+        'enum',
+        [ qw(
+                dfs_query_then_fetch    dfs_query_and_fetch
+                query_then_fetch        query_and_fetch
+                count                   scan
+                )
+        ]
+    ],
+    preference   => ['string'],
+    routing      => ['flatten'],
+    scroll       => ['duration'],
+    timeout      => ['duration'],
 );
 
 my %Search_Defn = (
     cmd     => CMD_index_type,
     postfix => '_search',
+    data    => { %Search_Data, query => ['query'] },
     qs      => {
-        search_type => [
-            'enum',
-            [ qw(
-                    dfs_query_then_fetch    dfs_query_and_fetch
-                    query_then_fetch        query_and_fetch
-                    count                   scan
-                    )
-            ]
-        ],
-        routing => ['flatten'],
+        %SearchQS,
         scroll  => ['duration'],
-        timeout => ['duration'],
-        version => [ 'boolean', 1 ],
+        version => [ 'boolean', 1 ]
     },
-    data => { %Search_Data, query => 'query' }
+);
+
+my %SearchQS_Defn = (
+    cmd     => CMD_index_type,
+    postfix => '_search',
+    qs      => {
+        %SearchQS,
+        q                => ['string'],
+        df               => ['string'],
+        analyzer         => ['string'],
+        default_operator => [ 'enum', [ 'OR', 'AND' ] ],
+        explain   => [ 'boolean', 1 ],
+        fields    => ['flatten'],
+        from      => ['int'],
+        min_score => ['float'],
+        scroll    => ['duration'],
+        size      => ['int'],
+        'sort'    => ['flatten'],
+        version   => [ 'boolean', 1 ],
+    },
 );
 
 my %Query_Defn = (
     bool               => ['bool'],
+    boosting           => ['boosting'],
     constant_score     => ['constant_score'],
     custom_score       => ['custom_score'],
     dis_max            => ['dis_max'],
@@ -422,25 +468,28 @@ my %Query_Defn = (
     flt                => [ 'flt', 'fuzzy_like_this' ],
     flt_field          => [ 'flt_field', 'fuzzy_like_this_field' ],
     fuzzy              => ['fuzzy'],
+    has_child          => ['has_child'],
+    ids                => ['ids'],
     match_all          => ['match_all'],
-    min_score          => ['min_score'],
     mlt                => [ 'mlt', 'more_like_this' ],
     mlt_field          => [ 'mlt_field', 'more_like_this_field' ],
     prefix             => ['prefix'],
     query_string       => ['query_string'],
     range              => ['range'],
-    span_term          => ['span_term'],
     span_first         => ['span_first'],
     span_near          => ['span_near'],
     span_not           => ['span_not'],
     span_or            => ['span_or'],
+    span_term          => ['span_term'],
     term               => ['term'],
     terms              => [ 'terms', 'in' ],
+    top_children       => ['top_children'],
     wildcard           => ['wildcard'],
 );
 
 #===================================
-sub search { shift()->_do_action( 'search', \%Search_Defn, @_ ) }
+sub search   { shift()->_do_action( 'search',   \%Search_Defn,   @_ ) }
+sub searchqs { shift()->_do_action( 'searchqs', \%SearchQS_Defn, @_ ) }
 #===================================
 
 #===================================
@@ -457,6 +506,14 @@ sub scroll {
         },
         @_
     );
+}
+
+#===================================
+sub scrolled_search {
+#===================================
+    my $self = shift;
+    require ElasticSearch::ScrolledSearch;
+    return ElasticSearch::ScrolledSearch->new( $self, @_ );
 }
 
 #===================================
@@ -500,7 +557,7 @@ sub mlt {
         {   cmd    => CMD_INDEX_TYPE_ID,
             method => 'GET',
             qs     => {
-                %{ $Search_Defn{qs} },
+                %SearchQS,
                 mlt_fields         => ['flatten'],
                 pct_terms_to_match => [ 'float', 'percent_terms_to_match' ],
                 min_term_freq      => ['int'],
@@ -511,6 +568,9 @@ sub mlt {
                 min_word_len       => ['int'],
                 max_word_len       => ['int'],
                 boost_terms        => ['float'],
+                search_indices     => ['flatten'],
+                search_types       => ['flatten'],
+                search_scroll      => ['string'],
             },
             postfix => '_mlt',
             data    => \%Search_Data,
@@ -607,7 +667,11 @@ sub index_status {
     shift()->_do_action(
         'index_status',
         {   cmd     => CMD_index,
-            postfix => '_status'
+            postfix => '_status',
+            qs      => {
+                recovery => [ 'boolean', 1 ],
+                snapshot => [ 'boolean', 1 ]
+            },
         },
         @_
     );
@@ -636,7 +700,7 @@ sub delete_index {
     shift()->_do_action(
         'delete_index',
         {   method  => 'DELETE',
-            cmd     => CMD_INDEX,
+            cmd     => CMD_index,
             qs      => { ignore_missing => [ 'boolean', 1 ], },
             postfix => ''
         },
@@ -696,8 +760,13 @@ sub get_aliases {
     my ( $self, $params ) = parse_params(@_);
     $self->error("get_aliases() does not support as_json")
         if $params->{as_json};
-    my $results = $self->index_status($params);
-    my $indices = $results->{indices};
+    my $results = $self->cluster_state(
+        filter_indices       => $params->{index},
+        filter_blocks        => 1,
+        filter_nodes         => 1,
+        filter_routing_table => 1,
+    );
+    my $indices = $results->{metadata}{indices};
     my %aliases = ( indices => {}, aliases => {} );
     foreach my $index ( keys %$indices ) {
         my $aliases = $indices->{$index}{aliases};
@@ -916,12 +985,27 @@ sub clear_cache {
 }
 
 #===================================
+sub index_settings {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+
+    $self->_do_action(
+        'index_settings',
+        {   method  => 'GET',
+            cmd     => CMD_index,
+            postfix => '_settings'
+        },
+        $params
+    );
+}
+
+#===================================
 sub update_index_settings {
 #===================================
     my ( $self, $params ) = parse_params(@_);
 
     $self->_do_action(
-        'update_settings',
+        'update_index_settings',
         {   method  => 'PUT',
             cmd     => CMD_index,
             postfix => '_settings',
@@ -1219,8 +1303,15 @@ sub _usage {
     if ( my $qs = $defn->{qs} ) {
         for ( sort keys %$qs ) {
             my $arg_format = $QS_Format{ $qs->{$_}[0] };
+            my @extra;
+            $arg_format = $arg_format->( $_, $qs->{$_} )
+                if ref $arg_format;
+            if ( length($arg_format) > 45 ) {
+                ( $arg_format, @extra ) = split / [|] /, $arg_format;
+            }
             $usage .= sprintf( "  - %-26s =>  %-45s # optional\n", $_,
                 $arg_format );
+            $usage .= ( ' ' x 34 ) . " | $_\n" for @extra;
         }
     }
 
@@ -1299,7 +1390,11 @@ sub _build_cmd {
         my $key  = shift @defn;
         my $type = shift @defn;
 
-        my $val = delete $params->{$key};
+        my $val
+            = exists $params->{$key}
+            ? delete $params->{$key}
+            : $self->{_default}{$key};
+
         if ( defined $val ) {
             if ( ref $val eq 'ARRAY' ) {
                 die "'$key' must be a single value\n"
