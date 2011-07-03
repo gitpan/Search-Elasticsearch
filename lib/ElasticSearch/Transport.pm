@@ -5,6 +5,7 @@ use warnings FATAL => 'all';
 use ElasticSearch::Util qw(throw parse_params);
 use URI();
 use JSON();
+use Scalar::Util qw(openhandle);
 
 our %Transport = (
     'http'     => 'ElasticSearch::Transport::HTTP',
@@ -306,8 +307,15 @@ sub _log_fh {
     unless ( exists $self->{_log_fh}{$$} ) {
         my $log_fh;
         if ( my $file = $self->trace_calls ) {
-            $file = $file eq 1 ? '&STDERR' : "$file.$$";
-            open $log_fh, ">>$file"
+            $file = \*STDERR if $file eq 1;
+            my $open_mode = '>>';
+            if ( openhandle($file) ) {
+                $open_mode = '>>&';
+            }
+            else {
+                $file .= ".$$";
+            }
+            open $log_fh, $open_mode, $file
                 or $self->throw( 'Internal',
                 "Couldn't open '$file' for trace logging: $!" );
             binmode( $log_fh, ':utf8' );
@@ -520,7 +528,7 @@ Note: my experience with L<HTTP::Lite> so far has been flawless - I'm just
 being cautious.
 
 Also, just added the C<httptiny> backend with L<HTTP::Tiny>, which is 1% faster
-again than the C<httplite> backend, but again needs more testing.
+again than the C<httplite> backend.
 
 See also:
 L<http://www.elasticsearch.org/guide/reference/modules/http.html>
