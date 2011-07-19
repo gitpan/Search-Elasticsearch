@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.38';
+our $VERSION = '0.39';
 our $DEBUG   = 0;
 
 #===================================
@@ -114,8 +114,9 @@ sub reindex {
         last unless $doc;
 
         $doc = $transform->($doc) or next;
-        $doc->{version_type} = 'external';
-        $doc->{_index}       = $dest_index
+        $doc->{version_type} = 'external'
+            if defined $doc->{_version};
+        $doc->{_index} = $dest_index
             if $dest_index;
         push @docs, $doc;
     }
@@ -144,7 +145,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.38, tested against ElasticSearch server version 0.16.2.
+Version 0.39, tested against ElasticSearch server version 0.17.0.
 
 =head1 DESCRIPTION
 
@@ -529,7 +530,7 @@ See also: L</"index()">
 
     $result = $es->get(
         index   => single,
-        type    => single,
+        type    => single or blank,
         id      => single,
 
         # optional
@@ -571,6 +572,58 @@ If the requested C<index>, C<type> or C<id> is not found, then a C<Missing>
 exception is thrown, unless C<ignore_missing> is true.
 
 See also: L</"bulk()">, L<http://www.elasticsearch.org/guide/reference/api/get.html>
+
+=head3 mget()
+
+    $docs = $es->mget(
+        index          => single,
+        type           => single or blank,
+        ids            => \@ids,
+        filter_missing => 0 | 1
+    );
+
+    $docs = $es->mget(
+        index          => single or blank,
+        type           => single or blank,
+        docs           => \@doc_info,
+        filter_missing => 0 | 1
+    );
+
+C<mget> or "multi-get" returns multiple documents at once. There are two
+ways to call C<mget()>:
+
+If all docs come from the same index (and potentially the same type):
+
+    $docs = $es->mget(
+        index => 'myindex',
+        type  => 'mytype',   # optional
+        ids   => [1,2,3],
+    )
+
+Alternatively you can specify each doc separately:
+
+    $docs = $es->mget(
+        docs => [
+            { _index => 'index_1', type = >'type_1', _id => 1 },
+            { _index => 'index_2', type = >'type_2', _id => 2 },
+        ]
+    )
+
+Or:
+    $docs = $es->mget(
+        index => 'myindex',  # default index
+        type  => 'mytype',   # default type
+        docs => [
+            { _id => 1 },    # uses defaults
+            { _index => 'index_2', type = >'type_2', _id => 2 },
+        ]
+    );
+
+Returns an array ref containing all of the documents requested.  If a document
+is not found, then its entry will include C<<{exists => 0}>>. If you would
+rather filter these missing docs, pass C<filter_missing => 1>
+
+See L<https://github.com/elasticsearch/elasticsearch/issues/1084>
 
 =head3 delete()
 
@@ -1229,6 +1282,17 @@ specified index doesn't exist and C<ignore_missing> is not true:
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-index.html>
 
+=head3 index_exists()
+
+    $result = $e->index_exists(
+        index => multi
+    );
+
+Returns C<<{ok => 1}>> if all specified indices exist, or throws  a C<Missing>
+exception.
+
+See L<https://github.com/elasticsearch/elasticsearch/issues/1022>
+
 =head3 index_settings()
 
     $result = $es->index_settings(
@@ -1273,6 +1337,18 @@ Adds or removes an alias for an index, eg:
 
 C<actions> can be a single HASH ref, or an ARRAY ref containing multiple HASH
 refs.
+
+Note: C<aliases()> supports L<ElasticSearch::SearchBuilder>-style
+filters via the C<filterb> parameter.  See
+L</"INTEGRATION WITH ElasticSearch::SearchBuilder"> for more details.
+
+    $result = $es->aliases( actions => [
+        { add    => {
+            index   => 'foo',
+            alias   => 'baz',
+            filterb => { foo => 'bar' }
+        }}
+    ]);
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases.html>
 

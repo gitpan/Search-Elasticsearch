@@ -6,14 +6,16 @@ use warnings FATAL => 'all';
 use constant {
     ONE_REQ     => 1,
     ONE_OPT     => 2,
-    MULTI_ALL   => 3,
-    MULTI_BLANK => 4,
+    ONE_ALL     => 3,
+    MULTI_ALL   => 4,
+    MULTI_BLANK => 5,
 };
 
 use constant {
     CMD_NONE          => [],
     CMD_INDEX_TYPE_ID => [ index => ONE_REQ, type => ONE_REQ, id => ONE_REQ ],
     CMD_INDEX_TYPE_id => [ index => ONE_REQ, type => ONE_REQ, id => ONE_OPT ],
+    CMD_INDEX_type_ID => [ index => ONE_REQ, type => ONE_ALL, id => ONE_REQ ],
     CMD_index      => [ index => MULTI_BLANK ],
     CMD_INDEX      => [ index => ONE_REQ ],
     CMD_INDEX_TYPE => [ index => ONE_REQ, type => ONE_REQ ],
@@ -107,7 +109,7 @@ sub get {
 #===================================
     shift()->_do_action(
         'get',
-        {   cmd => CMD_INDEX_TYPE_ID,
+        {   cmd => CMD_INDEX_type_ID,
             qs  => {
                 fields         => ['flatten'],
                 ignore_missing => [ 'boolean', 1 ],
@@ -118,6 +120,43 @@ sub get {
         },
         @_
     );
+}
+
+#===================================
+sub mget {
+#===================================
+    my $self   = shift;
+    my $params = $self->parse_params(@_);
+
+    if ( $params->{index} ) {
+        if ( my $ids = delete $params->{ids} ) {
+            $self->throw( 'Param', 'mget',
+                'Cannot specify both ids and docs in mget()' )
+                if $params->{docs};
+            $params->{docs} = [ map { +{ _id => $_ } } @$ids ];
+        }
+    }
+    else {
+        $self->throw( 'Param',
+            'Cannot specify a type for mget() without specifying index' )
+            if $params->{type};
+        $self->throw( 'Param',
+            'Use of the ids param with mget() requires an index' )
+            if $params->{ids};
+    }
+    my $filter;
+    my $result = $self->_do_action(
+        'mget',
+        {   cmd     => [ index => ONE_OPT, type => ONE_OPT ],
+            postfix => '_mget',
+            data => { docs           => 'docs' },
+            qs   => { filter_missing => [ 'boolean', 1 ], },
+            fixup => sub { $filter = delete $_[1]->{qs}{filter_missing} }
+        },
+        $params
+    );
+    my $docs = $result->{docs};
+    return $filter ? [ grep { $_->{exists} } @$docs ] : $docs;
 }
 
 my %Index_Defn = (
@@ -773,6 +812,18 @@ sub delete_index {
 }
 
 #===================================
+sub index_exists {
+#===================================
+    shift()->_do_action(
+        'index_exists',
+        {   method => 'HEAD',
+            cmd    => CMD_index,
+        },
+        @_
+    );
+}
+
+#===================================
 sub open_index {
 #===================================
     shift()->_do_action(
@@ -813,6 +864,12 @@ sub aliases {
             method => 'POST',
             cmd    => [],
             data   => { actions => 'actions' },
+            fixup  => sub {
+                my $self    = shift;
+                my $args    = shift;
+                my @actions = map { values %$_ } @{ $args->{data}{actions} };
+                $self->_to_dsl( { filterb => 'filter' }, @actions );
+                }
         },
         $params
     );
@@ -1463,7 +1520,7 @@ sub _build_cmd {
         if ( defined $val ) {
             if ( ref $val eq 'ARRAY' ) {
                 die "'$key' must be a single value\n"
-                    if $type == ONE_REQ || $type == ONE_OPT;
+                    if $type <= ONE_ALL;
                 $val = join ',', @$val;
             }
         }
