@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.39';
+our $VERSION = '0.40';
 our $DEBUG   = 0;
 
 #===================================
@@ -145,7 +145,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.39, tested against ElasticSearch server version 0.17.0.
+Version 0.40, tested against ElasticSearch server version 0.17.4.
 
 =head1 DESCRIPTION
 
@@ -172,7 +172,7 @@ a randomly chosen node in the list.
 
     use ElasticSearch;
     my $es = ElasticSearch->new(
-        servers      => 'search.foo.com:9200',
+        servers      => 'search.foo.com:9200',  # default '127.0.0.1:9200'
         transport    => 'http'                  # default 'http'
                         | 'httplite'
                         | 'httptiny'
@@ -274,7 +274,7 @@ Also, see L</"use_index()/use_type()">.
 =head2 as_json
 
 If you pass C<< as_json => 1 >> to any request to the ElasticSearch server,
-it will return the raw UTF8-decodeed JSON response, rather than a Perl
+it will return the raw UTF8-decoded JSON response, rather than a Perl
 datastructure.
 
 =cut
@@ -365,8 +365,9 @@ the syntax.
                                                                 # just the servers specified
      );
 
-C<servers> is a required parameter and can be either a single server or an
-ARRAY ref with a list of servers.
+C<servers> can be either a single server or an ARRAY ref with a list of servers.
+If not specified, then it defaults to C<localhost> and the port for the
+specified transport (eg C<9200> for C<http*> or C<9500> for C<thrift>).
 
 These servers are used in a round-robin fashion. If any server fails to
 connect, then the other servers in the list are tried, and if any
@@ -619,11 +620,14 @@ Or:
         ]
     );
 
+If C<$docs> or C<$ids> is an empty array ref, then C<mget()> will just return
+an empty array ref.
+
 Returns an array ref containing all of the documents requested.  If a document
 is not found, then its entry will include C<<{exists => 0}>>. If you would
 rather filter these missing docs, pass C<filter_missing => 1>
 
-See L<https://github.com/elasticsearch/elasticsearch/issues/1084>
+See L<http://www.elasticsearch.org/guide/reference/api/multi-get.html>
 
 =head3 delete()
 
@@ -755,7 +759,7 @@ results directly to C<bulk()>.
 See L<http://www.elasticsearch.org/guide/reference/api/bulk.html> for
 more details.
 
-=head3 bulk_index(), C<bulk_create()>, C<bulk_delete()>
+=head3 bulk_index(), bulk_create(), bulk_delete()
 
 These are convenience methods which allow you to pass just the data, without
 the C<index>, C<create> or C<index> action for each record, eg:
@@ -990,25 +994,27 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
 =head3 searchqs()
 
     $result = $es->searchqs(
-        index               => multi,
-        type                => multi,
+        index                    => multi,
+        type                     => multi,
 
         # optional
-        q                   => $query_string,
-        analyzer            => $analyzer,
-        default_operator    => 'OR | AND ',
-        df                  => $default_field,
-        explain             => 1 | 0,
-        fields              => [$field_1,$field_n],
-        from                => $start_from
-        preference          => '_local' | '_primary' | $string,
-        routing             => [$routing, ...]
-        search_type         => $search_type
-        size                => $no_of_results
-        sort                => ['_score:asc','last_modified:desc'],
-        scroll              => '5m' | '30s',
-        timeout             => '10s'
-        version             => 0 | 1
+        q                        => $query_string,
+        analyze_wildcard         => 0 | 1,
+        analyzer                 => $analyzer,
+        default_operator         => 'OR | AND ',
+        df                       => $default_field,
+        explain                  => 1 | 0,
+        fields                   => [$field_1,$field_n],
+        from                     => $start_from,
+        lowercase_expanded_terms => 0 | 1,
+        preference               => '_local' | '_primary' | $string,
+        routing                  => [$routing, ...]
+        search_type              => $search_type
+        size                     => $no_of_results
+        sort                     => ['_score:asc','last_modified:desc'],
+        scroll                   => '5m' | '30s',
+        timeout                  => '10s'
+        version                  => 0 | 1
 
 Searches for all documents matching the C<q> query_string, with a URI request.
 Documents can be matched against multiple indices and multiple types, eg:
@@ -1098,6 +1104,8 @@ B<Note>: C<count()> supports L<ElasticSearch::SearchBuilder>-style
 queries via the C<queryb> parameter.  See
 L</"INTEGRATION WITH ElasticSearch::SearchBuilder"> for more details.
 
+C<query> defaults to C<< {match_all=>{}} >> unless specified.
+
 B<DEPRECATION>: C<count()> previously took query types at the top level, eg
 C<< $es->count( term=> { ... }) >>. This form still works, but is deprecated.
 Instead use the C<queryb> or C<query> parameter as you would in L</"search()">.
@@ -1182,6 +1190,8 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
         script_fields        =>  { script_fields }
         search_scroll        =>  '5m' | '10s',
         search_indices       =>  ['index1','index2],
+        search_from          =>  integer,
+        search_size          =>  integer,
         search_type          =>  $search_type
         search_types         =>  ['type1','type],
         size                 =>  {size}
@@ -1288,8 +1298,8 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-inde
         index => multi
     );
 
-Returns C<<{ok => 1}>> if all specified indices exist, or throws  a C<Missing>
-exception.
+Returns C<< {ok => 1} >> if all specified indices exist, or an empty list
+if it doesn't.
 
 See L<https://github.com/elasticsearch/elasticsearch/issues/1022>
 
@@ -1546,21 +1556,8 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-clearcache.
     $result = $es->put_mapping(
         index               => multi,
         type                => single,
-        properties          => { ... },      # required
-
-        # optional
-        _all                => { ... },
-        _analyzer           => { ... },
-        _boost              => { ... },
-        _id                 => { ... },
-        _index              => { ... },
-        _meta               => { ... },
-        _parent             => { ... },
-        _routing            => { ... },
-        _source             => { ... },
-        dynamic             => 1 | 0 | 'strict',
-        dynamic_templates   => [ ... ],
-        ignore_conflicts    => 0 | 1,
+        mapping             => { ... }      # required
+        ignore_conflicts    => 0 | 1
     );
 
 A C<mapping> is the data definition of a C<type>.  If no mapping has been
@@ -1577,18 +1574,25 @@ to specify an official C<mapping> instead, eg:
     $result = $es->put_mapping(
         index   => ['twitter','buzz'],
         type    => 'tweet',
-        _source => { compress => 1 },
-        properties  =>  {
-            user        =>  {type  =>  "string", index      =>  "not_analyzed"},
-            message     =>  {type  =>  "string", null_value =>  "na"},
-            post_date   =>  {type  =>  "date"},
-            priority    =>  {type  =>  "integer"},
-            rank        =>  {type  =>  "float"}
+        mapping => {
+            _source => { compress => 1 },
+            properties  =>  {
+                user        =>  {type  =>  "string", index      =>  "not_analyzed"},
+                message     =>  {type  =>  "string", null_value =>  "na"},
+                post_date   =>  {type  =>  "date"},
+                priority    =>  {type  =>  "integer"},
+                rank        =>  {type  =>  "float"}
+            }
         }
     );
 
 See also: L<http://www.elasticsearch.org/guide/reference/api/admin-indices-put-mapping.html>
 and L<http://www.elasticsearch.org/guide/reference/mapping>
+
+B<DEPRECATION>: C<put_mapping()> previously took the mapping parameters
+at the top level, eg C<< $es->put_mapping( properties=> { ... }) >>.
+This form still works, but is deprecated. Instead use the C<mapping>
+parameter.
 
 =head3 delete_mapping()
 

@@ -2,7 +2,7 @@ package ElasticSearch;
 
 use strict;
 use warnings FATAL => 'all';
-
+use Any::URI::Escape qw(uri_escape);
 use constant {
     ONE_REQ     => 1,
     ONE_OPT     => 2,
@@ -128,6 +128,8 @@ sub mget {
     my $self   = shift;
     my $params = $self->parse_params(@_);
 
+    $params->{$_} ||= $self->{_default}{$_} for qw(index type);
+
     if ( $params->{index} ) {
         if ( my $ids = delete $params->{ids} ) {
             $self->throw( 'Param', 'mget',
@@ -144,6 +146,7 @@ sub mget {
             'Use of the ids param with mget() requires an index' )
             if $params->{ids};
     }
+    return [] unless @{ $params->{docs} };
     my $filter;
     my $result = $self->_do_action(
         'mget',
@@ -517,53 +520,60 @@ my %SearchQS_Defn = (
         %SearchQS,
         q                => ['string'],
         df               => ['string'],
+        analyze_wildcard => [ 'boolean', 1 ],
         analyzer         => ['string'],
         default_operator => [ 'enum', [ 'OR', 'AND' ] ],
-        explain   => [ 'boolean', 1 ],
-        fields    => ['flatten'],
-        from      => ['int'],
-        min_score => ['float'],
-        scroll    => ['duration'],
-        size      => ['int'],
-        'sort'    => ['flatten'],
-        version   => [ 'boolean', 1 ],
+        explain                  => [ 'boolean', 1 ],
+        fields                   => ['flatten'],
+        from                     => ['int'],
+        lowercase_expanded_terms => [ 'boolean', 1 ],
+        min_score                => ['float'],
+        scroll                   => ['duration'],
+        size                     => ['int'],
+        'sort'                   => ['flatten'],
+        version                  => [ 'boolean', 1 ],
     },
 );
 
 my %Query_Defn = (
-    query              => ['query'],
-    queryb             => ['queryb'],
-    bool               => ['bool'],
-    boosting           => ['boosting'],
-    constant_score     => ['constant_score'],
-    custom_score       => ['custom_score'],
-    dis_max            => ['dis_max'],
-    field              => ['field'],
-    field_masking_span => ['field_masking_span'],
-    filtered           => ['filtered'],
-    flt                => [ 'flt', 'fuzzy_like_this' ],
-    flt_field          => [ 'flt_field', 'fuzzy_like_this_field' ],
-    fuzzy              => ['fuzzy'],
-    has_child          => ['has_child'],
-    ids                => ['ids'],
-    match_all          => ['match_all'],
-    mlt                => [ 'mlt', 'more_like_this' ],
-    mlt_field          => [ 'mlt_field', 'more_like_this_field' ],
-    prefix             => ['prefix'],
-    query_string       => ['query_string'],
-    range              => ['range'],
-    span_first         => ['span_first'],
-    span_near          => ['span_near'],
-    span_not           => ['span_not'],
-    span_or            => ['span_or'],
-    span_term          => ['span_term'],
-    term               => ['term'],
-    terms              => [ 'terms', 'in' ],
-    text               => ['text'],
-    text_phrase        => ['text_phrase'],
-    text_phrase_prefix => ['text_phrase_prefix'],
-    top_children       => ['top_children'],
-    wildcard           => ['wildcard'],
+    data => {
+        query  => ['query'],
+        queryb => ['queryb'],
+
+    },
+    deprecated => {
+        bool               => ['bool'],
+        boosting           => ['boosting'],
+        constant_score     => ['constant_score'],
+        custom_score       => ['custom_score'],
+        dis_max            => ['dis_max'],
+        field              => ['field'],
+        field_masking_span => ['field_masking_span'],
+        filtered           => ['filtered'],
+        flt                => [ 'flt', 'fuzzy_like_this' ],
+        flt_field          => [ 'flt_field', 'fuzzy_like_this_field' ],
+        fuzzy              => ['fuzzy'],
+        has_child          => ['has_child'],
+        ids                => ['ids'],
+        match_all          => ['match_all'],
+        mlt                => [ 'mlt', 'more_like_this' ],
+        mlt_field          => [ 'mlt_field', 'more_like_this_field' ],
+        prefix             => ['prefix'],
+        query_string       => ['query_string'],
+        range              => ['range'],
+        span_first         => ['span_first'],
+        span_near          => ['span_near'],
+        span_not           => ['span_not'],
+        span_or            => ['span_or'],
+        span_term          => ['span_term'],
+        term               => ['term'],
+        terms              => [ 'terms', 'in' ],
+        text               => ['text'],
+        text_phrase        => ['text_phrase'],
+        text_phrase_prefix => ['text_phrase_prefix'],
+        top_children       => ['top_children'],
+        wildcard           => ['wildcard'],
+    }
 );
 
 #===================================
@@ -620,8 +630,12 @@ sub delete_by_query {
                 replication => [ 'enum', [ 'async', 'sync' ] ],
                 routing => ['flatten'],
             },
-            data  => \%Query_Defn,
-            fixup => \&_query_fixup,
+            %Query_Defn,
+            fixup => sub {
+                _query_fixup(@_);
+                die "Missing required param 'query' or 'queryb'\n"
+                    unless %{ $_[1]->{data} };
+            },
         },
         @_
     );
@@ -634,9 +648,14 @@ sub count {
         'count',
         {   %Search_Defn,
             postfix => '_count',
-            data    => \%Query_Defn,
-            qs      => { routing => ['flatten'] },
-            fixup   => \&_query_fixup,
+            %Query_Defn,
+            qs    => { routing => ['flatten'] },
+            fixup => sub {
+                _query_fixup(@_);
+                my $args = $_[1];
+                $args->{data}{match_all} = {}
+                    unless %{ $args->{data} };
+            },
         },
         @_
     );
@@ -662,6 +681,8 @@ sub mlt {
                 max_word_len       => ['int'],
                 boost_terms        => ['float'],
                 search_indices     => ['flatten'],
+                search_from        => ['int'],
+                search_size        => ['int'],
                 search_types       => ['flatten'],
                 search_scroll      => ['string'],
             },
@@ -818,6 +839,7 @@ sub index_exists {
         'index_exists',
         {   method => 'HEAD',
             cmd    => CMD_index,
+            fixup  => sub { $_[1]->{qs}{ignore_missing} = 1 }
         },
         @_
     );
@@ -1025,35 +1047,43 @@ sub gateway_snapshot {
 sub put_mapping {
 #===================================
     my ( $self, $params ) = parse_params(@_);
+    my %defn = (
+        data       => { mapping => 'mapping' },
+        deprecated => {
+            dynamic           => ['dynamic'],
+            dynamic_templates => ['dynamic_templates'],
+            properties        => ['properties'],
+            _all              => ['_all'],
+            _analyzer         => ['_analyzer'],
+            _boost            => ['_boost'],
+            _id               => ['_id'],
+            _index            => ['_index'],
+            _meta             => ['_meta'],
+            _parent           => ['_parent'],
+            _routing          => ['_routing'],
+            _source           => ['_source'],
+        },
+    );
+
+    $defn{deprecated}{mapping} = undef
+        if !$params->{mapping} && grep { exists $params->{$_} }
+            keys %{ $defn{deprecated} };
+
     $self->_do_action(
         'put_mapping',
         {   method  => 'PUT',
             cmd     => CMD_index_TYPE,
             postfix => '_mapping',
             qs      => { ignore_conflicts => [ 'boolean', 1 ] },
-            data    => {
-                dynamic           => ['dynamic'],
-                dynamic_templates => ['dynamic_templates'],
-                properties        => 'properties',
-                _all              => ['_all'],
-                _analyzer         => ['_analyzer'],
-                _boost            => ['_boost'],
-                _id               => ['_id'],
-                _index            => ['_index'],
-                _meta             => ['_meta'],
-                _parent           => ['_parent'],
-                _routing          => ['_routing'],
-                _source           => ['_source'],
-            },
+            %defn,
             fixup => sub {
                 my $args = $_[1];
-                $args->{data} = { $params->{type} => $args->{data} };
+                my $mapping = $args->{data}{mapping} || $args->{data};
+                $args->{data} = { $params->{type} => $mapping };
             },
-
         },
         $params
     );
-
 }
 
 #===================================
@@ -1368,7 +1398,8 @@ sub _do_action {
         $args{cmd}
             = $self->_build_cmd( $params, @{$defn}{qw(prefix cmd postfix)} );
         $args{qs} = $self->_build_qs( $params, $defn->{qs} );
-        $args{data} = $self->_build_data( $params, $defn->{data} );
+        $args{data}
+            = $self->_build_data( $params, @{$defn}{ 'data', 'deprecated' } );
         if ( my $fixup = $defn->{fixup} ) {
             $fixup->( $self, \%args );
         }
@@ -1475,9 +1506,13 @@ sub _build_data {
         $top_level = 1;
         $defn = { data => $defn };
     }
+    elsif ( my $deprecated = shift ) {
+        $defn = { %$defn, %$deprecated };
+    }
 
     my %data;
 KEY: while ( my ( $key, $source ) = each %$defn ) {
+        next unless defined $source;
         if ( ref $source eq 'ARRAY' ) {
             foreach (@$source) {
                 my $val = delete $params->{$_};
@@ -1530,10 +1565,9 @@ sub _build_cmd {
                 if $type == ONE_REQ;
             $val = '_all';
         }
-        push @cmd, $val;
+        push @cmd, uri_escape($val);
     }
 
     return join '/', '', grep {defined} ( $prefix, @cmd, $postfix );
 }
-
 1;

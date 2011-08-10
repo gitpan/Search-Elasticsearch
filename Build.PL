@@ -8,7 +8,7 @@ my $builder = Module::Build->new(
     dist_author       => q{Clinton Gormley <drtech@cpan.org>},
     dist_version_from => 'lib/ElasticSearch.pm',
     build_requires    => {
-        'Test::More'      => 0,
+        'Test::More'      => '0.96',
         'Test::Exception' => 0,
         'POSIX'           => 0,
         'IO::Socket'      => 0,
@@ -17,10 +17,9 @@ my $builder = Module::Build->new(
     },
     add_to_cleanup     => ['ElasticSearch-*'],
     create_makefile_pl => 'traditional',
-    configure_requires => {
-        'Module::Build' => 0.38,
-    },
+    configure_requires => { 'Module::Build' => 0.38, },
     requires           => {
+        'Any::URI::Escape'             => 0,
         'LWP::UserAgent'               => 0,
         'LWP::ConnCache'               => 0,
         'HTTP::Request'                => 0,
@@ -29,7 +28,8 @@ my $builder = Module::Build->new(
         'Encode'                       => 0,
         'parent'                       => 0,
         'Scalar::Util'                 => '1.07',
-        'ElasticSearch::SearchBuilder' => '0.06',
+        'ElasticSearch::SearchBuilder' => '0.07',
+        'URI::Escape'                  => 0,
     },
     recommends => {
         'HTTP::Lite'      => 0,
@@ -37,6 +37,7 @@ my $builder = Module::Build->new(
         'Bit::Vector'     => 0,
         'Class::Accessor' => 0,
         'JSON::XS'        => 0,
+        'URI::Escape::XS' => 0.08,
     },
     meta_merge => {
         resources => {
