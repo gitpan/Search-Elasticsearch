@@ -1,4 +1,7 @@
 package ElasticSearch::Error;
+{
+  $ElasticSearch::Error::VERSION = '0.42';
+}
 
 @ElasticSearch::Error::Internal::ISA    = __PACKAGE__;
 @ElasticSearch::Error::Param::ISA       = __PACKAGE__;

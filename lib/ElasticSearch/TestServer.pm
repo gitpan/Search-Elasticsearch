@@ -1,4 +1,7 @@
 package ElasticSearch::TestServer;
+{
+  $ElasticSearch::TestServer::VERSION = '0.42';
+}
 
 use strict;
 use warnings;

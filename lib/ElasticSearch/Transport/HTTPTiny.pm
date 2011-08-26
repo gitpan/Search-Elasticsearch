@@ -1,4 +1,7 @@
 package ElasticSearch::Transport::HTTPTiny;
+{
+  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.42';
+}
 
 use strict;
 use warnings FATAL => 'all';

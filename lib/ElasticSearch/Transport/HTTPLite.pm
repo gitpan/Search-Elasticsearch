@@ -1,4 +1,7 @@
 package ElasticSearch::Transport::HTTPLite;
+{
+  $ElasticSearch::Transport::HTTPLite::VERSION = '0.42';
+}
 
 use strict;
 use warnings FATAL => 'all';

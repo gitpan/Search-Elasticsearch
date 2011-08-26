@@ -1,4 +1,7 @@
 package ElasticSearch::Util;
+{
+  $ElasticSearch::Util::VERSION = '0.42';
+}
 
 use strict;
 use warnings FATAL => 'all';
