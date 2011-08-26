@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTP;
 {
-  $ElasticSearch::Transport::HTTP::VERSION = '0.42';
+  $ElasticSearch::Transport::HTTP::VERSION = '0.43';
 }
 
 use strict;
@@ -114,6 +114,8 @@ consider trying L<ElasticSearch::Transport:HTTPLite> instead - it is
 =item * L<ElasticSearch::Transport::Curl>
 
 =item * L<ElasticSearch::Transport::AEHTTP>
+
+=item * L<ElasticSearch::Transport::AECurl>
 
 =item * L<ElasticSearch::Transport::Thrift>
 

@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTPTiny;
 {
-  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.42';
+  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.43';
 }
 
 use strict;
@@ -121,6 +121,8 @@ It is slightly (1%) faster thab L<ElasticSearch::Transport::HTTPLite>.
 =item * L<ElasticSearch::Transport::Curl>
 
 =item * L<ElasticSearch::Transport::AEHTTP>
+
+=item * L<ElasticSearch::Transport::AECurl>
 
 =item * L<ElasticSearch::Transport::Thrift>
 

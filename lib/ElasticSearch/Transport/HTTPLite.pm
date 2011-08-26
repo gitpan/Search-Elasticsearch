@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTPLite;
 {
-  $ElasticSearch::Transport::HTTPLite::VERSION = '0.42';
+  $ElasticSearch::Transport::HTTPLite::VERSION = '0.43';
 }
 
 use strict;
@@ -112,6 +112,8 @@ faster than L<ElasticSearch::Transport.:HTTP>.
 =item * L<ElasticSearch::Transport::Curl>
 
 =item * L<ElasticSearch::Transport::AEHTTP>
+
+=item * L<ElasticSearch::Transport::AECurl>
 
 =item * L<ElasticSearch::Transport::Thrift>
 
