@@ -2,7 +2,7 @@ NAME
     ElasticSearch - An API for communicating with ElasticSearch
 
 VERSION
-    Version 0.40, tested against ElasticSearch server version 0.17.4.
+    Version 0.41, tested against ElasticSearch server version 0.17.6.
 
 DESCRIPTION
     ElasticSearch is an Open Source (Apache 2 license), distributed, RESTful
@@ -28,6 +28,8 @@ SYNOPSIS
             transport    => 'http'                  # default 'http'
                             | 'httplite'
                             | 'httptiny'
+                            | 'curl'
+                            | 'aehttp'
                             | 'thrift',
             max_requests => 10_000,                 # default 10_000
             trace_calls  => 'log_file',
@@ -106,15 +108,25 @@ CALLING CONVENTIONS
 
        $es->method( index => multi, type => single, ...)
 
+    "single" values must be a scalar, and are required parameters
+
+          type  => 'tweet'
+
     "multi" values can be:
 
           index   => 'twitter'          # specific index
           index   => ['twitter','user'] # list of indices
           index   => undef              # (or not specified) = all indices
 
-    "single" values must be a scalar, and are required parameters
+    "multi_req" values work like "multi" values, but at least one value is
+    required, so:
 
-          type  => 'tweet'
+          index   => 'twitter'          # specific index
+          index   => ['twitter','user'] # list of indices
+          index   => '_all'             # all indices
+
+          index   => []                 # error
+          index   => undef              # error
 
     Also, see "use_index()/use_type()".
 
@@ -191,7 +203,7 @@ METHODS
   Creating a new ElasticSearch instance
    new()
         $es = ElasticSearch->new(
-                transport    =>  'http|httplite|httptiny|thrift',   # default 'http'
+                transport    =>  'http',
                 servers      =>  '127.0.0.1:9200'                   # single server
                                   | ['es1.foo.com:9200',
                                      'es2.foo.com:9200'],           # multiple servers
@@ -1075,7 +1087,7 @@ METHODS
 
    delete_index()
         $result = $es->delete_index(
-            index           => multi,
+            index           => multi_req,
             ignore_missing  => 0 | 1        # optional
         );
 
@@ -1096,7 +1108,9 @@ METHODS
     Returns "{ok => 1}" if all specified indices exist, or an empty list if
     it doesn't.
 
-    See <https://github.com/elasticsearch/elasticsearch/issues/1022>
+    See
+    <http://www.elasticsearch.org/guide/reference/api/admin-indices-indices-
+    exists.html>
 
    index_settings()
         $result = $es->index_settings(
@@ -1176,8 +1190,6 @@ METHODS
     If you pass in the optional "index" argument, which can be an index name
     or an alias name, then it will only return the indices and aliases
     related to that argument.
-
-    Note: "get_aliases()" does not support "as_json"
 
    open_index()
         $result = $es->open_index( index => single);
@@ -1399,7 +1411,7 @@ METHODS
 
    delete_mapping()
         $result = $es->delete_mapping(
-            index           => multi,
+            index           => multi_req,
             type            => single,
             ignore_missing  => 0 | 1,
         );
@@ -1862,17 +1874,6 @@ BUGS
     notified, and then you'll automatically be notified of progress on your
     bug as I make changes.
 
-TODO
-    Hopefully I'll be adding an ElasticSearch::Abstract (similar to
-    SQL::Abstract) which will make it easier to generate valid queries for
-    ElasticSearch.
-
-    Also, a non-blocking AnyEvent module has been written, but needs
-    integrating with the new ElasticSearch::Transport.
-
-    This version is missing tests for "parent", "routing" and "percolator".
-    Will follow soon.
-
 SUPPORT
     You can find documentation for this module with the perldoc command.
 
@@ -1884,21 +1885,13 @@ SUPPORT
 
         <http://github.com/clintongormley/ElasticSearch.pm>
 
-    *   RT: CPAN's request tracker
-
-        <http://rt.cpan.org/NoAuth/Bugs.html?Dist=ElasticSearch>
-
-    *   AnnoCPAN: Annotated CPAN documentation
-
-        <http://annocpan.org/dist/ElasticSearch>
-
     *   CPAN Ratings
 
         <http://cpanratings.perl.org/d/ElasticSearch>
 
-    *   Search CPAN
+    *   Search MetaCPAN
 
-        <http://search.cpan.org/dist/ElasticSearch/>
+        <https://metacpan.org/module/ElasticSearch>
 
 ACKNOWLEDGEMENTS
     Thanks to Shay Bannon, the ElasticSearch author, for producing an

@@ -9,6 +9,7 @@ use constant {
     ONE_ALL     => 3,
     MULTI_ALL   => 4,
     MULTI_BLANK => 5,
+    MULTI_REQ   => 6,
 };
 
 use constant {
@@ -16,16 +17,18 @@ use constant {
     CMD_INDEX_TYPE_ID => [ index => ONE_REQ, type => ONE_REQ, id => ONE_REQ ],
     CMD_INDEX_TYPE_id => [ index => ONE_REQ, type => ONE_REQ, id => ONE_OPT ],
     CMD_INDEX_type_ID => [ index => ONE_REQ, type => ONE_ALL, id => ONE_REQ ],
-    CMD_index      => [ index => MULTI_BLANK ],
-    CMD_INDEX      => [ index => ONE_REQ ],
-    CMD_INDEX_TYPE => [ index => ONE_REQ, type => ONE_REQ ],
-    CMD_INDEX_type => [ index => ONE_REQ, type => MULTI_BLANK ],
-    CMD_index_TYPE => [ index => MULTI_ALL, type => ONE_REQ ],
-    CMD_index_type => [ index => MULTI_ALL, type => MULTI_BLANK ],
-    CMD_RIVER      => [ river => ONE_REQ ],
-    CMD_nodes      => [ node  => MULTI_BLANK ],
-    CMD_NAME       => [ name  => ONE_REQ ],
-    CMD_INDEX_PERC => [ index => ONE_REQ, percolator => ONE_REQ ],
+    CMD_index        => [ index => MULTI_BLANK ],
+    CMD_INDICES      => [ index => MULTI_REQ ],
+    CMD_INDEX        => [ index => ONE_REQ ],
+    CMD_INDEX_TYPE   => [ index => ONE_REQ, type => ONE_REQ ],
+    CMD_INDEX_type   => [ index => ONE_REQ, type => MULTI_BLANK ],
+    CMD_index_TYPE   => [ index => MULTI_ALL, type => ONE_REQ ],
+    CMD_INDICES_TYPE => [ index => MULTI_REQ, type => ONE_REQ ],
+    CMD_index_type   => [ index => MULTI_ALL, type => MULTI_BLANK ],
+    CMD_RIVER        => [ river => ONE_REQ ],
+    CMD_nodes        => [ node  => MULTI_BLANK ],
+    CMD_NAME         => [ name  => ONE_REQ ],
+    CMD_INDEX_PERC   => [ index => ONE_REQ, percolator => ONE_REQ ],
 };
 
 our %QS_Format = (
@@ -148,18 +151,21 @@ sub mget {
     }
     return [] unless @{ $params->{docs} };
     my $filter;
-    my $result = $self->_do_action(
+    $self->_do_action(
         'mget',
         {   cmd     => [ index => ONE_OPT, type => ONE_OPT ],
             postfix => '_mget',
             data => { docs           => 'docs' },
             qs   => { filter_missing => [ 'boolean', 1 ], },
-            fixup => sub { $filter = delete $_[1]->{qs}{filter_missing} }
+            fixup => sub { $filter = delete $_[1]->{qs}{filter_missing} },
+            post_process => sub {
+                my $result = shift;
+                my $docs   = $result->{docs};
+                return $filter ? [ grep { $_->{exists} } @$docs ] : $docs;
+                }
         },
         $params
     );
-    my $docs = $result->{docs};
-    return $filter ? [ grep { $_->{exists} } @$docs ] : $docs;
 }
 
 my %Index_Defn = (
@@ -323,15 +329,24 @@ sub bulk {
     $json->indent($indenting);
     die $error unless $json_docs;
 
-    my $results = $self->request( {
-            method  => 'POST',
-            cmd     => '/_bulk',
-            qs      => $qs,
-            as_json => $as_json,
-            data    => $json_docs
+    $self->request( {
+            method       => 'POST',
+            cmd          => '/_bulk',
+            qs           => $qs,
+            as_json      => $as_json,
+            data         => $json_docs,
+            post_process => sub { $self->_bulk_response( $actions, @_ ) },
         }
     );
-    return $results if $as_json;
+}
+
+#===================================
+sub _bulk_response {
+#===================================
+    my $self    = shift;
+    my $actions = shift;
+    my $results = shift;
+
     my $items = ref($results) eq 'HASH' && $results->{items}
         || $self->throw( 'Request', 'Malformed response to bulk query',
         $results );
@@ -747,23 +762,26 @@ sub delete_percolator {
 #===================================
 sub get_percolator {
 #===================================
-    my $result = shift()->_do_action(
+    shift()->_do_action(
         'get_percolator',
-        {   cmd    => CMD_INDEX_PERC,
-            prefix => '_percolator',
-            method => 'GET',
-            qs     => { ignore_missing => [ 'boolean', 1 ], }
+        {   cmd          => CMD_INDEX_PERC,
+            prefix       => '_percolator',
+            method       => 'GET',
+            qs           => { ignore_missing => [ 'boolean', 1 ], },
+            post_process => sub {
+                my $result = shift;
+                return $result
+                    unless ref $result eq 'HASH';
+                return {
+                    index      => $result->{_type},
+                    percolator => $result->{_id},
+                    query      => delete $result->{_source}{query},
+                    data       => $result->{_source},
+                };
+            },
         },
         @_
     );
-    return $result
-        unless ref $result eq 'HASH';
-    return {
-        index      => $result->{_type},
-        percolator => $result->{_id},
-        query      => delete $result->{_source}{query},
-        data       => $result->{_source},
-    };
 }
 
 #===================================
@@ -824,7 +842,7 @@ sub delete_index {
     shift()->_do_action(
         'delete_index',
         {   method  => 'DELETE',
-            cmd     => CMD_index,
+            cmd     => CMD_INDICES,
             qs      => { ignore_missing => [ 'boolean', 1 ], },
             postfix => ''
         },
@@ -900,26 +918,34 @@ sub aliases {
 #===================================
 sub get_aliases {
 #===================================
-    my ( $self, $params ) = parse_params(@_);
-    $self->error("get_aliases() does not support as_json")
-        if $params->{as_json};
-    my $results = $self->cluster_state(
-        filter_indices       => $params->{index},
-        filter_blocks        => 1,
-        filter_nodes         => 1,
-        filter_routing_table => 1,
-    );
-    my $indices = $results->{metadata}{indices};
-    my %aliases = ( indices => {}, aliases => {} );
-    foreach my $index ( keys %$indices ) {
-        my $aliases = $indices->{$index}{aliases};
-        $aliases{indices}{$index} = $aliases;
-        for (@$aliases) {
-            push @{ $aliases{aliases}{$_} }, $index;
-        }
+    shift()->_do_action(
+        'get_aliases',
+        {   cmd    => CMD_NONE,
+            prefix => '_cluster/state',
+            qs     => { index => ['flatten'], },
+            fixup  => sub {
+                my $qs = $_[1]->{qs};
+                $qs->{"filter_$_"} = 1 for qw(blocks nodes routing_table);
+                $qs->{filter_indices} = delete $qs->{index};
+            },
+            post_process => sub {
+                my $results = shift;
+                my $indices = $results->{metadata}{indices};
+                my %aliases = ( indices => {}, aliases => {} );
+                foreach my $index ( keys %$indices ) {
+                    my $aliases = $indices->{$index}{aliases};
+                    $aliases{indices}{$index} = $aliases;
+                    for (@$aliases) {
+                        push @{ $aliases{aliases}{$_} }, $index;
+                    }
 
-    }
-    return \%aliases;
+                }
+                return \%aliases;
+            },
+        },
+        @_
+    );
+
 }
 
 #===================================
@@ -1094,7 +1120,7 @@ sub delete_mapping {
     $self->_do_action(
         'delete_mapping',
         {   method => 'DELETE',
-            cmd    => CMD_index_TYPE,
+            cmd    => CMD_INDICES_TYPE,
             qs     => { ignore_missing => [ 'boolean', 1 ], }
         },
         $params
@@ -1408,6 +1434,7 @@ sub _do_action {
         1;
     } or $error = $@ || 'Unknown error';
 
+    $args{post_process} = $defn->{post_process};
     $self->throw(
         'Param',
         $error . $self->_usage( $action, $defn ),
@@ -1552,17 +1579,17 @@ sub _build_cmd {
             ? delete $params->{$key}
             : $self->{_default}{$key};
 
-        if ( defined $val ) {
-            if ( ref $val eq 'ARRAY' ) {
-                die "'$key' must be a single value\n"
-                    if $type <= ONE_ALL;
-                $val = join ',', @$val;
-            }
+        $val = '' unless defined $val;
+
+        if ( ref $val eq 'ARRAY' ) {
+            die "'$key' must be a single value\n"
+                if $type <= ONE_ALL;
+            $val = join ',', @$val;
         }
-        else {
+        unless ( length $val ) {
             next if $type == ONE_OPT || $type == MULTI_BLANK;
             die "Param '$key' is required\n"
-                if $type == ONE_REQ;
+                if $type == ONE_REQ || $type == MULTI_REQ;
             $val = '_all';
         }
         push @cmd, uri_escape($val);

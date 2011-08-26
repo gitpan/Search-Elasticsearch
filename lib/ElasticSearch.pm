@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.40';
+our $VERSION = '0.41';
 our $DEBUG   = 0;
 
 #===================================
@@ -101,6 +101,9 @@ sub reindex {
         my $doc = $source->next();
         if ( !$doc or @docs == $bulk_size ) {
             my $results = $self->bulk_index( \@docs );
+            $results = $results->recv
+                if ref $results ne 'HASH'
+                    && $results->isa('AnyEvent::CondVar');
             if ( my $err = $results->{errors} ) {
                 my @errors = splice @$err, 0, 5;
                 push @errors, sprintf "...and %d more", scalar @$err
@@ -145,7 +148,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.40, tested against ElasticSearch server version 0.17.4.
+Version 0.41, tested against ElasticSearch server version 0.17.6.
 
 =head1 DESCRIPTION
 
@@ -176,6 +179,8 @@ a randomly chosen node in the list.
         transport    => 'http'                  # default 'http'
                         | 'httplite'
                         | 'httptiny'
+                        | 'curl'
+                        | 'aehttp'
                         | 'thrift',
         max_requests => 10_000,                 # default 10_000
         trace_calls  => 'log_file',
@@ -259,15 +264,26 @@ types. I distinguish between them as follows:
 
    $es->method( index => multi, type => single, ...)
 
+C<single> values must be a scalar, and are required parameters
+
+      type  => 'tweet'
+
 C<multi> values can be:
 
       index   => 'twitter'          # specific index
       index   => ['twitter','user'] # list of indices
       index   => undef              # (or not specified) = all indices
 
-C<single> values must be a scalar, and are required parameters
+C<multi_req> values work like C<multi> values, but at least one value is
+required, so:
 
-      type  => 'tweet'
+      index   => 'twitter'          # specific index
+      index   => ['twitter','user'] # list of indices
+      index   => '_all'             # all indices
+
+      index   => []                 # error
+      index   => undef              # error
+
 
 Also, see L</"use_index()/use_type()">.
 
@@ -351,7 +367,7 @@ the syntax.
 =head3 new()
 
     $es = ElasticSearch->new(
-            transport    =>  'http|httplite|httptiny|thrift',   # default 'http'
+            transport    =>  'http',
             servers      =>  '127.0.0.1:9200'                   # single server
                               | ['es1.foo.com:9200',
                                  'es2.foo.com:9200'],           # multiple servers
@@ -1281,7 +1297,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-create-inde
 =head3 delete_index()
 
     $result = $es->delete_index(
-        index           => multi,
+        index           => multi_req,
         ignore_missing  => 0 | 1        # optional
     );
 
@@ -1301,7 +1317,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-inde
 Returns C<< {ok => 1} >> if all specified indices exist, or an empty list
 if it doesn't.
 
-See L<https://github.com/elasticsearch/elasticsearch/issues/1022>
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-indices-exists.html>
 
 =head3 index_settings()
 
@@ -1380,8 +1396,6 @@ all aliases and their corresponding indices, eg:
 If you pass in the optional C<index> argument, which can be an index name
 or an alias name, then it will only return the indices and aliases related
 to that argument.
-
-Note: C<get_aliases()> does not support L</"as_json">
 
 =head3 open_index()
 
@@ -1597,7 +1611,7 @@ parameter.
 =head3 delete_mapping()
 
     $result = $es->delete_mapping(
-        index           => multi,
+        index           => multi_req,
         type            => single,
         ignore_missing  => 0 | 1,
     );
@@ -2101,18 +2115,6 @@ them to L<http://github.com/clintongormley/ElasticSearch.pm/issues>.
 I will be notified, and then you'll automatically be notified of progress on
 your bug as I make changes.
 
-=head1 TODO
-
-Hopefully I'll be adding an ElasticSearch::Abstract (similar to
-L<SQL::Abstract>) which will make it easier to generate valid queries
-for ElasticSearch.
-
-Also, a non-blocking L<AnyEvent> module has been written, but needs
-integrating with the new L<ElasticSearch::Transport>.
-
-This version is missing tests for C<parent>, C<routing> and C<percolator>.
-Will follow soon.
-
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
@@ -2127,21 +2129,13 @@ You can also look for information at:
 
 L<http://github.com/clintongormley/ElasticSearch.pm>
 
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=ElasticSearch>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/ElasticSearch>
-
 =item * CPAN Ratings
 
 L<http://cpanratings.perl.org/d/ElasticSearch>
 
-=item * Search CPAN
+=item * Search MetaCPAN
 
-L<http://search.cpan.org/dist/ElasticSearch/>
+L<https://metacpan.org/module/ElasticSearch>
 
 =back
 
