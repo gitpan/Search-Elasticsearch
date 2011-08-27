@@ -32,6 +32,7 @@ t/request_tests/cluster_health.pl
 t/request_tests/cluster_state.pl
 t/request_tests/count.pl
 t/request_tests/create_index.pl
+t/request_tests/deflate.pl
 t/request_tests/delete.pl
 t/request_tests/delete_by_query.pl
 t/request_tests/delete_index.pl

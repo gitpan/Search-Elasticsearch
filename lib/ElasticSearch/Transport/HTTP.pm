@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTP;
 {
-  $ElasticSearch::Transport::HTTP::VERSION = '0.43';
+  $ElasticSearch::Transport::HTTP::VERSION = '0.44';
 }
 
 use strict;
@@ -27,6 +27,9 @@ sub send_request {
     my $method  = $params->{method};
     my $uri     = $self->http_uri( $server, $params->{cmd}, $params->{qs} );
     my $request = HTTP::Request->new( $method, $uri );
+
+    $request->header( 'Accept-Encoding' => 'deflate' )
+        if $self->deflate;
 
     $request->add_content_utf8( $params->{data} )
         if defined $params->{data};

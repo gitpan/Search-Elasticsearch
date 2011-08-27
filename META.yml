@@ -33,6 +33,7 @@ requires:
   HTTP::Request: 0
   HTTP::Tiny: 0
   IO::Socket: 0
+  IO::Uncompress::Inflate: 0
   JSON: 0
   LWP::ConnCache: 0
   LWP::UserAgent: 0
@@ -50,4 +51,4 @@ resources:
   bugtracker: https://github.com/clintongormley/ElasticSearch.pm/issues
   homepage: http://clintongormley.github.com/ElasticSearch.pm/
   repository: git://github.com/clintongormley/ElasticSearch.pm.git
-version: 0.43
+version: 0.44

@@ -251,8 +251,8 @@ METHODS
     There are various "transport" backends that ElasticSearch can use:
     "http" (the default, based on LWP), "httplite" (based on HTTP::Lite),
     "httptiny" (based on HTTP::Tiny), "curl" (based on WWW::Curl), "aehttp"
-    (based on "AnyEvent::HTTP), "aecurl" (based on AnyEvent::Curl::Multi)
-    and "thrift" (which uses the Thrift protocol)."
+    (based on AnyEvent::HTTP), "aecurl" (based on AnyEvent::Curl::Multi) and
+    "thrift" (which uses the Thrift protocol).
 
     Although the "thrift" interface has the right buzzwords (binary,
     compact, sockets), the generated Perl code is very slow. Until that is
@@ -1907,11 +1907,4 @@ LICENSE AND COPYRIGHT
     by the Free Software Foundation; or the Artistic License.
 
     See http://dev.perl.org/licenses/ for more information.
-
-POD ERRORS
-    Hey! The above document had some coding errors, which are explained
-    below:
-
-    Around line 416:
-        Unterminated L<...> sequence
 
