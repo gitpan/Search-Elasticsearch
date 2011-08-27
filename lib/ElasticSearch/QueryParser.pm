@@ -1,6 +1,6 @@
 package ElasticSearch::QueryParser;
 {
-  $ElasticSearch::QueryParser::VERSION = '0.44';
+  $ElasticSearch::QueryParser::VERSION = '0.45';
 }
 
 use strict;

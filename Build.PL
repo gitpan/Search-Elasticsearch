@@ -21,7 +21,7 @@ my %module_build_args = (
     "Clinton Gormley <drtech\@cpan.org>"
   ],
   "dist_name" => "ElasticSearch",
-  "dist_version" => "0.44",
+  "dist_version" => "0.45",
   "license" => "perl",
   "module_name" => "ElasticSearch",
   "recommends" => {
