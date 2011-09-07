@@ -19,6 +19,7 @@ lib/ElasticSearch/Transport/HTTP.pm
 lib/ElasticSearch/Transport/HTTPLite.pm
 lib/ElasticSearch/Transport/HTTPTiny.pm
 lib/ElasticSearch/Util.pm
+log.26402
 t/00-request.t
 t/10-queryparser.t
 t/release-eol.t
@@ -29,6 +30,7 @@ t/request_tests/as_json.pl
 t/request_tests/bulk.pl
 t/request_tests/clear_cache.pl
 t/request_tests/cluster_health.pl
+t/request_tests/cluster_settings.pl
 t/request_tests/cluster_state.pl
 t/request_tests/count.pl
 t/request_tests/create_index.pl
@@ -40,6 +42,7 @@ t/request_tests/get.pl
 t/request_tests/index_admin.pl
 t/request_tests/index_alias.pl
 t/request_tests/index_and_create.pl
+t/request_tests/index_stats.pl
 t/request_tests/index_status.pl
 t/request_tests/index_templates.pl
 t/request_tests/mapping.pl

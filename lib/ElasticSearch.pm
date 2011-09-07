@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.45';
+our $VERSION = '0.46';
 our $DEBUG   = 0;
 
 #===================================
@@ -119,6 +119,10 @@ sub reindex {
         $doc = $transform->($doc) or next;
         $doc->{version_type} = 'external'
             if defined $doc->{_version};
+        if ( my $fields = delete $doc->{fields} ) {
+            $doc->{parent} = $fields->{_parent}
+                if defined $fields->{_parent};
+        }
         $doc->{_index} = $dest_index
             if $dest_index;
         push @docs, $doc;
@@ -598,6 +602,7 @@ See also: L</"bulk()">, L<http://www.elasticsearch.org/guide/reference/api/get.h
         index          => single,
         type           => single or blank,
         ids            => \@ids,
+        fields         => ['field_1','field_2'],
         filter_missing => 0 | 1
     );
 
@@ -605,6 +610,7 @@ See also: L</"bulk()">, L<http://www.elasticsearch.org/guide/reference/api/get.h
         index          => single or blank,
         type           => single or blank,
         docs           => \@doc_info,
+        fields         => ['field_1','field_2'],
         filter_missing => 0 | 1
     );
 
@@ -623,18 +629,24 @@ Alternatively you can specify each doc separately:
 
     $docs = $es->mget(
         docs => [
-            { _index => 'index_1', type = >'type_1', _id => 1 },
-            { _index => 'index_2', type = >'type_2', _id => 2 },
+            { _index => 'index_1', _type => 'type_1', _id => 1 },
+            { _index => 'index_2', _type => 'type_2', _id => 2 },
         ]
     )
 
 Or:
+
     $docs = $es->mget(
-        index => 'myindex',  # default index
-        type  => 'mytype',   # default type
+        index  => 'myindex',                    # default index
+        type   => 'mytype',                     # default type
+        fields => ['field_1','field_2'],        # default fields
         docs => [
-            { _id => 1 },    # uses defaults
-            { _index => 'index_2', type = >'type_2', _id => 2 },
+            { _id => 1 },                       # uses defaults
+            { _index => 'index_2',
+              _type  => 'type_2',
+              _id    => 2,
+              fields => ['field_2','field_3'],
+            },
         ]
     );
 
@@ -886,6 +898,24 @@ from the original index:
             $doc->{_source}{title} = uc( $doc->{_source}{title} );
             return $doc;
         }
+    );
+
+B<NOTE:> If some of your docs have parent/child relationships, and you want
+to preserve this relationship, then you should add this to your
+scrolled search parameters: C<< fields => ['_source','_parent'] >>.
+
+For example:
+
+    my $source = $es->scrolled_search(
+        index       => 'old_index',
+        search_type => 'scan',
+        fields      => ['_source','_parent'],
+        version     => 1
+    );
+
+    $es->reindex(
+        source      => $source,
+        dest_index  => 'new_index',
     );
 
 See also L</"scrolled_search()">, L<ElasticSearch::ScrolledSearch>,
@@ -1253,6 +1283,28 @@ Returns the status of
 Throws a C<Missing> exception if the specified indices do not exist.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-status.html>
+
+=head3 index_stats()
+
+    $result = $es->index_stats(
+        index           => multi,
+        type            => multi,
+
+        docs            => 1|0,
+        store           => 1|0,
+        indexing        => 1|0,
+
+        clear           => 0|1,         # clears default docs,store,indexing
+        flush           => 0|1,
+        merge           => 0|1
+        refresh         => 0|1,
+        level           => 'shards'
+    );
+
+Throws a C<Missing> exception if the specified indices do not exist.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-stats.html>
+
 
 =head3 create_index()
 
@@ -1872,6 +1924,36 @@ For example:
     $result = $es->cluster_health( wait_for_status => 'green', timeout => '10s')
 
 See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-health.html>
+
+=head3 cluster_settings()
+
+    $result = $es->cluster_settings()
+
+Returns any cluster wide settings that have been set with
+L</"update_cluster_settings">.
+
+See L<https://github.com/elasticsearch/elasticsearch/issues/1266>
+
+
+=head3 update_cluster_settings()
+
+    $result = $es->update_cluster_settings(
+        persistent  => {...},
+        transient   => {...},
+    )
+
+For example:
+
+    $result = $es->update_cluster_settings(
+        persistent  => {
+            "discovery.zen.minimum_master_nodes" => 2
+        },
+    )
+
+C<persistent> settings will survive a full cluster restart. C<transient>
+settings won't.
+
+See L<https://github.com/elasticsearch/elasticsearch/issues/1266>
 
 =head3 nodes()
 

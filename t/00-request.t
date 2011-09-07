@@ -52,6 +52,7 @@ sub run_test_suite {
             version
             cluster_state
             cluster_health
+            cluster_settings
             nodes
             module_options
             deflate
@@ -62,6 +63,7 @@ sub run_test_suite {
     run_tests( qw(
             create_index
             index_status
+            index_stats
             update_settings
             index_admin
             analyze

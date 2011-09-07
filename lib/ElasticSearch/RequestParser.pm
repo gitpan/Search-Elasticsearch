@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.45';
+  $ElasticSearch::VERSION = '0.46';
 }
 
 use strict;
@@ -131,8 +131,7 @@ sub get {
 #===================================
 sub mget {
 #===================================
-    my $self   = shift;
-    my $params = $self->parse_params(@_);
+    my ( $self, $params ) = parse_params(@_);
 
     $params->{$_} ||= $self->{_default}{$_} for qw(index type);
 
@@ -158,8 +157,11 @@ sub mget {
         'mget',
         {   cmd     => [ index => ONE_OPT, type => ONE_OPT ],
             postfix => '_mget',
-            data => { docs           => 'docs' },
-            qs   => { filter_missing => [ 'boolean', 1 ], },
+            data => { docs => 'docs' },
+            qs   => {
+                fields         => ['flatten'],
+                filter_missing => [ 'boolean', 1 ],
+            },
             fixup => sub { $filter = delete $_[1]->{qs}{filter_missing} },
             post_process => sub {
                 my $result = shift;
@@ -823,6 +825,34 @@ sub index_status {
 }
 
 #===================================
+sub index_stats {
+#===================================
+    shift()->_do_action(
+        'index_stats',
+        {   cmd     => CMD_index,
+            postfix => '_stats',
+            qs      => {
+                type     => ['flatten'],
+                level    => [ 'enum', [qw(shards)] ],
+                docs     => [ 'boolean', 1, 0 ],
+                store    => [ 'boolean', 1, 0 ],
+                indexing => [ 'boolean', 1, 0 ],
+                clear   => [ 'boolean', 1 ],
+                merge   => [ 'boolean', 1 ],
+                flush   => [ 'boolean', 1 ],
+                refresh => [ 'boolean', 1 ],
+            },
+            fixup => sub {
+                my $qs = $_[1]->{qs};
+                my $types = delete $qs->{type} or return;
+                $qs->{types} = $types;
+            },
+        },
+        @_
+    );
+}
+
+#===================================
 sub create_index {
 #===================================
     shift()->_do_action(
@@ -1368,6 +1398,40 @@ sub cluster_health {
             }
         },
         @_
+    );
+}
+
+#===================================
+sub cluster_settings {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+
+    $self->_do_action(
+        'cluster_settings',
+        {   method  => 'GET',
+            cmd     => CMD_NONE,
+            postfix => '_cluster/settings'
+        },
+        $params
+    );
+}
+
+#===================================
+sub update_cluster_settings {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+
+    $self->_do_action(
+        'update_cluster_settings',
+        {   method  => 'PUT',
+            cmd     => CMD_NONE,
+            postfix => '_cluster/settings',
+            data    => {
+                persistent => ['persistent'],
+                transient  => ['transient']
+            }
+        },
+        $params
     );
 }
 
