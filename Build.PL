@@ -21,7 +21,7 @@ my %module_build_args = (
     "Clinton Gormley <drtech\@cpan.org>"
   ],
   "dist_name" => "ElasticSearch",
-  "dist_version" => "0.46",
+  "dist_version" => "0.47",
   "license" => "perl",
   "module_name" => "ElasticSearch",
   "recommends" => {
@@ -46,6 +46,7 @@ my %module_build_args = (
     "JSON" => 0,
     "LWP::ConnCache" => 0,
     "LWP::UserAgent" => 0,
+    "List::Util" => 0,
     "POSIX" => 0,
     "Scalar::Util" => "1.07",
     "URI" => 0,
