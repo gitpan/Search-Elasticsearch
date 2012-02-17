@@ -2,7 +2,7 @@ NAME
     ElasticSearch - An API for communicating with ElasticSearch
 
 VERSION
-    Version 0.41, tested against ElasticSearch server version 0.17.6.
+    Version 0.48, tested against ElasticSearch server version 0.18.6.
 
 DESCRIPTION
     ElasticSearch is an Open Source (Apache 2 license), distributed, RESTful
@@ -315,6 +315,17 @@ METHODS
     *   If "version" is passed, and the current version in ElasticSearch is
         different, then a "Conflict" error will be thrown.
 
+    *   "data" can also be a raw JSON encoded string (but ensure that it is
+        correctly encoded, otherwise you see errors when trying to retrieve
+        it from ElasticSearch).
+
+            $es->index(
+                index   => 'foo',
+                type    =>  'bar',
+                id      =>  1,
+                data    =>  '{"foo":"bar"}'
+            );
+
     See also:
     <http://www.elasticsearch.org/guide/reference/api/index_.html>, "bulk()"
     and "put_mapping()"
@@ -366,6 +377,41 @@ METHODS
     you also set "version_type" to "external".
 
     See also: "index()"
+
+   update()
+        $result = $es->update(
+            index             => single,
+            type              => single,
+            id                => single,
+
+            # required
+            script            => $script,
+
+            # optional
+            params            => { params },
+            consistency       => 'quorum' | 'one' | 'all'
+            ignore_missing    => 0 | 1
+            parent            => $parent,
+            percolate         => $percolate,
+            retry_on_conflict => 2,
+            routing           => $routing,
+            timeout           => '10s',
+            replication       => 'sync' | 'async'
+        )
+
+    The "update()" method accepts a script which will update a single doc
+    without having to retrieve and reindex the doc yourself, eg:
+
+        $es->update(
+            index   => 'test',
+            type    => 'foo',
+            id      => 123,
+            script  => 'ctx._source.tags+=[tag]',
+            params  => { tag => 'red' }
+        );
+
+    See <http://www.elasticsearch.org/guide/reference/api/update.html> for
+    more.
 
    get()
         $result = $es->get(
@@ -471,8 +517,8 @@ METHODS
     an empty array ref.
 
     Returns an array ref containing all of the documents requested. If a
-    document is not found, then its entry will include "<{exists =" 0}>>. If
-    you would rather filter these missing docs, pass "filter_missing =" 1>
+    document is not found, then its entry will include "{exists => 0}". If
+    you would rather filter these missing docs, pass "filter_missing => 1".
 
     See <http://www.elasticsearch.org/guide/reference/api/multi-get.html>
 
@@ -511,62 +557,113 @@ METHODS
     <http://www.elasticsearch.org/guide/reference/api/delete.html>
 
    bulk()
+        $result = $es->bulk( [ actions ] )
+
         $result = $es->bulk(
-            [
-                { create => { index => 'foo', type => 'bar', id => 123,
-                              data => { text => 'foo bar'},
+            actions     => [ actions ]                  # required
 
-                              # optional
-                              routing       => $routing,
-                              parent        => $parent,
-                              percolate     => $percolate,
-                              version       => $version,
-                              version_type  => 'internal' | 'external'
-                }},
-
-                { index  => { index => 'foo', type => 'bar', id => 123,
-                              data => { text => 'foo bar'},
-
-                              # optional
-                              routing       => $routing,
-                              parent        => $parent,
-                              percolate     => $percolate,
-                              version       => $version,
-                              version_type  => 'internal' | 'external'
-                }},
-
-                { delete => { index => 'foo', type => 'bar', id => 123,
-
-                              # optional
-                              routing       => $routing,
-                              parent        => $parent,
-                              version       => $version
-                }},
-
-            ],
-            consistency     => 'quorum' | 'one' | 'all'     # optional
-            refresh         => 0 | 1                        # optional
+            index       => 'foo',                       # optional
+            type        => 'bar',                       # optional
+            consistency => 'quorum' |  'one' | 'all'    # optional
+            refresh     => 0 | 1,                       # optional
+            replication => 'sync' | 'async',            # optional
         );
 
-    Perform multiple "index","create" or "delete" operations in a single
-    request. In my benchmarks, this is 10 times faster than serial
-    operations.
+    Perform multiple "index", "create" and "delete" actions in a single
+    request. This is about 10x as fast as performing each action in a
+    separate request.
 
-    For the above example, the $result will look like:
+    Each "action" is a HASH ref with a key indicating the action type
+    ("index", "create" or "delete"), whose value is another HASH ref
+    containing the associated metadata.
+
+    The "index" and "type" parameters can be specified for each individual
+    action, or inherited from the top level "index" and "type" parameters,
+    as shown above.
+
+    NOTE: "bulk()" also accepts the "_index", "_type", "_id", "_source",
+    "_parent", "_routing" and "_version" parameters so that you can pass
+    search results directly to "bulk()".
+
+   "index" and "create" actions
+        { index  => {
+            index           => 'foo',
+            type            => 'bar',
+            id              => 123,
+            data            => { text => 'foo bar'},
+
+            # optional
+            routing         => $routing,
+            parent          => $parent,
+            percolate       => $percolate,
+            timestamp       => $timestamp,
+            ttl             => $ttl,
+            version         => $version,
+            version_type    => 'internal' | 'external'
+        }}
+
+        { create  => { ... same options as for 'index' }}
+
+    The "index" and "type" parameters, if not specified, are inherited from
+    the top level bulk request.
+
+    "data" can also be a raw JSON encoded string (but ensure that it is
+    correctly encoded, otherwise you see errors when trying to retrieve it
+    from ElasticSearch).
+
+        actions => [{
+            index => {
+                index   => 'foo',
+                type    =>  'bar',
+                id      =>  1,
+                data    =>  '{"foo":"bar"}'
+            }
+        }]
+
+   "delete" action
+        { delete  => {
+            index           => 'foo',
+            type            => 'bar',
+            id              => 123,
+
+            # optional
+            routing         => $routing,
+            parent          => $parent,
+            version         => $version,
+            version_type    => 'internal' | 'external'
+        }}
+
+    The "index" and "type" parameters, if not specified, are inherited from
+    the top level bulk request.
+
+   Return values
+    The "bulk()" method returns a HASH ref containing:
 
         {
             actions => [ the list of actions you passed in ],
-            results => [
-                 { create => { _id => 123, _index => "foo", _type => "bar", _version => 1 } },
-                 { index  => { _id => 123, _index => "foo", _type => "bar", _version => 2 } },
-                 { delete => { _id => 123, _index => "foo", _type => "bar", _version => 3 } },
-            ]
+            results => [ the result of each of the actions ],
+            errors  => [ a list of any errors              ]
         }
 
-    where each row in "results" corresponds to the same row in "actions". If
-    there are any errors for individual rows, then the $result will contain
-    a key "errors" which contains an array of each error and the associated
-    action, eg:
+    The "results" ARRAY ref contains the same values that would be returned
+    for individiual "index"/"create"/"delete" statements, eg:
+
+        results => [
+             { create => { _id => 123, _index => "foo", _type => "bar", _version => 1 } },
+             { index  => { _id => 123, _index => "foo", _type => "bar", _version => 2 } },
+             { delete => { _id => 123, _index => "foo", _type => "bar", _version => 3 } },
+        ]
+
+    The "errors" key is only present if an error has occured, so you can do:
+
+        $results = $es->bulk(\@actions);
+        if ($results->{errors}) {
+            # handle errors
+        }
+
+    Each error element contains the "error" message plus the "action" that
+    triggered the error. Each "result" element will also contain the error
+    message., eg:
 
         $result = {
             actions => [
@@ -599,32 +696,39 @@ METHODS
 
         };
 
-    NOTE: "bulk()" also accepts the "_index", "_type", "_id", "_source",
-    "_parent", "_routing" and "_version" parameters so that you can pass
-    search results directly to "bulk()".
-
     See <http://www.elasticsearch.org/guide/reference/api/bulk.html> for
     more details.
 
    bulk_index(), bulk_create(), bulk_delete()
-    These are convenience methods which allow you to pass just the data,
-    without the "index", "create" or "index" action for each record, eg:
+    These are convenience methods which allow you to pass just the metadata,
+    without the "index", "create" or "index" action for each record.
 
-        $es->bulk_index([
-            { id => 123, index => 'bar', type => 'bar', data => { text=>'foo'} },
-            { id => 124, index => 'bar', type => 'bar', data => { text=>'bar'} },
-        ],  { refresh => 1 });
+    These methods accept the same parameters as the "bulk()" method, except
+    that the "actions" parameter is replaced by "docs", eg:
 
-    is the equivalent of:
+        $result = $es->bulk_index( [ docs ] );
 
-        $es->bulk([
-            { index =>
-                { id => 123, index => 'bar', type => 'bar', data => { text=>'foo'}}
-            },
-            { index =>
-                { id => 124, index => 'bar', type => 'bar', data => { text=>'bar'}}
-            }
-        ],  { refresh => 1 });
+        $result = $es->bulk_index(
+            docs        => [ docs ],                    # required
+
+            index       => 'foo',                       # optional
+            type        => 'bar',                       # optional
+            consistency => 'quorum' |  'one' | 'all'    # optional
+            refresh     => 0 | 1,                       # optional
+            replication => 'sync' | 'async',            # optional
+        );
+
+    For instance:
+
+        $es->bulk_index(
+            index   => 'foo',
+            type    => 'bar',
+            refresh => 1,
+            docs    => [
+                { id => 123,                data => { text=>'foo'} },
+                { id => 124, type => 'baz', data => { text=>'bar'} },
+            ]
+        );
 
    reindex()
         $es->reindex(
@@ -722,11 +826,18 @@ METHODS
 
    analyze()
         $result = $es->analyze(
-          index         =>  single,
           text          =>  $text_to_analyze,           # required
+          index         =>  single,                     # optional
 
-          # optional
+          # either
+          field         =>  'type.fieldname',           # requires index
+
           analyzer      =>  $analyzer,
+
+          tokenizer     => $tokenizer,
+          filters       => \@filters,
+
+          # other options
           format        =>  'detailed' | 'text',
           prefer_local  =>  1 | 0
         );
@@ -734,21 +845,30 @@ METHODS
     The "analyze()" method allows you to see how ElasticSearch is analyzing
     the text that you pass in, eg:
 
-        $result = $es->analyze( text => 'The Man', index => 'foo')
+        $result = $es->analyze( text => 'The Man' )
 
-    returns:
+        $result = $es->analyze(
+            text        => 'The Man',
+            analyzer    => 'simple'
+        );
 
-        {
-          tokens => [
-            {
-              end_offset        => 7,
-              position          => 2,
-              start_offset      => 4,
-              token             => "man",
-              type              => "<ALPHANUM>",
-            },
-          ],
-        }
+        $result = $es->analyze(
+            text        => 'The Man',
+            tokenizer   => 'keyword',
+            filters     => ['lowercase'],
+        );
+
+        $result = $es->analyze(
+            text        => 'The Man',
+            index       => 'my_index',
+            analyzer    => 'my_custom_analyzer'
+        );
+
+        $result = $es->analyze(
+            text        => 'The Man',
+            index       => 'my_index',
+            field       => 'my_type.my_field',
+        );
 
     See
     <http://www.elasticsearch.org/guide/reference/api/admin-indices-analyze.
@@ -770,6 +890,7 @@ METHODS
             explain         => 1 | 0,
             facets          => { facets },
             fields          => [$field_1,$field_n],
+            partial_fields  => { my_field => { include => 'foo.bar.* }},
             from            => $start_from
             highlight       => { highlight }
             indices_boost   => { index_1 => 1.5,... },
@@ -786,6 +907,7 @@ METHODS
             size            => $no_of_results
             sort            => ['_score',$field_1]
             scroll          => '5m' | '30s',
+            stats           => ['group_1','group_2'],
             track_scores    => 0 | 1,
             timeout         => '10s'
             version         => 0 | 1
@@ -857,6 +979,7 @@ METHODS
             size                     => $no_of_results
             sort                     => ['_score:asc','last_modified:desc'],
             scroll                   => '5m' | '30s',
+            stats                    => ['group_1','group_2'],
             timeout                  => '10s'
             version                  => 0 | 1
 
@@ -1058,6 +1181,22 @@ METHODS
     and
     <http://www.elasticsearch.org/guide/reference/query-dsl/mlt-query.html>
 
+   validate_query()
+        $bool = $es->validate_query(
+            index   => multi,
+            type    => multi,
+
+            query   => { native query }
+          | queryb  => { search builder query }
+          | q       => $query_string
+        );
+
+    Returns true if the passed in "query" (native ES query), "queryb"
+    (SearchBuilder style query) or "q" (Lucene query string) is valid.
+    Otherwise returns false.
+
+    See <https://github.com/elasticsearch/elasticsearch/pull/1574>
+
   Index Admin methods
    index_status()
         $result = $es->index_status(
@@ -1079,16 +1218,20 @@ METHODS
    index_stats()
         $result = $es->index_stats(
             index           => multi,
-            type            => multi,
+            types           => multi,
 
             docs            => 1|0,
             store           => 1|0,
             indexing        => 1|0,
+            get             => 1|0,
 
-            clear           => 0|1,         # clears default docs,store,indexing
+            all             => 0|1,  # returns all stats
+            clear           => 0|1,  # clears default docs,store,indexing,get,search
+
             flush           => 0|1,
             merge           => 0|1
             refresh         => 0|1,
+
             level           => 'shards'
         );
 
@@ -1097,6 +1240,19 @@ METHODS
     See
     <http://www.elasticsearch.org/guide/reference/api/admin-indices-stats.ht
     ml>
+
+   index_segments()
+        $result = $es->index_segments(
+            index           => multi,
+        );
+
+    Returns low-level Lucene segments information for the specified indices.
+
+    Throws a "Missing" exception if the specified indices do not exist.
+
+    See
+    <http://www.elasticsearch.org/guide/reference/api/admin-indices-segments
+    .html>
 
    create_index()
         $result = $es->create_index(
@@ -1410,6 +1566,7 @@ METHODS
             field_data      => 0 | 1,
             filter          => 0 | 1,
             id              => 0 | 1,
+            fields          => 'field1' | ['field1','fieldn',...]
         );
 
     Clears the caches for the specified indices. By default, clears all
@@ -1715,7 +1872,9 @@ METHODS
     Returns any cluster wide settings that have been set with
     "update_cluster_settings".
 
-    See <https://github.com/elasticsearch/elasticsearch/issues/1266>
+    See
+    <http://www.elasticsearch.org/guide/reference/api/admin-cluster-update-s
+    ettings.html>
 
    update_cluster_settings()
         $result = $es->update_cluster_settings(
@@ -1734,16 +1893,24 @@ METHODS
     "persistent" settings will survive a full cluster restart. "transient"
     settings won't.
 
-    See <https://github.com/elasticsearch/elasticsearch/issues/1266>
+    See
+    <http://www.elasticsearch.org/guide/reference/api/admin-cluster-update-s
+    ettings.html>
 
    nodes()
         $result = $es->nodes(
             nodes       => multi,
-            settings    => 1 | 0        # optional
+            settings    => 0 | 1,
+            http        => 0 | 1,
+            jvm         => 0 | 1,
+            network     => 0 | 1,
+            os          => 0 | 1,
+            process     => 0 | 1,
+            thread_pool => 0 | 1,
+            transport   => 0 | 1
         );
 
     Returns information about one or more nodes or servers in the cluster.
-    If "settings" is "true", then it includes the node settings information.
 
     See:
     <http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-in
@@ -1752,6 +1919,19 @@ METHODS
    nodes_stats()
         $result = $es->nodes_stats(
             node    => multi,
+
+            indices     => 1 | 0,
+            clear       => 0 | 1,
+            all         => 0 | 1,
+            fs          => 0 | 1,
+            http        => 0 | 1,
+            jvm         => 0 | 1,
+            network     => 0 | 1,
+            os          => 0 | 1,
+            process     => 0 | 1,
+            thread_pool => 0 | 1,
+            transport   => 0 | 1,
+
         );
 
     Returns various statistics about one or more nodes in the cluster.

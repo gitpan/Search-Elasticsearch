@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTPTiny;
 {
-  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.47';
+  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.48';
 }
 
 use strict;
@@ -58,12 +58,12 @@ sub send_request {
         $content = '';
     }
 
-    my $type
-        = $code eq '409' ? 'Conflict'
-        : $code eq '404' ? 'Missing'
-        : $msg =~ /Timed out/         ? 'Timeout'
+    my $type = $self->code_to_error($code)
+        || (
+          $msg =~ /Timed out/         ? 'Timeout'
         : $msg =~ /$Connection_Error/ ? 'Connection'
-        :                               'Request';
+        : 'Request'
+        );
 
     my $error_params = {
         server      => $server,

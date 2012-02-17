@@ -1,11 +1,12 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.47';
+  $ElasticSearch::VERSION = '0.48';
 }
 
 use strict;
 use warnings FATAL => 'all';
 use Any::URI::Escape qw(uri_escape);
+use Carp;
 use constant {
     ONE_REQ     => 1,
     ONE_OPT     => 2,
@@ -20,18 +21,23 @@ use constant {
     CMD_INDEX_TYPE_ID => [ index => ONE_REQ, type => ONE_REQ, id => ONE_REQ ],
     CMD_INDEX_TYPE_id => [ index => ONE_REQ, type => ONE_REQ, id => ONE_OPT ],
     CMD_INDEX_type_ID => [ index => ONE_REQ, type => ONE_ALL, id => ONE_REQ ],
-    CMD_index        => [ index => MULTI_BLANK ],
-    CMD_INDICES      => [ index => MULTI_REQ ],
-    CMD_INDEX        => [ index => ONE_REQ ],
-    CMD_INDEX_TYPE   => [ index => ONE_REQ, type => ONE_REQ ],
-    CMD_INDEX_type   => [ index => ONE_REQ, type => MULTI_BLANK ],
-    CMD_index_TYPE   => [ index => MULTI_ALL, type => ONE_REQ ],
-    CMD_INDICES_TYPE => [ index => MULTI_REQ, type => ONE_REQ ],
-    CMD_index_type   => [ index => MULTI_ALL, type => MULTI_BLANK ],
-    CMD_RIVER        => [ river => ONE_REQ ],
-    CMD_nodes        => [ node  => MULTI_BLANK ],
-    CMD_NAME         => [ name  => ONE_REQ ],
-    CMD_INDEX_PERC   => [ index => ONE_REQ, percolator => ONE_REQ ],
+    CMD_Index           => [ index => ONE_OPT ],
+    CMD_index           => [ index => MULTI_BLANK ],
+    CMD_INDICES         => [ index => MULTI_REQ ],
+    CMD_INDEX           => [ index => ONE_REQ ],
+    CMD_INDEX_TYPE      => [ index => ONE_REQ, type => ONE_REQ ],
+    CMD_INDEX_type      => [ index => ONE_REQ, type => MULTI_BLANK ],
+    CMD_index_TYPE      => [ index => MULTI_ALL, type => ONE_REQ ],
+    CMD_INDICES_TYPE    => [ index => MULTI_REQ, type => ONE_REQ ],
+    CMD_index_type      => [ index => MULTI_ALL, type => MULTI_BLANK ],
+    CMD_index_then_type => [ index => ONE_OPT, type => ONE_OPT ],
+    CMD_RIVER           => [ river => ONE_REQ ],
+    CMD_nodes           => [ node  => MULTI_BLANK ],
+    CMD_NAME            => [ name  => ONE_REQ ],
+    CMD_INDEX_PERC      => [ index => ONE_REQ, percolator => ONE_REQ ],
+
+    CONSISTENCY => [ 'enum', [ 'one', 'quorum', 'all' ] ],
+    REPLICATION => [ 'enum', [ 'async', 'sync' ] ],
 };
 
 our %QS_Format = (
@@ -182,10 +188,16 @@ my %Index_Defn = (
         routing   => ['string'],
         parent    => ['string'],
         percolate => ['string'],
+        timestamp => ['duration'],
+        ttl       => ['int'],
         version   => ['int'],
         version_type => [ 'enum', [ 'internal', 'external' ] ],
     },
-    data => 'data',
+    data  => { data => 'data' },
+    fixup => sub {
+        my $data = $_[1]{data}{data};
+        $_[1]{data} = ref $data eq 'HASH' ? $data : \$data;
+    }
 );
 
 #===================================
@@ -208,24 +220,7 @@ sub set {
 sub create {
 #===================================
     my ( $self, $params ) = parse_params(@_);
-
-    $self->_index(
-        'create',
-        {   cmd     => CMD_INDEX_TYPE_id,
-            data    => 'data',
-            postfix => '_create',
-            qs      => {
-                refresh   => [ 'boolean', 1 ],
-                timeout   => ['duration'],
-                routing   => ['string'],
-                parent    => ['string'],
-                percolate => ['string'],
-                version   => ['int'],
-                version_type => [ 'enum', [ 'internal', 'external' ] ],
-            },
-        },
-        $params
-    );
+    $self->_index( 'create', \%Index_Defn, { %$params, create => 1 } );
 }
 
 #===================================
@@ -237,6 +232,33 @@ sub _index {
 }
 
 #===================================
+sub update {
+#===================================
+    shift()->_do_action(
+        'update',
+        {   method  => 'POST',
+            cmd     => CMD_INDEX_TYPE_ID,
+            postfix => '_update',
+            data => {
+                script=>'script',
+                params=>['params'],
+            },
+            qs      => {
+                consistency       => CONSISTENCY,
+                ignore_missing    => [ 'boolean', 1 ],
+                parent            => ['string'],
+                percolate         => ['string'],
+                retry_on_conflict => ['int'],
+                routing           => ['string'],
+                timeout           => ['duration'],
+                replication       => REPLICATION,
+            }
+        },
+        @_
+    );
+}
+
+#===================================
 sub delete {
 #===================================
     shift()->_do_action(
@@ -244,13 +266,13 @@ sub delete {
         {   method => 'DELETE',
             cmd    => CMD_INDEX_TYPE_ID,
             qs     => {
-                consistency => [ 'enum', [ 'one', 'quorom', 'all' ] ],
+                consistency    => CONSISTENCY,
                 ignore_missing => [ 'boolean', 1 ],
                 refresh        => [ 'boolean', 1 ],
                 parent         => ['string'],
                 routing        => ['string'],
                 version        => ['int'],
-                replication => [ 'enum', [ 'async', 'sync' ] ],
+                replication    => REPLICATION,
             }
         },
         @_
@@ -263,11 +285,14 @@ sub analyze {
     shift()->_do_action(
         'analyze',
         {   method  => 'GET',
-            cmd     => CMD_INDEX,
+            cmd     => CMD_Index,
             postfix => '_analyze',
             qs      => {
                 text         => ['string'],
                 analyzer     => ['string'],
+                tokenizer    => ['string'],
+                filters      => ['flatten'],
+                field        => ['string'],
                 format       => [ 'enum', [ 'detailed', 'text' ] ],
                 prefer_local => [ 'boolean', undef, 0 ],
             }
@@ -280,69 +305,165 @@ sub analyze {
 ## BULK INTERFACE
 ##################################
 
+#===================================
+sub bulk {
+#===================================
+    my $self = shift;
+    $self->_bulk( 'bulk', $self->_bulk_params( 'actions', @_ ) );
+}
+
+#===================================
+sub _bulk {
+#===================================
+    my ( $self, $method, $params ) = @_;
+    my $actions = $params->{actions} || [];
+    return { actions => [], results => [] } unless @$actions;
+
+    $self->_do_action(
+        $method,
+        {   cmd     => CMD_index_then_type,
+            method  => 'POST',
+            postfix => '_bulk',
+            qs      => {
+                consistency => CONSISTENCY,
+                replication => REPLICATION,
+                refresh     => [ 'boolean', 1 ],
+            },
+            data  => { actions => 'actions' },
+            fixup => sub {
+                die "Cannot specify type without index"
+                    if $params->{type} && !$params->{index};
+                $_[1]->{data} = $self->_bulk_request($actions);
+            },
+            post_process => sub { $self->_bulk_response( $actions, @_ ) },
+        },
+        $params
+    );
+}
+
+#===================================
+sub bulk_index  { shift->_bulk_action( 'index',  @_ ) }
+sub bulk_create { shift->_bulk_action( 'create', @_ ) }
+sub bulk_delete { shift->_bulk_action( 'delete', @_ ) }
+#===================================
+
+#===================================
+sub _bulk_action {
+#===================================
+    my $self   = shift;
+    my $action = shift;
+    my $params = $self->_bulk_params( 'docs', @_ );
+    $params->{actions}
+        = [ map { +{ $action => $_ } } @{ delete $params->{docs} } ];
+    return $self->_bulk( "bulk_$action", $params );
+}
+
+#===================================
+sub _bulk_params {
+#===================================
+    my $self = shift;
+    my $key  = shift;
+
+    return { $key => [], @_ } unless ref $_[0];
+    return
+        ref $_[0] eq 'ARRAY' ? { $key => $_[0] } : { $key => [], %{ $_[0] } }
+        unless @_ > 1;
+
+    carp "The method signature for bulk methods has changed. "
+        . "Please check the docs.";
+
+    if ( ref $_[0] eq 'ARRAY' ) {
+        my $first = shift;
+        my $params = ref $_[0] ? shift : {@_};
+        $params->{$key} = $first;
+        return $params;
+    }
+    return { $key => \@_ };
+}
+
 my %Bulk_Actions = (
     'delete' => {
-        index   => ONE_REQ,
-        type    => ONE_REQ,
-        id      => ONE_REQ,
-        parent  => ONE_OPT,
-        routing => ONE_OPT,
-        version => ONE_OPT,
+        index        => ONE_OPT,
+        type         => ONE_OPT,
+        id           => ONE_REQ,
+        parent       => ONE_OPT,
+        routing      => ONE_OPT,
+        version      => ONE_OPT,
+        version_type => ONE_OPT,
     },
     'index' => {
-        index        => ONE_REQ,
-        type         => ONE_REQ,
+        index        => ONE_OPT,
+        type         => ONE_OPT,
         id           => ONE_OPT,
         data         => ONE_REQ,
         routing      => ONE_OPT,
         parent       => ONE_OPT,
         percolate    => ONE_OPT,
+        timestamp    => ONE_OPT,
+        ttl          => ONE_OPT,
         version      => ONE_OPT,
         version_type => ONE_OPT,
     },
 );
 $Bulk_Actions{create} = $Bulk_Actions{index};
 
-my %Bulk_QS = (
-    consistency => [ 'enum', [ 'one', 'quorom', 'all' ] ],
-    refresh => [ 'boolean', 1 ],
-);
-
 #===================================
-sub bulk {
+sub _bulk_request {
 #===================================
-    my $self = shift;
-    my ( $actions, $qs, $as_json );
-    if ( ref $_[0] eq 'ARRAY' ) {
-        $actions = shift;
-        my $params = ref $_[0] eq 'HASH' ? shift : {@_};
-        $as_json = delete $params->{as_json};
-        $qs = $self->_build_qs( $params, \%Bulk_QS );
-    }
-    else {
-        $actions = [@_];
-    }
-
-    return { actions => [], results => [] } unless @$actions;
+    my $self    = shift;
+    my $actions = shift;
 
     my $json      = $self->transport->JSON;
     my $indenting = $json->get_indent;
     $json->indent(0);
 
-    my $json_docs = eval { $self->_build_bulk_query($actions) };
-    my $error = $@;
-    $json->indent($indenting);
-    die $error unless $json_docs;
+    my $json_docs = '';
+    my $error;
+    eval {
+        for my $data (@$actions)
+        {
+            die "'actions' must be an ARRAY ref of HASH refs"
+                unless ref $data eq 'HASH';
 
-    $self->request( {
-            method       => 'POST',
-            cmd          => '/_bulk',
-            qs           => $qs,
-            as_json      => $as_json,
-            data         => $json_docs,
-            post_process => sub { $self->_bulk_response( $actions, @_ ) },
+            my ( $action, $params ) = %$data;
+            $action ||= '';
+            my $defn = $Bulk_Actions{$action}
+                || die "Unknown action '$action'";
+
+            my %metadata;
+            $params = {%$params};
+            delete @{$params}{qw(_score sort)};
+            $params->{data} ||= delete $params->{_source}
+                if $params->{_source};
+
+            for my $key ( keys %$defn ) {
+                my $val = delete $params->{$key};
+                $val = delete $params->{"_$key"} unless defined $val;
+                unless ( defined $val ) {
+                    next if $defn->{$key} == ONE_OPT;
+                    die "Missing required param '$key' for action '$action'";
+                }
+                $metadata{"_$key"} = $val;
+            }
+            die "Unknown params for bulk action '$action': "
+                . join( ', ', keys %$params )
+                if keys %$params;
+
+            my $data = delete $metadata{_data};
+            my $request = $json->encode( { $action => \%metadata } ) . "\n";
+            if ($data) {
+                $data = $json->encode($data) if ref $data eq 'HASH';
+                $request .= $data . "\n";
+            }
+            $json_docs .= $request;
         }
-    );
+        1;
+    } or $error = $@ || 'Unknown error';
+
+    $json->indent($indenting);
+    die $error if $error;
+
+    return \$json_docs;
 }
 
 #===================================
@@ -376,82 +497,6 @@ sub _bulk_response {
     };
 }
 
-#===================================
-sub bulk_index  { shift->_bulk_action( 'index',  @_ ) }
-sub bulk_create { shift->_bulk_action( 'create', @_ ) }
-sub bulk_delete { shift->_bulk_action( 'delete', @_ ) }
-#===================================
-
-#===================================
-sub _bulk_action {
-#===================================
-    my $self    = shift;
-    my $action  = shift;
-    my $docs    = ref $_[0] eq 'ARRAY' ? shift : [@_];
-    my @actions = map {
-        { $action => $_ }
-    } @$docs;
-    return $self->bulk( \@actions, @_ );
-}
-
-#===================================
-sub _build_bulk_query {
-#===================================
-    my $self    = shift;
-    my $actions = shift;
-    my $json    = $self->transport->JSON;
-
-    my $json_docs = '';
-    for my $data (@$actions) {
-
-        $self->throw( "Param", 'bulk() expects an array of HASH refs', $data )
-            unless ref $data eq 'HASH';
-
-        my ( $action, $params ) = %$data;
-        $action ||= '';
-        my $defn = $Bulk_Actions{$action}
-            || $self->throw( "Param", "Unknown bulk action '$action'" );
-
-        my %metadata;
-        $params = {%$params};
-        delete @{$params}{qw(_score sort)};
-        $params->{data} ||= delete $params->{_source}
-            if $params->{_source};
-
-        for my $key ( keys %$defn ) {
-            my $val
-                = exists $params->{$key}    ? delete $params->{$key}
-                : exists $params->{"_$key"} ? delete $params->{"_$key"}
-                :                             $self->{_default}{$key};
-            unless ( defined $val ) {
-                next if $defn->{$key} == ONE_OPT;
-                $self->throw(
-                    'Param',
-                    "Missing required param '$key' for bulk action '$action'",
-                    $data
-                );
-            }
-            $metadata{"_$key"} = $val;
-        }
-        if ( exists $metadata{_percolate} ) {
-            $metadata{percolate} = delete $metadata{_percolate};
-        }
-        $self->throw(
-            'Param',
-            "Unknown params for bulk action '$action': "
-                . join( ', ', keys %$params ),
-            $data
-        ) if keys %$params;
-
-        my $data = delete $metadata{_data};
-        my $request = $json->encode( { $action => \%metadata } ) . "\n";
-        $request .= $json->encode($data) . "\n"
-            if $data;
-        $json_docs .= $request;
-    }
-    return \$json_docs;
-}
-
 ##################################
 ## QUERIES
 ##################################
@@ -465,7 +510,7 @@ sub _to_dsl {
     foreach my $clause (@_) {
         while ( my ( $old, $new ) = each %$ops ) {
             my $src = delete $clause->{$old} or next;
-            die "Cannot specify $old and $new parameters"
+            die "Cannot specify $old and $new parameters.\n"
                 if $clause->{$new};
             $builder ||= $self->builder;
             my $method = $new eq 'query' ? 'query' : 'filter';
@@ -509,10 +554,16 @@ my %SearchQS = (
 my %Search_Defn = (
     cmd     => CMD_index_type,
     postfix => '_search',
-    data    => { %Search_Data, query => ['query'], queryb => ['queryb'] },
-    qs      => {
+    data    => {
+        %Search_Data,
+        query          => ['query'],
+        queryb         => ['queryb'],
+        partial_fields => ['partial_fields']
+    },
+    qs => {
         %SearchQS,
         scroll  => ['duration'],
+        stats   => ['flatten'],
         version => [ 'boolean', 1 ]
     },
     fixup => sub {
@@ -551,6 +602,7 @@ my %SearchQS_Defn = (
         scroll                   => ['duration'],
         size                     => ['int'],
         'sort'                   => ['flatten'],
+        stats                    => ['flatten'],
         version                  => [ 'boolean', 1 ],
     },
 );
@@ -559,7 +611,6 @@ my %Query_Defn = (
     data => {
         query  => ['query'],
         queryb => ['queryb'],
-
     },
     deprecated => {
         bool               => ['bool'],
@@ -614,6 +665,37 @@ sub searchqs { shift()->_do_action( 'searchqs', \%SearchQS_Defn, @_ ) }
 #===================================
 
 #===================================
+sub validate_query {
+#===================================
+    shift->_do_action(
+        'validate_query',
+        {   cmd     => CMD_index_type,
+            postfix => '_validate/query',
+            data    => {
+                query  => ['query'],
+                queryb => ['queryb'],
+            },
+            qs    => { q => ['string'] },
+            fixup => sub {
+                my $args = $_[1];
+                if ( defined $args->{qs}{q} ) {
+                    die "Cannot specify q and query/queryb parameters.\n"
+                        if %{ $args->{data} };
+                    delete $args->{data};
+                }
+                else {
+                    eval { _query_fixup(@_); 1 } or do {
+                        die $@ if $@ =~ /Cannot specify queryb and query/;
+                    };
+                }
+            },
+            post_process => sub { !!shift->{valid} }
+        },
+        @_
+    );
+}
+
+#===================================
 sub scroll {
 #===================================
     shift()->_do_action(
@@ -646,9 +728,9 @@ sub delete_by_query {
             method  => 'DELETE',
             postfix => '_query',
             qs      => {
-                consistency => [ 'enum', [ 'one', 'quorom', 'all' ] ],
-                replication => [ 'enum', [ 'async', 'sync' ] ],
-                routing => ['flatten'],
+                consistency => CONSISTENCY,
+                replication => REPLICATION,
+                routing     => ['flatten'],
             },
             %Query_Defn,
             fixup => sub {
@@ -670,12 +752,7 @@ sub count {
             postfix => '_count',
             %Query_Defn,
             qs    => { routing => ['flatten'] },
-            fixup => sub {
-                _query_fixup(@_);
-                my $args = $_[1];
-                $args->{data}{match_all} = {}
-                    unless %{ $args->{data} };
-            },
+            fixup => \&_query_fixup,
         },
         @_
     );
@@ -832,21 +909,32 @@ sub index_stats {
         {   cmd     => CMD_index,
             postfix => '_stats',
             qs      => {
-                type     => ['flatten'],
-                level    => [ 'enum', [qw(shards)] ],
                 docs     => [ 'boolean', 1, 0 ],
                 store    => [ 'boolean', 1, 0 ],
                 indexing => [ 'boolean', 1, 0 ],
-                clear   => [ 'boolean', 1 ],
-                merge   => [ 'boolean', 1 ],
-                flush   => [ 'boolean', 1 ],
-                refresh => [ 'boolean', 1 ],
+                get      => [ 'boolean', 1, 0 ],
+                search   => [ 'boolean', 1, 0 ],
+                clear    => [ 'boolean', 1 ],
+                all      => [ 'boolean', 1 ],
+                merge    => [ 'boolean', 1 ],
+                flush    => [ 'boolean', 1 ],
+                refresh  => [ 'boolean', 1 ],
+                types    => ['flatten'],
+                groups   => ['flatten'],
+                level => [ 'enum', [qw(shards)] ],
             },
-            fixup => sub {
-                my $qs = $_[1]->{qs};
-                my $types = delete $qs->{type} or return;
-                $qs->{types} = $types;
-            },
+        },
+        @_
+    );
+}
+
+#===================================
+sub index_segments {
+#===================================
+    shift()->_do_action(
+        'index_segments',
+        {   cmd     => CMD_index,
+            postfix => '_segments',
         },
         @_
     );
@@ -1128,6 +1216,7 @@ sub put_mapping {
         if !$params->{mapping} && grep { exists $params->{$_} }
             keys %{ $defn{deprecated} };
 
+    my $type = $params->{type} || $self->{_default}{type};
     $self->_do_action(
         'put_mapping',
         {   method  => 'PUT',
@@ -1138,7 +1227,7 @@ sub put_mapping {
             fixup => sub {
                 my $args = $_[1];
                 my $mapping = $args->{data}{mapping} || $args->{data};
-                $args->{data} = { $params->{type} => $mapping };
+                $args->{data} = { $type => $mapping };
             },
         },
         $params
@@ -1168,9 +1257,13 @@ sub mapping {
     $self->_do_action(
         'mapping',
         {   method  => 'GET',
-            cmd     => CMD_index_type,
+            cmd     => CMD_index_then_type,
             postfix => '_mapping',
-            qs      => { ignore_missing => [ 'boolean', 1 ], }
+            fixup   => sub {
+                die "Cannot specify type without index"
+                    if $params->{type} && !$params->{index};
+            },
+            qs => { ignore_missing => [ 'boolean', 1 ], }
         },
         $params
     );
@@ -1189,6 +1282,7 @@ sub clear_cache {
                 filter     => [ 'boolean', 1 ],
                 field_data => [ 'boolean', 1 ],
                 bloom      => [ 'boolean', 1 ],
+                fields     => ['flatten'],
             }
         },
         @_
@@ -1333,7 +1427,16 @@ sub nodes {
         'nodes',
         {   prefix => '_cluster/nodes',
             cmd    => CMD_nodes,
-            qs     => { settings => [ 'boolean', 1 ] }
+            qs     => {
+                settings    => [ 'boolean', 1 ],
+                http        => [ 'boolean', 1 ],
+                jvm         => [ 'boolean', 1 ],
+                network     => [ 'boolean', 1 ],
+                os          => [ 'boolean', 1 ],
+                process     => [ 'boolean', 1 ],
+                thread_pool => [ 'boolean', 1 ],
+                transport   => [ 'boolean', 1 ],
+            },
         },
         @_
     );
@@ -1347,6 +1450,19 @@ sub nodes_stats {
         {   prefix  => '_cluster/nodes',
             postfix => 'stats',
             cmd     => CMD_nodes,
+            qs      => {
+                indices     => [ 'boolean', 1, 0 ],
+                clear       => [ 'boolean', 1 ],
+                all         => [ 'boolean', 1 ],
+                fs          => [ 'boolean', 1 ],
+                http        => [ 'boolean', 1 ],
+                jvm         => [ 'boolean', 1 ],
+                network     => [ 'boolean', 1 ],
+                os          => [ 'boolean', 1 ],
+                process     => [ 'boolean', 1 ],
+                thread_pool => [ 'boolean', 1 ],
+                transport   => [ 'boolean', 1 ],
+            },
         },
         @_
     );
@@ -1502,11 +1618,14 @@ sub _do_action {
     } or $error = $@ || 'Unknown error';
 
     $args{post_process} = $defn->{post_process};
-    $self->throw(
-        'Param',
-        $error . $self->_usage( $action, $defn ),
-        { params => $original_params }
-    ) if $error;
+    if ($error) {
+        die $error if ref $error;
+        $self->throw(
+            'Param',
+            $error . $self->_usage( $action, $defn ),
+            { params => $original_params }
+        );
+    }
 
     return $self->request( \%args );
 }
@@ -1533,7 +1652,6 @@ sub _usage {
     }
 
     if ( my $data = $defn->{data} ) {
-        $data = { data => $data } unless ref $data eq 'HASH';
         my @keys = sort { $a->[0] cmp $b->[0] }
             map { ref $_ ? [ $_->[0], 'optional' ] : [ $_, 'required' ] }
             values %$data;
@@ -1595,12 +1713,7 @@ sub _build_data {
     my $params = shift;
     my $defn   = shift or return;
 
-    my $top_level;
-    if ( ref $defn ne 'HASH' ) {
-        $top_level = 1;
-        $defn = { data => $defn };
-    }
-    elsif ( my $deprecated = shift ) {
+    if ( my $deprecated = shift ) {
         $defn = { %$defn, %$deprecated };
     }
 
@@ -1619,11 +1732,6 @@ KEY: while ( my ( $key, $source ) = each %$defn ) {
             $data{$key} = delete $params->{$source}
                 or die "Missing required param '$source'\n";
         }
-    }
-    if ($top_level) {
-        die "Param '$defn' is not a HASH ref"
-            unless ref $data{data} eq 'HASH';
-        return $data{data};
     }
     return \%data;
 }

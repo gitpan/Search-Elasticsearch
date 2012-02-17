@@ -1,6 +1,6 @@
 package ElasticSearch::ScrolledSearch;
 {
-  $ElasticSearch::ScrolledSearch::VERSION = '0.47';
+  $ElasticSearch::ScrolledSearch::VERSION = '0.48';
 }
 
 use strict;
@@ -22,9 +22,10 @@ ElasticSearch::ScrolledSearch - Description
         # do something
     }
 
-    $total = $scroller->total;
-    $bool  = $scroller->eof
-    $score = $scroller->max_score;
+    $total  = $scroller->total;
+    $bool   = $scroller->eof
+    $score  = $scroller->max_score;
+    $facets = $scroller->facets;
 
 =head1 DESCRIPTION
 
@@ -55,8 +56,8 @@ sub new {
     my ( $es, $params ) = parse_params(@_);
 
     my $scroll = $params->{scroll} ||= '1m';
-    my $method = $params->{q} ? 'searchqs' : 'search';
-
+    my $method  = $params->{q} ? 'searchqs' : 'search';
+    my $as_json = delete $params->{as_json};
     my $results = $es->$method($params);
     $results = $results->recv
         if ref $results ne 'HASH' and $results->isa('AnyEvent::CondVar');
@@ -67,7 +68,9 @@ sub new {
         _total     => $results->{hits}{total},
         _buffer    => $results->{hits}{hits},
         _max_score => $results->{hits}{max_score},
+        _facets    => $results->{facets},
         _eof       => 0,
+        _as_json   => $as_json,
     };
     return bless( $self, $class );
 }
@@ -82,6 +85,17 @@ no more results are available.
 
 An error is thrown if the C<scroll> has already expired.
 
+If C<< as_json => 1 >> is specified, then L</"next()"> will always return
+a JSON array:
+
+   $scroller->next()
+   # '[{...}]'
+
+   $scroller->next(2)
+   # '[{...},{...}]'
+
+   # if no results left: '[]'
+
 =cut
 
 #===================================
@@ -90,26 +104,59 @@ sub next {
     my $self = shift;
     my $size = shift || 1;
     while ( @{ $self->{_buffer} } < $size && !$self->{_eof} ) {
-        $self->_get_next;
+        $self->refill_buffer;
     }
-    return splice @{ $self->{_buffer} }, 0, $size;
+    my @results = splice @{ $self->{_buffer} }, 0, $size;
+    return $self->{_as_json}
+        ? $self->{_es}->transport->JSON->encode( \@results )
+        : $size == 1 ? $results[0]
+        :              @results;
 }
 
+=head2 drain_buffer()
+
+    @docs = $scroller->drain_buffer;
+
+Returns and removes all docs that are currently stored in the buffer.
+
+=cut
+
 #===================================
-sub _get_next {
+sub drain_buffer {
 #===================================
     my $self = shift;
-    return if $self->{_eof};
-    my $results = $self->{_es}->scroll(
-        scroll    => $self->{_scroll},
-        scroll_id => $self->{_scroll_id}
-    );
-    $results = $results->recv
-        if ref $results ne 'HASH' and $results->isa('AnyEvent::CondVar');
-    my @hits = @{ $results->{hits}{hits} };
-    $self->{_eof}++ if @hits == 0;
-    $self->{_scroll_id} = $results->{_scroll_id};
-    push @{ $self->{_buffer} }, @hits;
+    if ( my $size = @{ $self->{_buffer} } ) {
+        return $self->next($size);
+    }
+    return $self->{_as_json} ? '[]' : ();
+}
+
+=head2 refill_buffer()
+
+    $buffer_size = $scroller->refill_buffer
+
+Pulls the next set of results from ElasticSearch (if any) and returns
+the total number of docs stored in the internal buffer.
+
+=cut
+
+#===================================
+sub refill_buffer {
+#===================================
+    my $self = shift;
+    unless ( $self->{_eof} ) {
+        my $results = $self->{_es}->scroll(
+            scroll    => $self->{_scroll},
+            scroll_id => $self->{_scroll_id}
+        );
+        $results = $results->recv
+            if ref $results ne 'HASH' and $results->isa('AnyEvent::CondVar');
+        my @hits = @{ $results->{hits}{hits} };
+        $self->{_eof}++ if @hits == 0;
+        $self->{_scroll_id} = $results->{_scroll_id};
+        push @{ $self->{_buffer} }, @hits;
+    }
+    return scalar @{ $self->{_buffer} };
 }
 
 =head2 total()
@@ -139,6 +186,27 @@ sub total     { shift->{_total} }
 sub max_score { shift->{_max_score} }
 sub eof       { shift->{_eof} }
 #===================================
+
+=head2 facets()
+
+    $facets = $scroller->facets
+
+The C<facets> returned from the first search request (if any).
+
+If C<< as_json => 1 >> is specified, then L</"facets()"> will always return
+a JSON object.
+
+=cut
+
+#===================================
+sub facets {
+#===================================
+    my $self = shift;
+    return $self->{_as_json}
+        ? $self->{_es}->transport->JSON->encode( $self->{_facets} || {} )
+        : $self->{_facets}
+
+}
 
 =head1 SEE ALSO
 

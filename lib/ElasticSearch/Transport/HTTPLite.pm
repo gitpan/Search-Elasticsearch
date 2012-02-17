@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTPLite;
 {
-  $ElasticSearch::Transport::HTTPLite::VERSION = '0.47';
+  $ElasticSearch::Transport::HTTPLite::VERSION = '0.48';
 }
 
 use strict;
@@ -51,12 +51,12 @@ sub send_request {
     return $content if $code && $code >= 200 && $code <= 209;
 
     $msg ||= $client->status_message || 'read timeout';
-    my $type
-        = $code eq '409' ? 'Conflict'
-        : $code eq '404' ? 'Missing'
-        : $msg =~ /$Connection_Error/ ? 'Connection'
+    my $type = $self->code_to_error($code)
+        || (
+          $msg =~ /$Connection_Error/ ? 'Connection'
         : $msg =~ /read timeout/      ? 'Timeout'
-        :                               'Request';
+        : 'Request'
+        );
     my $error_params = {
         server      => $server,
         status_code => $code,

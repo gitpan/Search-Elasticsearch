@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.47';
+our $VERSION = '0.48';
 our $DEBUG   = 0;
 
 #===================================
@@ -152,7 +152,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.41, tested against ElasticSearch server version 0.17.6.
+Version 0.48, tested against ElasticSearch server version 0.18.6.
 
 =head1 DESCRIPTION
 
@@ -493,6 +493,18 @@ ID and a new document is always created.
 If C<version> is passed, and the current version in ElasticSearch is
 different, then a C<Conflict> error will be thrown.
 
+=item *
+
+C<data> can also be a raw JSON encoded string (but ensure that it is correctly
+encoded, otherwise you see errors when trying to retrieve it from ElasticSearch).
+
+    $es->index(
+        index   => 'foo',
+        type    =>  'bar',
+        id      =>  1,
+        data    =>  '{"foo":"bar"}'
+    );
+
 =back
 
 See also: L<http://www.elasticsearch.org/guide/reference/api/index_.html>,
@@ -548,6 +560,41 @@ If you pass a C<version> parameter to C<create>, then it must be C<0> unless
 you also set C<version_type> to C<external>.
 
 See also: L</"index()">
+
+=head3 update()
+
+    $result = $es->update(
+        index             => single,
+        type              => single,
+        id                => single,
+
+        # required
+        script            => $script,
+
+        # optional
+        params            => { params },
+        consistency       => 'quorum' | 'one' | 'all'
+        ignore_missing    => 0 | 1
+        parent            => $parent,
+        percolate         => $percolate,
+        retry_on_conflict => 2,
+        routing           => $routing,
+        timeout           => '10s',
+        replication       => 'sync' | 'async'
+    )
+
+The C<update()> method accepts a script which will update a single doc without
+having to retrieve and reindex the doc yourself, eg:
+
+    $es->update(
+        index   => 'test',
+        type    => 'foo',
+        id      => 123,
+        script  => 'ctx._source.tags+=[tag]',
+        params  => { tag => 'red' }
+    );
+
+See L<http://www.elasticsearch.org/guide/reference/api/update.html> for more.
 
 =head3 get()
 
@@ -654,8 +701,8 @@ If C<$docs> or C<$ids> is an empty array ref, then C<mget()> will just return
 an empty array ref.
 
 Returns an array ref containing all of the documents requested.  If a document
-is not found, then its entry will include C<<{exists => 0}>>. If you would
-rather filter these missing docs, pass C<filter_missing => 1>
+is not found, then its entry will include C<< {exists => 0} >>. If you would
+rather filter these missing docs, pass C<< filter_missing => 1 >>.
 
 See L<http://www.elasticsearch.org/guide/reference/api/multi-get.html>
 
@@ -695,61 +742,116 @@ L<http://www.elasticsearch.org/guide/reference/api/delete.html>
 
 =head3 bulk()
 
+    $result = $es->bulk( [ actions ] )
+
     $result = $es->bulk(
-        [
-            { create => { index => 'foo', type => 'bar', id => 123,
-                          data => { text => 'foo bar'},
+        actions     => [ actions ]                  # required
 
-                          # optional
-                          routing       => $routing,
-                          parent        => $parent,
-                          percolate     => $percolate,
-                          version       => $version,
-                          version_type  => 'internal' | 'external'
-            }},
-
-            { index  => { index => 'foo', type => 'bar', id => 123,
-                          data => { text => 'foo bar'},
-
-                          # optional
-                          routing       => $routing,
-                          parent        => $parent,
-                          percolate     => $percolate,
-                          version       => $version,
-                          version_type  => 'internal' | 'external'
-            }},
-
-            { delete => { index => 'foo', type => 'bar', id => 123,
-
-                          # optional
-                          routing       => $routing,
-                          parent        => $parent,
-                          version       => $version
-            }},
-
-        ],
-        consistency     => 'quorum' | 'one' | 'all'     # optional
-        refresh         => 0 | 1                        # optional
+        index       => 'foo',                       # optional
+        type        => 'bar',                       # optional
+        consistency => 'quorum' |  'one' | 'all'    # optional
+        refresh     => 0 | 1,                       # optional
+        replication => 'sync' | 'async',            # optional
     );
 
-Perform multiple C<index>,C<create> or C<delete> operations in a single
-request.  In my benchmarks, this is 10 times faster than serial operations.
 
-For the above example, the C<$result> will look like:
+Perform multiple C<index>, C<create> and C<delete> actions in a single request.
+This is about 10x as fast as performing each action in a separate request.
+
+Each C<action> is a HASH ref with a key indicating the action type (C<index>,
+C<create> or C<delete>), whose value is another HASH ref containing the
+associated metadata.
+
+The C<index> and C<type> parameters can be specified for each individual action,
+or inherited from the top level C<index> and C<type> parameters, as shown
+above.
+
+NOTE: C<bulk()> also accepts the C<_index>, C<_type>, C<_id>, C<_source>,
+C<_parent>, C<_routing> and C<_version> parameters so that you can pass search
+results directly to C<bulk()>.
+
+=head4 C<index> and C<create> actions
+
+    { index  => {
+        index           => 'foo',
+        type            => 'bar',
+        id              => 123,
+        data            => { text => 'foo bar'},
+
+        # optional
+        routing         => $routing,
+        parent          => $parent,
+        percolate       => $percolate,
+        timestamp       => $timestamp,
+        ttl             => $ttl,
+        version         => $version,
+        version_type    => 'internal' | 'external'
+    }}
+
+    { create  => { ... same options as for 'index' }}
+
+The C<index> and C<type> parameters, if not specified, are inherited from
+the top level bulk request.
+
+C<data> can also be a raw JSON encoded string (but ensure that it is correctly
+encoded, otherwise you see errors when trying to retrieve it from ElasticSearch).
+
+    actions => [{
+        index => {
+            index   => 'foo',
+            type    =>  'bar',
+            id      =>  1,
+            data    =>  '{"foo":"bar"}'
+        }
+    }]
+
+=head4 C<delete> action
+
+    { delete  => {
+        index           => 'foo',
+        type            => 'bar',
+        id              => 123,
+
+        # optional
+        routing         => $routing,
+        parent          => $parent,
+        version         => $version,
+        version_type    => 'internal' | 'external'
+    }}
+
+The C<index> and C<type> parameters, if not specified, are inherited from
+the top level bulk request.
+
+=head4 Return values
+
+The L</"bulk()"> method returns a HASH ref containing:
 
     {
         actions => [ the list of actions you passed in ],
-        results => [
-             { create => { _id => 123, _index => "foo", _type => "bar", _version => 1 } },
-             { index  => { _id => 123, _index => "foo", _type => "bar", _version => 2 } },
-             { delete => { _id => 123, _index => "foo", _type => "bar", _version => 3 } },
-        ]
+        results => [ the result of each of the actions ],
+        errors  => [ a list of any errors              ]
     }
 
-where each row in C<results> corresponds to the same row in C<actions>.
-If there are any errors for individual rows, then the C<$result> will contain
-a key C<errors> which contains an array of each error and the associated
-action, eg:
+The C<results> ARRAY ref contains the same values that would be returned
+for individiual C<index>/C<create>/C<delete> statements, eg:
+
+    results => [
+         { create => { _id => 123, _index => "foo", _type => "bar", _version => 1 } },
+         { index  => { _id => 123, _index => "foo", _type => "bar", _version => 2 } },
+         { delete => { _id => 123, _index => "foo", _type => "bar", _version => 3 } },
+    ]
+
+The C<errors> key is only present if an error has occured, so you can do:
+
+    $results = $es->bulk(\@actions);
+    if ($results->{errors}) {
+        # handle errors
+    }
+
+Each error element contains the C<error> message plus the C<action> that
+triggered the error.  Each C<result> element will also contain the error
+message., eg:
+
 
     $result = {
         actions => [
@@ -782,33 +884,41 @@ action, eg:
 
     };
 
-NOTE: C<bulk()> also accepts the C<_index>, C<_type>, C<_id>, C<_source>,
-C<_parent>, C<_routing> and C<_version> parameters so that you can pass search
-results directly to C<bulk()>.
-
 See L<http://www.elasticsearch.org/guide/reference/api/bulk.html> for
 more details.
 
 =head3 bulk_index(), bulk_create(), bulk_delete()
 
-These are convenience methods which allow you to pass just the data, without
-the C<index>, C<create> or C<index> action for each record, eg:
+These are convenience methods which allow you to pass just the metadata, without
+the C<index>, C<create> or C<index> action for each record.
 
-    $es->bulk_index([
-        { id => 123, index => 'bar', type => 'bar', data => { text=>'foo'} },
-        { id => 124, index => 'bar', type => 'bar', data => { text=>'bar'} },
-    ],  { refresh => 1 });
+These methods accept the same parameters as the L</"bulk()"> method, except
+that the C<actions> parameter is replaced by C<docs>, eg:
 
-is the equivalent of:
+    $result = $es->bulk_index( [ docs ] );
 
-    $es->bulk([
-        { index =>
-            { id => 123, index => 'bar', type => 'bar', data => { text=>'foo'}}
-        },
-        { index =>
-            { id => 124, index => 'bar', type => 'bar', data => { text=>'bar'}}
-        }
-    ],  { refresh => 1 });
+    $result = $es->bulk_index(
+        docs        => [ docs ],                    # required
+
+        index       => 'foo',                       # optional
+        type        => 'bar',                       # optional
+        consistency => 'quorum' |  'one' | 'all'    # optional
+        refresh     => 0 | 1,                       # optional
+        replication => 'sync' | 'async',            # optional
+    );
+
+For instance:
+
+    $es->bulk_index(
+        index   => 'foo',
+        type    => 'bar',
+        refresh => 1,
+        docs    => [
+            { id => 123,                data => { text=>'foo'} },
+            { id => 124, type => 'baz', data => { text=>'bar'} },
+        ]
+    );
+
 
 =head3 reindex()
 
@@ -924,11 +1034,18 @@ and L</"search()">.
 =head3 analyze()
 
     $result = $es->analyze(
-      index         =>  single,
       text          =>  $text_to_analyze,           # required
+      index         =>  single,                     # optional
 
-      # optional
+      # either
+      field         =>  'type.fieldname',           # requires index
+
       analyzer      =>  $analyzer,
+
+      tokenizer     => $tokenizer,
+      filters       => \@filters,
+
+      # other options
       format        =>  'detailed' | 'text',
       prefer_local  =>  1 | 0
     );
@@ -936,21 +1053,30 @@ and L</"search()">.
 The C<analyze()> method allows you to see how ElasticSearch is analyzing
 the text that you pass in, eg:
 
-    $result = $es->analyze( text => 'The Man', index => 'foo')
+    $result = $es->analyze( text => 'The Man' )
 
-returns:
+    $result = $es->analyze(
+        text        => 'The Man',
+        analyzer    => 'simple'
+    );
 
-    {
-      tokens => [
-        {
-          end_offset        => 7,
-          position          => 2,
-          start_offset      => 4,
-          token             => "man",
-          type              => "<ALPHANUM>",
-        },
-      ],
-    }
+    $result = $es->analyze(
+        text        => 'The Man',
+        tokenizer   => 'keyword',
+        filters     => ['lowercase'],
+    );
+
+    $result = $es->analyze(
+        text        => 'The Man',
+        index       => 'my_index',
+        analyzer    => 'my_custom_analyzer'
+    );
+
+    $result = $es->analyze(
+        text        => 'The Man',
+        index       => 'my_index',
+        field       => 'my_type.my_field',
+    );
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-analyze.html> for
 more.
@@ -975,6 +1101,7 @@ more.
         explain         => 1 | 0,
         facets          => { facets },
         fields          => [$field_1,$field_n],
+        partial_fields  => { my_field => { include => 'foo.bar.* }},
         from            => $start_from
         highlight       => { highlight }
         indices_boost   => { index_1 => 1.5,... },
@@ -991,6 +1118,7 @@ more.
         size            => $no_of_results
         sort            => ['_score',$field_1]
         scroll          => '5m' | '30s',
+        stats           => ['group_1','group_2'],
         track_scores    => 0 | 1,
         timeout         => '10s'
         version         => 0 | 1
@@ -1061,6 +1189,7 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
         size                     => $no_of_results
         sort                     => ['_score:asc','last_modified:desc'],
         scroll                   => '5m' | '30s',
+        stats                    => ['group_1','group_2'],
         timeout                  => '10s'
         version                  => 0 | 1
 
@@ -1263,6 +1392,23 @@ for more details.
 See L<http://www.elasticsearch.org/guide/reference/api/more-like-this.html>
 and L<http://www.elasticsearch.org/guide/reference/query-dsl/mlt-query.html>
 
+=head3 validate_query()
+
+    $bool = $es->validate_query(
+        index   => multi,
+        type    => multi,
+
+        query   => { native query }
+      | queryb  => { search builder query }
+      | q       => $query_string
+    );
+
+Returns true if the passed in C<query> (native ES query),
+C<queryb> (SearchBuilder style query) or C<q> (Lucene query string) is valid.
+Otherwise returns false.
+
+See L<https://github.com/elasticsearch/elasticsearch/pull/1574>
+
 =cut
 
 =head2 Index Admin methods
@@ -1288,16 +1434,20 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-status.html
 
     $result = $es->index_stats(
         index           => multi,
-        type            => multi,
+        types           => multi,
 
         docs            => 1|0,
         store           => 1|0,
         indexing        => 1|0,
+        get             => 1|0,
 
-        clear           => 0|1,         # clears default docs,store,indexing
+        all             => 0|1,  # returns all stats
+        clear           => 0|1,  # clears default docs,store,indexing,get,search
+
         flush           => 0|1,
         merge           => 0|1
         refresh         => 0|1,
+
         level           => 'shards'
     );
 
@@ -1305,6 +1455,18 @@ Throws a C<Missing> exception if the specified indices do not exist.
 
 See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-stats.html>
 
+
+=head3 index_segments()
+
+    $result = $es->index_segments(
+        index           => multi,
+    );
+
+Returns low-level Lucene segments information for the specified indices.
+
+Throws a C<Missing> exception if the specified indices do not exist.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-segments.html>
 
 =head3 create_index()
 
@@ -1605,6 +1767,7 @@ C<snapshot_index()> is a synonym for L</"gateway_snapshot()">
         field_data      => 0 | 1,
         filter          => 0 | 1,
         id              => 0 | 1,
+        fields          => 'field1' | ['field1','fieldn',...]
     );
 
 Clears the caches for the specified indices. By default, clears all caches,
@@ -1932,7 +2095,7 @@ See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-health.htm
 Returns any cluster wide settings that have been set with
 L</"update_cluster_settings">.
 
-See L<https://github.com/elasticsearch/elasticsearch/issues/1266>
+See L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-update-settings.html>
 
 
 =head3 update_cluster_settings()
@@ -1953,17 +2116,23 @@ For example:
 C<persistent> settings will survive a full cluster restart. C<transient>
 settings won't.
 
-See L<https://github.com/elasticsearch/elasticsearch/issues/1266>
+See L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-update-settings.html>
 
 =head3 nodes()
 
     $result = $es->nodes(
         nodes       => multi,
-        settings    => 1 | 0        # optional
+        settings    => 0 | 1,
+        http        => 0 | 1,
+        jvm         => 0 | 1,
+        network     => 0 | 1,
+        os          => 0 | 1,
+        process     => 0 | 1,
+        thread_pool => 0 | 1,
+        transport   => 0 | 1
     );
 
-Returns information about one or more nodes or servers in the cluster. If
-C<settings> is C<true>, then it includes the node settings information.
+Returns information about one or more nodes or servers in the cluster.
 
 See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-info.html>
 
@@ -1971,6 +2140,19 @@ See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-info
 
     $result = $es->nodes_stats(
         node    => multi,
+
+        indices     => 1 | 0,
+        clear       => 0 | 1,
+        all         => 0 | 1,
+        fs          => 0 | 1,
+        http        => 0 | 1,
+        jvm         => 0 | 1,
+        network     => 0 | 1,
+        os          => 0 | 1,
+        process     => 0 | 1,
+        thread_pool => 0 | 1,
+        transport   => 0 | 1,
+
     );
 
 Returns various statistics about one or more nodes in the cluster.

@@ -3,13 +3,14 @@ abstract: 'An API for communicating with ElasticSearch'
 author:
   - 'Clinton Gormley <drtech@cpan.org>'
 build_requires:
+  ElasticSearch::SearchBuilder: 0
   File::Temp: 0.20
-  Module::Build: 0.3601
+  Module::Build: 0
   Test::Differences: 0
   Test::Exception: 0
   Test::More: 0.96
 configure_requires:
-  Module::Build: 0.3601
+  ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
 generated_by: 'Dist::Zilla version 4.300000, CPAN::Meta::Converter version 2.110930'
 license: perl
@@ -22,8 +23,9 @@ recommends:
   URI::Escape::XS: 0
 requires:
   Any::URI::Escape: 0
+  Carp: 0
   Data::Dumper: 0
-  ElasticSearch::SearchBuilder: 0.07
+  ElasticSearch::SearchBuilder: 0.12
   Encode: 0
   Exporter: 0
   File::Path: 0
@@ -32,6 +34,7 @@ requires:
   HTTP::Lite: 0
   HTTP::Request: 0
   HTTP::Tiny: 0
+  IO::Handle: 0
   IO::Socket: 0
   IO::Uncompress::Inflate: 0
   JSON: 0
@@ -40,6 +43,7 @@ requires:
   List::Util: 0
   POSIX: 0
   Scalar::Util: 1.07
+  Task::Weaken: 0
   URI: 0
   YAML: 0
   base: 0
@@ -52,4 +56,4 @@ resources:
   bugtracker: https://github.com/clintongormley/ElasticSearch.pm/issues
   homepage: http://clintongormley.github.com/ElasticSearch.pm/
   repository: git://github.com/clintongormley/ElasticSearch.pm.git
-version: 0.47
+version: 0.48

@@ -1,10 +1,10 @@
 AUTHORS
-Build.PL
 Changes
 LICENSE
 MANIFEST
 META.json
 META.yml
+Makefile.PL
 README
 dist.ini
 examples/search_issues.pl
@@ -19,7 +19,6 @@ lib/ElasticSearch/Transport/HTTP.pm
 lib/ElasticSearch/Transport/HTTPLite.pm
 lib/ElasticSearch/Transport/HTTPTiny.pm
 lib/ElasticSearch/Util.pm
-log.21657
 t/00-request.t
 t/10-queryparser.t
 t/release-eol.t
@@ -42,6 +41,7 @@ t/request_tests/get.pl
 t/request_tests/index_admin.pl
 t/request_tests/index_alias.pl
 t/request_tests/index_and_create.pl
+t/request_tests/index_segments.pl
 t/request_tests/index_stats.pl
 t/request_tests/index_status.pl
 t/request_tests/index_templates.pl
@@ -61,13 +61,16 @@ t/request_tests/search_fields.pl
 t/request_tests/search_from_size.pl
 t/request_tests/search_highlight.pl
 t/request_tests/search_indices_boost.pl
+t/request_tests/search_partial_fields.pl
 t/request_tests/search_query.pl
 t/request_tests/search_script_fields.pl
 t/request_tests/search_scroll.pl
 t/request_tests/search_sort.pl
 t/request_tests/search_types.pl
 t/request_tests/searchqs.pl
+t/request_tests/update.pl
 t/request_tests/update_settings.pl
 t/request_tests/uri_escape.pl
 t/request_tests/use_index_type.pl
+t/request_tests/validate_query.pl
 t/request_tests/version.pl

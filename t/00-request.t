@@ -16,11 +16,12 @@ BEGIN {
 diag "";
 diag "Testing ElasticSearch $ElasticSearch::VERSION, Perl $], $^X";
 
+our $es;
 for ( get_backends() ) {
     diag "";
     diag "Transport backend: $_";
 
-    our $es = eval {
+    $es = eval {
         ElasticSearch::TestServer->new(
             instances   => $instances,
             transport   => $_,
@@ -52,6 +53,7 @@ sub run_test_suite {
             version
             cluster_state
             cluster_health
+            cluster_settings
             nodes
             module_options
             deflate
@@ -62,6 +64,8 @@ sub run_test_suite {
     run_tests( qw(
             create_index
             index_status
+            index_stats
+            index_segments
             update_settings
             index_admin
             analyze
@@ -84,6 +88,7 @@ sub run_test_suite {
             index_and_create
             get
             delete
+            update
             uri_escape
             )
     );
@@ -106,6 +111,7 @@ sub run_test_suite {
             search_explain
             search_sort
             search_fields
+            search_partial_fields
             search_script_fields
             search_highlight
             search_scroll
@@ -116,6 +122,7 @@ sub run_test_suite {
             more_like_this
             search_highlight
             delete_by_query
+            validate_query
             )
     );
 
@@ -220,7 +227,7 @@ sub index_test_docs {
 
         );
 
-    $es->bulk_index( \@rows, { refresh => 1 } );
+    $es->bulk_index( docs => \@rows, refresh => 1 );
 
 }
 

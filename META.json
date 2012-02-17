@@ -17,13 +17,12 @@
       "build" : {
          "requires" : {
             "File::Temp" : "0.20",
-            "Module::Build" : "0.3601",
             "Test::More" : "0.96"
          }
       },
       "configure" : {
          "requires" : {
-            "Module::Build" : "0.3601"
+            "ExtUtils::MakeMaker" : "6.30"
          }
       },
       "runtime" : {
@@ -33,8 +32,9 @@
          },
          "requires" : {
             "Any::URI::Escape" : 0,
+            "Carp" : 0,
             "Data::Dumper" : 0,
-            "ElasticSearch::SearchBuilder" : "0.07",
+            "ElasticSearch::SearchBuilder" : "0.12",
             "Encode" : 0,
             "Exporter" : 0,
             "File::Path" : 0,
@@ -43,6 +43,7 @@
             "HTTP::Lite" : 0,
             "HTTP::Request" : 0,
             "HTTP::Tiny" : 0,
+            "IO::Handle" : 0,
             "IO::Socket" : 0,
             "IO::Uncompress::Inflate" : 0,
             "JSON" : 0,
@@ -51,6 +52,7 @@
             "List::Util" : 0,
             "POSIX" : 0,
             "Scalar::Util" : "1.07",
+            "Task::Weaken" : 0,
             "URI" : 0,
             "YAML" : 0,
             "base" : 0,
@@ -63,6 +65,7 @@
       },
       "test" : {
          "requires" : {
+            "ElasticSearch::SearchBuilder" : 0,
             "Module::Build" : 0,
             "Test::Differences" : 0,
             "Test::Exception" : 0,
@@ -82,6 +85,6 @@
          "web" : "https://github.com/clintongormley/ElasticSearch.pm"
       }
    },
-   "version" : "0.47"
+   "version" : "0.48"
 }
 

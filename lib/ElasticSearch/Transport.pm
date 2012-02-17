@@ -1,6 +1,6 @@
 package ElasticSearch::Transport;
 {
-  $ElasticSearch::Transport::VERSION = '0.47';
+  $ElasticSearch::Transport::VERSION = '0.48';
 }
 
 use strict;
@@ -11,6 +11,7 @@ use JSON();
 use Encode qw(decode_utf8);
 use Scalar::Util qw(openhandle);
 use List::Util qw(shuffle);
+use IO::Handle();
 
 our %Transport = (
     'http'     => 'ElasticSearch::Transport::HTTP',
@@ -20,6 +21,13 @@ our %Transport = (
     'curl'     => 'ElasticSearch::Transport::Curl',
     'aehttp'   => 'ElasticSearch::Transport::AEHTTP',
     'aecurl'   => 'ElasticSearch::Transport::AECurl',
+);
+
+our %Min_Versions = (
+    'ElasticSearch::Transport::Thrift' => '0.03',
+    'ElasticSearch::Transport::Curl'   => '0.04',
+    'ElasticSearch::Transport::AEHTTP' => '0.03',
+    'ElasticSearch::Transport::AECurl' => '0.03',
 );
 
 #===================================
@@ -36,6 +44,12 @@ sub new {
         );
 
     eval "require  $transport_class" or $class->throw( "Internal", $@ );
+    if ( my $min = $Min_Versions{$transport_class} ) {
+        my $version = $transport_class->VERSION;
+        $class->throw( 'Internal',
+            "$transport_class v$min required but v$version installed." )
+            unless $version ge $min;
+    }
 
     my $self = bless {
         _JSON         => JSON->new(),
@@ -82,7 +96,7 @@ sub request {
             and last;
 
         my $error = $@ || 'Unknown error';
-        next if !$single_server && $self->_should_retry( $srvr, $error );
+        next if !$single_server && $self->should_retry( $srvr, $error );
         $error = $self->_handle_error( $srvr, $params, $error )
             or return;
         die $error;
@@ -121,7 +135,7 @@ sub _response {
 }
 
 #===================================
-sub _should_retry {
+sub should_retry {
 #===================================
     my $self   = shift;
     my $server = shift;
@@ -132,9 +146,13 @@ sub _should_retry {
     warn "Error connecting to '$server' : "
         . ( $error->{-text} || 'Unknown' ) . "\n\n";
 
-    $self->no_refresh
-        ? $self->_remove_server($server)
-        : $self->{_refresh_in} = 0;
+    if ( $self->no_refresh || $error->isa('ElasticSearch::Error::NotReady') )
+    {
+        $self->_remove_server($server);
+    }
+    else {
+        $self->{_refresh_in} = 0;
+    }
 
     return 1;
 }
@@ -332,15 +350,15 @@ sub http_uri {
 #===================================
 sub inflate {
 #===================================
-    my $self = shift;
+    my $self    = shift;
     my $content = shift;
     my $output;
-        require IO::Uncompress::Inflate;
+    require IO::Uncompress::Inflate;
 
-        no warnings 'once';
-        IO::Uncompress::Inflate::inflate( \$content, \$output, Transparent => 0 )
-            or die "Couldn't inflate response: "
-                . $IO::Uncompress::Inflate::InflateError;
+    no warnings 'once';
+    IO::Uncompress::Inflate::inflate( \$content, \$output, Transparent => 0 )
+        or die "Couldn't inflate response: "
+        . $IO::Uncompress::Inflate::InflateError;
     return $output;
 }
 
@@ -531,6 +549,21 @@ sub http_status {
     return $Statuses{$code} || 'Unknown code ' . $code;
 }
 
+my %Code_To_Error = (
+    409 => 'Conflict',
+    404 => 'Missing',
+    403 => 'ClusterBlocked',
+    503 => 'NotReady'
+);
+
+#===================================
+sub code_to_error {
+#===================================
+    my $self = shift;
+    my $code = shift || return;
+    return $Code_To_Error{$code};
+}
+
 #===================================
 sub register {
 #===================================
@@ -653,7 +686,9 @@ happens via the main L<ElasticSearch> class.
                                     # instead, use just the nodes specified
 
     $t->deflate(0|1);               # should ES deflate its responses
-                                    # useful if ES is on a remote network
+                                    # useful if ES is on a remote network.
+                                    # ES needs compression enabled with
+                                    #     http.compression: true
 
     $t->register('foo',$class)      # register new Transport backend
 
