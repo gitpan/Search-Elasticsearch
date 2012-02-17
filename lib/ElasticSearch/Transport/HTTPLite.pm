@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTPLite;
 {
-  $ElasticSearch::Transport::HTTPLite::VERSION = '0.48';
+  $ElasticSearch::Transport::HTTPLite::VERSION = '0.49';
 }
 
 use strict;
