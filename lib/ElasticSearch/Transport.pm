@@ -1,6 +1,6 @@
 package ElasticSearch::Transport;
 {
-  $ElasticSearch::Transport::VERSION = '0.49';
+  $ElasticSearch::Transport::VERSION = '0.50';
 }
 
 use strict;
@@ -26,8 +26,8 @@ our %Transport = (
 our %Min_Versions = (
     'ElasticSearch::Transport::Thrift' => '0.03',
     'ElasticSearch::Transport::Curl'   => '0.04',
-    'ElasticSearch::Transport::AEHTTP' => '0.03',
-    'ElasticSearch::Transport::AECurl' => '0.03',
+    'ElasticSearch::Transport::AEHTTP' => '0.04',
+    'ElasticSearch::Transport::AECurl' => '0.04',
 );
 
 #===================================
@@ -132,6 +132,16 @@ sub _response {
     }
 
     return $as_json ? $response_json : $result;
+}
+
+#===================================
+sub skip_request {
+#===================================
+    my $self    = shift;
+    my $as_json = shift;
+    my $result  = shift;
+    return $result unless $as_json;
+    return $self->JSON->encode($result);
 }
 
 #===================================

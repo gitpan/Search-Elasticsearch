@@ -39,7 +39,7 @@
             "Exporter" : 0,
             "File::Path" : 0,
             "File::Spec::Functions" : 0,
-            "File::Temp" : "0.20",
+            "File::Temp" : "0.22",
             "HTTP::Lite" : 0,
             "HTTP::Request" : 0,
             "HTTP::Tiny" : 0,
@@ -85,6 +85,6 @@
          "web" : "https://github.com/clintongormley/ElasticSearch.pm"
       }
    },
-   "version" : "0.49"
+   "version" : "0.50"
 }
 

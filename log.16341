@@ -1,0 +1,30 @@
+# [Fri Mar  2 12:07:58 2012] Protocol: http, Server: 127.0.0.1:9202
+curl -XGET 'http://127.0.0.1:9200/_cluster/health?pretty=1&timeout=30s&wait_for_status=green' 
+
+# [Fri Mar  2 12:07:59 2012] Response:
+# {
+#    "number_of_data_nodes" : 3,
+#    "relocating_shards" : 0,
+#    "active_shards" : 0,
+#    "status" : "green",
+#    "cluster_name" : "es_test",
+#    "active_primary_shards" : 0,
+#    "timed_out" : false,
+#    "initializing_shards" : 0,
+#    "number_of_nodes" : 3,
+#    "unassigned_shards" : 0
+# }
+
+# [Fri Mar  2 12:07:59 2012] Protocol: http, Server: 127.0.0.1:9201
+curl -XPOST 'http://127.0.0.1:9200/_refresh?pretty=1' 
+
+# [Fri Mar  2 12:07:59 2012] Response:
+# {
+#    "ok" : true,
+#    "_shards" : {
+#       "failed" : 0,
+#       "successful" : 0,
+#       "total" : 0
+#    }
+# }
+

@@ -35,7 +35,7 @@ my %WriteMakefileArgs = (
     "Exporter" => 0,
     "File::Path" => 0,
     "File::Spec::Functions" => 0,
-    "File::Temp" => "0.20",
+    "File::Temp" => "0.22",
     "HTTP::Lite" => 0,
     "HTTP::Request" => 0,
     "HTTP::Tiny" => 0,
@@ -58,7 +58,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.49",
+  "VERSION" => "0.50",
   "test" => {
     "TESTS" => "t/*.t"
   }
