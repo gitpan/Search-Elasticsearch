@@ -1,6 +1,6 @@
 package ElasticSearch::Transport;
 {
-  $ElasticSearch::Transport::VERSION = '0.50';
+  $ElasticSearch::Transport::VERSION = '0.51';
 }
 
 use strict;

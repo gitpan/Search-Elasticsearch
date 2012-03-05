@@ -19,11 +19,6 @@ lib/ElasticSearch/Transport/HTTP.pm
 lib/ElasticSearch/Transport/HTTPLite.pm
 lib/ElasticSearch/Transport/HTTPTiny.pm
 lib/ElasticSearch/Util.pm
-log.16341
-log.18790
-log.19570
-log.21009
-log.23343
 t/00-request.t
 t/10-queryparser.t
 t/release-eol.t

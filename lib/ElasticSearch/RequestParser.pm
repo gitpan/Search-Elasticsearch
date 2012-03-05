@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.50';
+  $ElasticSearch::VERSION = '0.51';
 }
 
 use strict;
@@ -193,15 +193,17 @@ sub mget {
 my %Index_Defn = (
     cmd => CMD_INDEX_TYPE_id,
     qs  => {
-        create => [ 'boolean', [ op_type => 'create' ] ],
-        refresh   => [ 'boolean', 1 ],
-        timeout   => ['duration'],
-        routing   => ['string'],
-        parent    => ['string'],
-        percolate => ['string'],
-        timestamp => ['duration'],
-        ttl       => ['int'],
-        version   => ['int'],
+        consistency => CONSISTENCY,
+        create      => [ 'boolean', [ op_type => 'create' ] ],
+        parent      => ['string'],
+        percolate   => ['string'],
+        refresh     => [ 'boolean', 1 ],
+        replication => REPLICATION,
+        routing     => ['string'],
+        timeout     => ['duration'],
+        timestamp   => ['duration'],
+        ttl         => ['int'],
+        version     => ['int'],
         version_type => [ 'enum', [ 'internal', 'external' ] ],
     },
     data  => { data => 'data' },

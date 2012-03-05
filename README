@@ -2,7 +2,7 @@ NAME
     ElasticSearch - An API for communicating with ElasticSearch
 
 VERSION
-    Version 0.50, tested against ElasticSearch server version 0.19.0.
+    Version 0.51, tested against ElasticSearch server version 0.19.0.
 
 DESCRIPTION
     ElasticSearch is an Open Source (Apache 2 license), distributed, RESTful
@@ -280,10 +280,12 @@ METHODS
             },
 
             # optional
+            consistency  => 'quorum' | 'one' | 'all',
             create       => 0 | 1,
             parent       => $parent,
             percolate    => $percolate,
             refresh      => 0 | 1,
+            replication  => 'sync' | 'async',
             routing      => $routing,
             timeout      => eg '1m' or '10s'
             version      => int,
@@ -344,9 +346,11 @@ METHODS
             },
 
             # optional
+            consistency  => 'quorum' | 'one' | 'all',
             parent       => $parent,
             percolate    => $percolate,
             refresh      => 0 | 1,
+            replication  => 'sync' | 'async',
             routing      => $routing,
             timeout      => eg '1m' or '10s',
             version      => int,
