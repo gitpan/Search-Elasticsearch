@@ -25,7 +25,7 @@ requires:
   Any::URI::Escape: 0
   Carp: 0
   Data::Dumper: 0
-  ElasticSearch::SearchBuilder: 0.12
+  ElasticSearch::SearchBuilder: 0.13
   Encode: 0
   Exporter: 0
   File::Path: 0
@@ -56,4 +56,4 @@ resources:
   bugtracker: https://github.com/clintongormley/ElasticSearch.pm/issues
   homepage: http://clintongormley.github.com/ElasticSearch.pm/
   repository: git://github.com/clintongormley/ElasticSearch.pm.git
-version: 0.51
+version: 0.52

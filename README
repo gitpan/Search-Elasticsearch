@@ -2,7 +2,7 @@ NAME
     ElasticSearch - An API for communicating with ElasticSearch
 
 VERSION
-    Version 0.51, tested against ElasticSearch server version 0.19.0.
+    Version 0.52, tested against ElasticSearch server version 0.19.0.
 
 DESCRIPTION
     ElasticSearch is an Open Source (Apache 2 license), distributed, RESTful
@@ -1451,8 +1451,10 @@ METHODS
 
         $result = $es->aliases( actions => [
             { add    => {
-                index   => 'foo',
-                alias   => 'baz',
+                index           => 'foo',
+                alias           => 'baz',
+                index_routing   => '1',
+                search_routing  => '1,2',
                 filterb => { foo => 'bar' }
             }}
         ]);
@@ -1465,19 +1467,32 @@ METHODS
         $result = $es->get_aliases( index => multi )
 
     Returns a hashref listing all indices and their corresponding aliases,
-    and all aliases and their corresponding indices, eg:
+    eg:
 
         {
-          aliases => {
-             bar => ["foo"],
-             baz => ["foo"],
-          },
-          indices => { foo => ["baz", "bar"] },
+           "foo" : {
+              "aliases" : {
+                 "foo_1" : {
+                    "search_routing" : "1,2",
+                    "index_routing" : "1"
+                    "filter" : {
+                       "term" : {
+                          "foo" : "bar"
+                       }
+                    }
+                 },
+                 "foo_2" : {}
+              }
+           }
         }
 
     If you pass in the optional "index" argument, which can be an index name
-    or an alias name, then it will only return the indices and aliases
-    related to that argument.
+    or an alias name, then it will only return the indices related to that
+    argument.
+
+    See
+    <http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases.
+    html>
 
    open_index()
         $result = $es->open_index( index => single);

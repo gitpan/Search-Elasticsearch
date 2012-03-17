@@ -30,7 +30,7 @@ my %WriteMakefileArgs = (
     "Any::URI::Escape" => 0,
     "Carp" => 0,
     "Data::Dumper" => 0,
-    "ElasticSearch::SearchBuilder" => "0.12",
+    "ElasticSearch::SearchBuilder" => "0.13",
     "Encode" => 0,
     "Exporter" => 0,
     "File::Path" => 0,
@@ -58,7 +58,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.51",
+  "VERSION" => "0.52",
   "test" => {
     "TESTS" => "t/*.t"
   }

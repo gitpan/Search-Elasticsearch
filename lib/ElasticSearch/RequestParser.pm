@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.51';
+  $ElasticSearch::VERSION = '0.52';
 }
 
 use strict;
@@ -1134,7 +1134,7 @@ sub aliases {
                 my $args    = shift;
                 my @actions = map { values %$_ } @{ $args->{data}{actions} };
                 $self->_to_dsl( { filterb => 'filter' }, @actions );
-                }
+            },
         },
         $params
     );
@@ -1143,33 +1143,13 @@ sub aliases {
 #===================================
 sub get_aliases {
 #===================================
-    shift()->_do_action(
-        'get_aliases',
-        {   cmd    => CMD_NONE,
-            prefix => '_cluster/state',
-            qs     => { index => ['flatten'], },
-            fixup  => sub {
-                my $qs = $_[1]->{qs};
-                $qs->{"filter_$_"} = 1 for qw(blocks nodes routing_table);
-                $qs->{filter_indices} = delete $qs->{index};
-            },
-            post_process => sub {
-                my $results = shift;
-                my $indices = $results->{metadata}{indices};
-                my %aliases = ( indices => {}, aliases => {} );
-                foreach my $index ( keys %$indices ) {
-                    my $aliases = $indices->{$index}{aliases};
-                    $aliases{indices}{$index} = $aliases;
-                    for (@$aliases) {
-                        push @{ $aliases{aliases}{$_} }, $index;
-                    }
-                }
-                return \%aliases;
-            },
+    shift->_do_action(
+        'aliases',
+        {   postfix => '_aliases',
+            cmd     => CMD_index,
         },
         @_
     );
-
 }
 
 #===================================
@@ -1361,13 +1341,9 @@ sub mapping {
     $self->_do_action(
         'mapping',
         {   method  => 'GET',
-            cmd     => CMD_index_then_type,
+            cmd     => CMD_index_type,
             postfix => '_mapping',
-            fixup   => sub {
-                die "Cannot specify type without index"
-                    if $params->{type} && !$params->{index};
-            },
-            qs => { ignore_missing => [ 'boolean', 1 ], }
+            qs      => { ignore_missing => [ 'boolean', 1 ], }
         },
         $params
     );
