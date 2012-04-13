@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.52';
+  $ElasticSearch::VERSION = '0.53';
 }
 
 use strict;
@@ -201,7 +201,7 @@ my %Index_Defn = (
         replication => REPLICATION,
         routing     => ['string'],
         timeout     => ['duration'],
-        timestamp   => ['duration'],
+        timestamp   => ['string'],
         ttl         => ['int'],
         version     => ['int'],
         version_type => [ 'enum', [ 'internal', 'external' ] ],

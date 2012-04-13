@@ -56,4 +56,4 @@ resources:
   bugtracker: https://github.com/clintongormley/ElasticSearch.pm/issues
   homepage: http://clintongormley.github.com/ElasticSearch.pm/
   repository: git://github.com/clintongormley/ElasticSearch.pm.git
-version: 0.52
+version: 0.53
