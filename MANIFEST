@@ -19,8 +19,7 @@ lib/ElasticSearch/Transport/HTTP.pm
 lib/ElasticSearch/Transport/HTTPLite.pm
 lib/ElasticSearch/Transport/HTTPTiny.pm
 lib/ElasticSearch/Util.pm
-log.22755
-log.27455
+log.18408
 t/00-request.t
 t/10-queryparser.t
 t/release-eol.t
@@ -39,6 +38,7 @@ t/request_tests/deflate.pl
 t/request_tests/delete.pl
 t/request_tests/delete_by_query.pl
 t/request_tests/delete_index.pl
+t/request_tests/exists.pl
 t/request_tests/get.pl
 t/request_tests/index_admin.pl
 t/request_tests/index_alias.pl

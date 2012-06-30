@@ -2,7 +2,7 @@ NAME
     ElasticSearch - An API for communicating with ElasticSearch
 
 VERSION
-    Version 0.53, tested against ElasticSearch server version 0.19.2.
+    Version 0.54, tested against ElasticSearch server version 0.19.7.
 
 DESCRIPTION
     ElasticSearch is an Open Source (Apache 2 license), distributed, RESTful
@@ -428,6 +428,7 @@ METHODS
             preference      => '_local' | '_primary' | $string,
             refresh         => 0 | 1,
             routing         => $routing,
+            parent          => $parent,
             ignore_missing  => 0 | 1,
 
         );
@@ -463,6 +464,20 @@ METHODS
 
     See also: "bulk()",
     <http://www.elasticsearch.org/guide/reference/api/get.html>
+
+   exists()
+        $bool = $es->exists(
+            index           => single,
+            type            => single,
+            id              => single,
+
+            preference      => '_local' | '_primary' | $string,
+            refresh         => 0 | 1,
+            routing         => $routing,
+            parent          => $parent,
+        );
+
+    Returns true or false depending on whether the doc exists.
 
    mget()
         $docs = $es->mget(
@@ -976,8 +991,11 @@ METHODS
             explain                  => 1 | 0,
             fields                   => [$field_1,$field_n],
             from                     => $start_from,
+            lenient                  => 0 | 1,
             lowercase_expanded_terms => 0 | 1,
             preference               => '_local' | '_primary' | $string,
+            quote_analyzer           => $analyzer,
+            quote_field_suffix       => '.unstemmed',
             routing                  => [$routing, ...]
             search_type              => $search_type
             size                     => $no_of_results
@@ -1088,9 +1106,10 @@ METHODS
 
    msearch()
         $results = $es->msearch(
-            index   => multi,
-            type    => multi,
-            queries => \@queries | \%queries
+            index       => multi,
+            type        => multi,
+            queries     => \@queries | \%queries,
+            search_type => $search_type,
         );
 
     With "msearch()" you can run multiple searches in parallel. "queries"
@@ -1098,9 +1117,9 @@ METHODS
     $results will return either an array or hash of results, depending on
     what you pass in.
 
-    The top-level "index" and "type" parameters define default values which
-    will be used for each query, although these can be overridden in the
-    query parameters:
+    The top-level "index", "type" and "search_type" parameters define
+    default values which will be used for each query, although these can be
+    overridden in the query parameters:
 
         $results = $es->msearch(
             index   => 'my_index',
@@ -2062,8 +2081,8 @@ METHODS
    current_server_version()
         $version = $es->current_server_version()
 
-    Returns a HASH containing the version "number" string, the build "date"
-    and whether or not the current server is a "snapshot_build".
+    Returns a HASH containing the version "number" string and whether or not
+    the current server is a "snapshot_build".
 
   Other methods
    use_index()/use_type()

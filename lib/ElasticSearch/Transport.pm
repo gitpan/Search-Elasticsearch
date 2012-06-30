@@ -1,6 +1,6 @@
 package ElasticSearch::Transport;
 {
-  $ElasticSearch::Transport::VERSION = '0.53';
+  $ElasticSearch::Transport::VERSION = '0.54';
 }
 
 use strict;
@@ -183,7 +183,12 @@ sub _handle_error {
             && $params->{qs}{ignore_missing};
 
     $error->{-vars}{request} = $params;
+
     if ( my $raw = $error->{-vars}{content} ) {
+        $error->{-vars}{current_version} = $1
+            if $error->isa('ElasticSearch::Error::Conflict')
+                and $raw =~ /: version conflict, current \[(\d+)\]/;
+
         my $content = eval { $self->JSON->decode($raw) } || $raw;
         $self->log_response($content);
         if ( ref $content and $content->{error} ) {

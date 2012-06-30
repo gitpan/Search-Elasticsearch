@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.53';
+  $ElasticSearch::VERSION = '0.54';
 }
 
 use strict;
@@ -136,7 +136,27 @@ sub get {
                 preference     => ['string'],
                 refresh        => [ 'boolean', 1 ],
                 routing        => ['string'],
+                parent         => ['string'],
             },
+        },
+        @_
+    );
+}
+
+#===================================
+sub exists : method {
+#===================================
+    shift()->_do_action(
+        'exists',
+        {   method => 'HEAD',
+            cmd    => CMD_INDEX_TYPE_ID,
+            qs     => {
+                preference => ['string'],
+                refresh    => [ 'boolean', 1 ],
+                routing    => ['string'],
+                parent     => ['string'],
+            },
+            fixup => sub { $_[1]->{qs}{ignore_missing} = 1 }
         },
         @_
     );
@@ -614,9 +634,12 @@ my %SearchQS_Defn = (
         explain                  => [ 'boolean', 1 ],
         fields                   => ['flatten'],
         from                     => ['int'],
+        lenient                  => [ 'boolean', 1 ],
         lowercase_expanded_terms => [ 'boolean', 1 ],
         min_score                => ['float'],
         preference               => ['string'],
+        quote_analyzer           => ['string'],
+        quote_field_suffix       => ['string'],
         routing                  => ['flatten'],
         scroll                   => ['duration'],
         search_type              => SEARCH_TYPE,
@@ -697,6 +720,7 @@ sub msearch {
         {   cmd     => CMD_index_type,
             method  => 'GET',
             postfix => '_msearch',
+            qs      => { search_type => SEARCH_TYPE },
             data    => { queries => 'queries' },
             fixup   => sub {
                 my ( $self, $args ) = @_;
@@ -1495,9 +1519,15 @@ sub cluster_state {
 #===================================
 sub current_server_version {
 #===================================
-    shift()
-        ->_do_action( 'current_server_version',
-        { cmd => CMD_NONE, prefix => '' } )->{version};
+    shift()->_do_action(
+        'current_server_version',
+        {   cmd          => CMD_NONE,
+            prefix       => '',
+            post_process => sub {
+                return shift->{version};
+            },
+        }
+    );
 }
 
 #===================================

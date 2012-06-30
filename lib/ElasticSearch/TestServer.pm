@@ -1,6 +1,6 @@
 package ElasticSearch::TestServer;
 {
-  $ElasticSearch::TestServer::VERSION = '0.53';
+  $ElasticSearch::TestServer::VERSION = '0.54';
 }
 
 use strict;
@@ -13,7 +13,7 @@ use File::Spec::Functions qw(catfile);
 use YAML qw(DumpFile);
 use File::Path qw(rmtree);
 
-use base 'ElasticSearch';
+use parent 'ElasticSearch';
 
 =head1 NAME
 

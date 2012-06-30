@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.53';
+our $VERSION = '0.54';
 our $DEBUG   = 0;
 
 #===================================
@@ -152,7 +152,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.53, tested against ElasticSearch server version 0.19.2.
+Version 0.54, tested against ElasticSearch server version 0.19.7.
 
 =head1 DESCRIPTION
 
@@ -612,6 +612,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/update.html> for more.
         preference      => '_local' | '_primary' | $string,
         refresh         => 0 | 1,
         routing         => $routing,
+        parent          => $parent,
         ignore_missing  => 0 | 1,
 
     );
@@ -646,6 +647,21 @@ If the requested C<index>, C<type> or C<id> is not found, then a C<Missing>
 exception is thrown, unless C<ignore_missing> is true.
 
 See also: L</"bulk()">, L<http://www.elasticsearch.org/guide/reference/api/get.html>
+
+=head3 exists()
+
+    $bool = $es->exists(
+        index           => single,
+        type            => single,
+        id              => single,
+
+        preference      => '_local' | '_primary' | $string,
+        refresh         => 0 | 1,
+        routing         => $routing,
+        parent          => $parent,
+    );
+
+Returns true or false depending on whether the doc exists.
 
 =head3 mget()
 
@@ -1186,8 +1202,11 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
         explain                  => 1 | 0,
         fields                   => [$field_1,$field_n],
         from                     => $start_from,
+        lenient                  => 0 | 1,
         lowercase_expanded_terms => 0 | 1,
         preference               => '_local' | '_primary' | $string,
+        quote_analyzer           => $analyzer,
+        quote_field_suffix       => '.unstemmed',
         routing                  => [$routing, ...]
         search_type              => $search_type
         size                     => $no_of_results
@@ -1298,18 +1317,19 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
 =head3 msearch()
 
     $results = $es->msearch(
-        index   => multi,
-        type    => multi,
-        queries => \@queries | \%queries
+        index       => multi,
+        type        => multi,
+        queries     => \@queries | \%queries,
+        search_type => $search_type,
     );
 
 With L</"msearch()"> you can run multiple searches in parallel. C<queries>
 can contain either an array of queries, or a hash of named queries.  C<$results>
 will return either an array or hash of results, depending on what you pass in.
 
-The top-level C<index> and C<type> parameters define default values which
-will be used for each query, although these can be overridden in the
-query parameters:
+The top-level C<index>, C<type> and C<search_type> parameters define default
+values which will be used for each query, although these can be overridden in
+the query parameters:
 
     $results = $es->msearch(
         index   => 'my_index',
@@ -2279,7 +2299,7 @@ See: L</"KNOWN ISSUES">
 
     $version = $es->current_server_version()
 
-Returns a HASH containing the version C<number> string, the build C<date> and
+Returns a HASH containing the version C<number> string and
 whether or not the current server is a C<snapshot_build>.
 
 =cut

@@ -5,14 +5,13 @@ author:
 build_requires:
   ElasticSearch::SearchBuilder: 0
   File::Temp: 0.20
-  Module::Build: 0
   Test::Differences: 0
   Test::Exception: 0
   Test::More: 0.96
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.300000, CPAN::Meta::Converter version 2.110930'
+generated_by: 'Dist::Zilla version 4.300016, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -25,7 +24,7 @@ requires:
   Any::URI::Escape: 0
   Carp: 0
   Data::Dumper: 0
-  ElasticSearch::SearchBuilder: 0.13
+  ElasticSearch::SearchBuilder: 0.14
   Encode: 0
   Exporter: 0
   File::Path: 0
@@ -46,7 +45,6 @@ requires:
   Task::Weaken: 0
   URI: 0
   YAML: 0
-  base: 0
   constant: 0
   overload: 0
   parent: 0
@@ -56,4 +54,4 @@ resources:
   bugtracker: https://github.com/clintongormley/ElasticSearch.pm/issues
   homepage: http://clintongormley.github.com/ElasticSearch.pm/
   repository: git://github.com/clintongormley/ElasticSearch.pm.git
-version: 0.53
+version: 0.54

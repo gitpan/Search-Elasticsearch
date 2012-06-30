@@ -2,7 +2,6 @@
 
 use Test::More 0.96;
 use Test::Exception;
-use Module::Build;
 use lib 't/request_tests';
 
 our $instances = 3;
@@ -87,6 +86,7 @@ sub run_test_suite {
     run_tests( qw(
             index_and_create
             get
+            exists
             delete
             update
             uri_escape
