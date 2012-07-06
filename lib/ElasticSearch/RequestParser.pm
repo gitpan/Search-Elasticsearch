@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.54';
+  $ElasticSearch::VERSION = '0.55';
 }
 
 use strict;
@@ -63,8 +63,9 @@ our %QS_Format = (
             : $k eq 'df'        ? '$default_field'
             :                     '$string';
     },
-    float => 'float',
-    enum  => sub { join " | ", @{ $_[1][1] } },
+    float   => 'float',
+    enum    => sub { join " | ", @{ $_[1][1] } },
+    coderef => 'sub {..} | "IGNORE"',
 );
 
 our %QS_Formatter = (
@@ -105,6 +106,17 @@ our %QS_Formatter = (
         my $string = shift;
         return unless defined $string;
         return [ $key, $string ];
+    },
+    'coderef' => sub {
+        my $key     = shift;
+        my $coderef = shift;
+        return unless defined $coderef;
+        unless ( ref $coderef ) {
+            die "'$key' is not a code ref or the string 'IGNORE'"
+                unless $coderef eq 'IGNORE';
+            $coderef = sub { };
+        }
+        return [ $key, $coderef ];
     },
     'enum' => sub {
         my $key = shift;
@@ -347,6 +359,7 @@ sub bulk {
 sub _bulk {
 #===================================
     my ( $self, $method, $params ) = @_;
+    my %callbacks;
     my $actions = $params->{actions} || [];
 
     $self->_do_action(
@@ -358,6 +371,8 @@ sub _bulk {
                 consistency => CONSISTENCY,
                 replication => REPLICATION,
                 refresh     => [ 'boolean', 1 ],
+                on_conflict => ['coderef'],
+                on_error    => ['coderef'],
             },
             data  => { actions => 'actions' },
             fixup => sub {
@@ -366,8 +381,12 @@ sub _bulk {
                 $_[1]->{data} = $self->_bulk_request($actions);
                 $_[1]->{skip} = { actions => [], results => [] }
                     unless ${ $_[1]->{data} };
+                $callbacks{$_} = delete $_[1]->{qs}{$_}
+                    for qw(on_error on_conflict);
             },
-            post_process => sub { $self->_bulk_response( $actions, @_ ) },
+            post_process => sub {
+                $self->_bulk_response( \%callbacks, $actions, @_ );
+            },
         },
         $params
     );
@@ -501,23 +520,34 @@ sub _bulk_request {
 #===================================
 sub _bulk_response {
 #===================================
-    my $self    = shift;
-    my $actions = shift;
-    my $results = shift;
+    my $self      = shift;
+    my $callbacks = shift;
+    my $actions   = shift;
+    my $results   = shift;
 
     my $items = ref($results) eq 'HASH' && $results->{items}
         || $self->throw( 'Request', 'Malformed response to bulk query',
         $results );
 
     my ( @errors, %matches );
+    my ( $on_conflict, $on_error ) = @{$callbacks}{qw(on_conflict on_error)};
 
     for ( my $i = 0; $i < @$actions; $i++ ) {
         my ( $action, $item ) = ( %{ $items->[$i] } );
         if ( my $match = $item->{matches} ) {
             push @{ $matches{$_} }, $item for @$match;
         }
+
         my $error = $items->[$i]{$action}{error} or next;
-        push @errors, { action => $actions->[$i], error => $error };
+        if ( $on_conflict and $error =~ /VersionConflictEngineException/ ) {
+            $on_conflict->( $action, $actions->[$i]{$action}, $error );
+        }
+        elsif ($on_error) {
+            $on_error->( $action, $actions->[$i]{$action}, $error );
+        }
+        else {
+            push @errors, { action => $actions->[$i], error => $error };
+        }
     }
 
     return {

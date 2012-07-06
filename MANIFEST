@@ -19,7 +19,6 @@ lib/ElasticSearch/Transport/HTTP.pm
 lib/ElasticSearch/Transport/HTTPLite.pm
 lib/ElasticSearch/Transport/HTTPTiny.pm
 lib/ElasticSearch/Util.pm
-log.18408
 t/00-request.t
 t/10-queryparser.t
 t/release-eol.t
@@ -28,6 +27,7 @@ t/release-pod-syntax.t
 t/request_tests/analyze.pl
 t/request_tests/as_json.pl
 t/request_tests/bulk.pl
+t/request_tests/bulk_errors.pl
 t/request_tests/clear_cache.pl
 t/request_tests/cluster_health.pl
 t/request_tests/cluster_settings.pl

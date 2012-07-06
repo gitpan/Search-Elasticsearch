@@ -2,7 +2,7 @@ NAME
     ElasticSearch - An API for communicating with ElasticSearch
 
 VERSION
-    Version 0.54, tested against ElasticSearch server version 0.19.7.
+    Version 0.55, tested against ElasticSearch server version 0.19.8.
 
 DESCRIPTION
     ElasticSearch is an Open Source (Apache 2 license), distributed, RESTful
@@ -586,6 +586,9 @@ METHODS
             consistency => 'quorum' |  'one' | 'all'    # optional
             refresh     => 0 | 1,                       # optional
             replication => 'sync' | 'async',            # optional
+
+            on_conflict => sub {...} | 'IGNORE'         # optional
+            on_error    => sub {...} | 'IGNORE'         # optional
         );
 
     Perform multiple "index", "create" and "delete" actions in a single
@@ -654,6 +657,41 @@ METHODS
 
     The "index" and "type" parameters, if not specified, are inherited from
     the top level bulk request.
+
+   Error handlers
+    The "on_conflict" and "on_error" parameters accept either a coderef or
+    the string 'IGNORE'. Normally, any errors are returned under the
+    "errors" key (see "Return values").
+
+    The logic works as follows:
+
+    *   If the error is a versioning conflict error and there is an
+        "on_conflict" handler, then call the handler and move on to the next
+        document
+
+    *   If the error is still unhandled, and we have an "on_error" handler,
+        then call it and move on to the next document.
+
+    *   If no handler exists, then add the error to the @errors array which
+        is returned by "bulk()"
+
+    Setting "on_conflict" or "on_error" to 'IGNORE' is the equivalent of
+    passing an empty no-op handler.
+
+    The handler callbacks are called as:
+
+        $handler->( $action, $document, $error );
+
+    For instance:
+
+    $action
+            "index"
+
+    $document
+            { id => 1, data => { count => "foo" }}
+
+    $error
+            "MapperParsingException[Failed to parse [count]]; ... etc ... "
 
    Return values
     The "bulk()" method returns a HASH ref containing:
@@ -735,6 +773,9 @@ METHODS
             consistency => 'quorum' |  'one' | 'all'    # optional
             refresh     => 0 | 1,                       # optional
             replication => 'sync' | 'async',            # optional
+
+            on_conflict => sub {...} | 'IGNORE'         # optional
+            on_error    => sub {...} | 'IGNORE'         # optional
         );
 
     For instance:
@@ -758,6 +799,9 @@ METHODS
             dest_index  => $index,
             quiet       => 0 | 1,
             transform   => sub {....},
+
+            on_conflict => sub {...} | 'IGNORE'
+            on_error    => sub {...} | 'IGNORE'
         )
 
     "reindex()" is a utility method which can be used for reindexing data
@@ -782,6 +826,9 @@ METHODS
     *   "transform" should be a sub-ref which will be called for each doc,
         allowing you to transform some element of the doc, or to skip the
         doc by returning "undef".
+
+    *   See "Error handlers" for an explanation "on_conflict" and
+        "on_error".
 
    Examples:
     To copy the ElasticSearch website index locally, you could do:
