@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.55';
+  $ElasticSearch::VERSION = '0.56';
 }
 
 use strict;
@@ -539,7 +539,13 @@ sub _bulk_response {
         }
 
         my $error = $items->[$i]{$action}{error} or next;
-        if ( $on_conflict and $error =~ /VersionConflictEngineException/ ) {
+        if (    $on_conflict
+            and $error =~ /
+                      VersionConflictEngineException
+                    | DocumentAlreadyExistsException
+                  /x
+            )
+        {
             $on_conflict->( $action, $actions->[$i]{$action}, $error );
         }
         elsif ($on_error) {
@@ -1352,7 +1358,7 @@ sub put_mapping {
 
     $defn{deprecated}{mapping} = undef
         if !$params->{mapping} && grep { exists $params->{$_} }
-            keys %{ $defn{deprecated} };
+        keys %{ $defn{deprecated} };
 
     my $type = $params->{type} || $self->{_default}{type};
     $self->_do_action(

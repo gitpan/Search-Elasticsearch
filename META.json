@@ -4,7 +4,7 @@
       "Clinton Gormley <drtech@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300016, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Zilla version 4.300020, CPAN::Meta::Converter version 2.120630",
    "license" : [
       "perl_5"
    ],
@@ -83,6 +83,6 @@
          "web" : "https://github.com/clintongormley/ElasticSearch.pm"
       }
    },
-   "version" : "0.55"
+   "version" : "0.56"
 }
 
