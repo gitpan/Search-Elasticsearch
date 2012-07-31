@@ -1,6 +1,6 @@
 package ElasticSearch::TestServer;
 {
-  $ElasticSearch::TestServer::VERSION = '0.56';
+  $ElasticSearch::TestServer::VERSION = '0.57';
 }
 
 use strict;
@@ -88,7 +88,8 @@ NO_HOME
 
     my %config = (
         cluster => { name => 'es_test' },
-        gateway => { type => 'local' },
+        gateway => { type => 'local', expected_nodes => $instances },
+        network => { host => 'localhost' },
         "$protocol.port" => "$port-" . ( $port + $instances - 1 ),
         %{ $params{config} || {} }
     );
@@ -200,9 +201,9 @@ RUNNING
         die $error;
     }
 
-    my $attempts = 10;
+    my $attempts = 20;
     while (1) {
-        eval { $es->refresh_servers; 1 } && last;
+        eval { @{ $es->refresh_servers } == $instances } && last;
         die("**** Couldn't connect to ElasticSearch at $server ****\n")
             unless --$attempts;
         print "Connection failed. Retrying\n";
