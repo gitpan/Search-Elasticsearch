@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.57';
+our $VERSION = '0.58';
 our $DEBUG   = 0;
 
 #===================================
@@ -91,6 +91,7 @@ sub reindex {
     my $verbose    = !$params->{quiet};
     my $dest_index = $params->{dest_index};
     my $bulk_size  = $params->{bulk_size} || 1000;
+    my $method     = $params->{_method_name} || 'next';
 
     local $| = $verbose;
     printf( "Reindexing %d docs\n", $source->total )
@@ -98,7 +99,7 @@ sub reindex {
 
     my @docs;
     while (1) {
-        my $doc = $source->next();
+        my $doc = $source->$method();
         if ( !$doc or @docs == $bulk_size ) {
             my $results = $self->bulk_index(
                 docs => \@docs,
@@ -155,7 +156,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.57, tested against ElasticSearch server version 0.19.8.
+Version 0.58, tested against ElasticSearch server version 0.19.8.
 
 =head1 DESCRIPTION
 
