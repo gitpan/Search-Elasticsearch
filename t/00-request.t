@@ -5,6 +5,7 @@ use Test::Exception;
 use lib 't/request_tests';
 
 our $instances = 3;
+our $es_version;
 
 BEGIN {
     use_ok 'ElasticSearch'             || print "Bail out!";
@@ -52,6 +53,7 @@ sub run_test_suite {
             version
             cluster_state
             cluster_health
+            cluster_reroute
             cluster_settings
             nodes
             module_options
@@ -97,6 +99,14 @@ sub run_test_suite {
     run_tests('mapping');
 
     drop_indices();
+    create_indices();
+    run_tests( qw(
+            type_exists
+            warmers
+            )
+    );
+
+    drop_indices();
     run_tests( qw(
             bulk
             bulk_errors
@@ -130,6 +140,7 @@ sub run_test_suite {
             search_highlight
             delete_by_query
             validate_query
+            explain
             )
     );
 
@@ -327,7 +338,7 @@ sub get_backends {
     my $transport = $ENV{ES_TRANSPORT} || 'http';
     $transport = 'http'
         unless $transport eq 'all'
-            or grep { $transport eq $_ } @backends;
+        or grep { $transport eq $_ } @backends;
 
     my $note = ' (Set ES_TRANSPORT=' . join( '|', 'all', @backends ) . ')';
     if ( $transport eq 'all' ) {

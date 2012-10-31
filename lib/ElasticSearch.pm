@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.58';
+our $VERSION = '0.59';
 our $DEBUG   = 0;
 
 #===================================
@@ -156,7 +156,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.58, tested against ElasticSearch server version 0.19.8.
+Version 0.59, tested against ElasticSearch server version 0.20.0.RC1.
 
 =head1 DESCRIPTION
 
@@ -511,6 +511,17 @@ encoded, otherwise you see errors when trying to retrieve it from ElasticSearch)
         data    =>  '{"foo":"bar"}'
     );
 
+=item *
+
+C<timeout> for all CRUD methods and L</"search()"> is a query timeout,
+specifying the amount of time ElasticSearch will spend (roughly) processing a
+query. Units can be concatenated with the integer value, e.g., C<500ms> or
+C<1s>.
+
+See also: L<http://www.elasticsearch.org/guide/reference/api/search/request-body.html>
+
+Note: this is distinct from the transport timeout, see L</"timeout()">.
+
 =back
 
 See also: L<http://www.elasticsearch.org/guide/reference/api/index_.html>,
@@ -581,8 +592,10 @@ See also: L</"index()">
 
         # optional
         params            => { params },
-        consistency       => 'quorum' | 'one' | 'all'
-        ignore_missing    => 0 | 1
+        upsert            => { new_doc },
+        consistency       => 'quorum' | 'one' | 'all',
+        fields            => ['_source'],
+        ignore_missing    => 0 | 1,
         parent            => $parent,
         percolate         => $percolate,
         retry_on_conflict => 2,
@@ -602,6 +615,9 @@ having to retrieve and reindex the doc yourself, eg:
         params  => { tag => 'red' }
     );
 
+You can also pass a new doc which will be inserted if the doc does not
+already exist, via the C<upsert> paramater.
+
 See L<http://www.elasticsearch.org/guide/reference/api/update.html> for more.
 
 =head3 get()
@@ -613,7 +629,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/update.html> for more.
 
         # optional
         fields          => 'field' or ['field1',...]
-        preference      => '_local' | '_primary' | $string,
+        preference      => '_local' | '_primary' | '_primary_first' | $string,
         refresh         => 0 | 1,
         routing         => $routing,
         parent          => $parent,
@@ -659,7 +675,7 @@ See also: L</"bulk()">, L<http://www.elasticsearch.org/guide/reference/api/get.h
         type            => single,
         id              => single,
 
-        preference      => '_local' | '_primary' | $string,
+        preference      => '_local' | '_primary' | '_primary_first' | $string,
         refresh         => 0 | 1,
         routing         => $routing,
         parent          => $parent,
@@ -882,25 +898,32 @@ of passing an empty no-op handler.
 
 The handler callbacks are called as:
 
-    $handler->( $action, $document, $error );
+    $handler->( $action, $document, $error, $req_no );
 
 For instance:
 
 =over
 
-=item $action
+=item C<$action>
 
     "index"
 
-=item $document
+=item C<$document>
 
     { id => 1, data => { count => "foo" }}
 
-=item $error
+=item C<$error>
 
     "MapperParsingException[Failed to parse [count]]; ... etc ... "
 
+=item  C<$req_no>
+
+    0
+
 =back
+
+The C<$req_no> is the array index of the current C<$action> from the original
+array of C<@actions>.
 
 =head4 Return values
 
@@ -921,7 +944,8 @@ for individiual C<index>/C<create>/C<delete> statements, eg:
          { delete => { _id => 123, _index => "foo", _type => "bar", _version => 3 } },
     ]
 
-The C<errors> key is only present if an error has occured, so you can do:
+The C<errors> key is only present if an error has occured and has not been handled
+by an C<on_conflict> or C<on_error> handler, so you can do:
 
     $results = $es->bulk(\@actions);
     if ($results->{errors}) {
@@ -1191,12 +1215,13 @@ more.
         explain         => 1 | 0,
         facets          => { facets },
         fields          => [$field_1,$field_n],
-        partial_fields  => { my_field => { include => 'foo.bar.* }},
-        from            => $start_from
-        highlight       => { highlight }
+        partial_fields  => { my_field => { include => 'foo.bar.*' }},
+        from            => $start_from,
+        highlight       => { highlight }.
+        ignore_indices  => 'none' | 'missing',
         indices_boost   => { index_1 => 1.5,... },
         min_score       => $score,
-        preference      => '_local' | '_primary' | $string,
+        preference      => '_local' | '_primary' | '_primary_first' | $string,
         routing         => [$routing, ...]
         script_fields   => { script_fields }
         search_type     => 'dfs_query_then_fetch'
@@ -1272,9 +1297,10 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
         explain                  => 1 | 0,
         fields                   => [$field_1,$field_n],
         from                     => $start_from,
+        ignore_indices           => 'none' | 'missing',
         lenient                  => 0 | 1,
         lowercase_expanded_terms => 0 | 1,
-        preference               => '_local' | '_primary' | $string,
+        preference               => '_local' | '_primary' | '_primary_first' | $string,
         quote_analyzer           => $analyzer,
         quote_field_suffix       => '.unstemmed',
         routing                  => [$routing, ...]
@@ -1355,6 +1381,7 @@ and L</"scroll()">.
 
         # optional
         routing         => [$routing,...]
+        ignore_indices  => 'none' | 'missing',
 
         # one of:
         query           => { native query },
@@ -1442,9 +1469,10 @@ A query can contain the following options:
 
           explain        => 0 | 1,
           indices_boost  => { index_1 => 5, ... },
+          ignore_indices => 'none' | 'missing',
           min_score      => 2,
           partial_fields => { partial fields },
-          preference     => '_local' | '_primary' | $string,
+          preference     => '_local' | '_primary' | '_primary_first' | $string,
           routing        => 'routing' | ['route_1',...],
           script_fields  => { script fields },
           search_type    => $search_type,
@@ -1526,7 +1554,7 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
         from                 =>  {from}
         indices_boost        =>  { index_1 => 1.5,... }
         min_score            =>  $score
-        preference           =>  '_local' | '_primary' | $string
+        preference           =>  '_local' | '_primary' | '_primary_first' | $string
         routing              =>  [$routing,...]
         script_fields        =>  { script_fields }
         search_scroll        =>  '5m' | '10s',
@@ -1556,22 +1584,55 @@ for more details.
 See L<http://www.elasticsearch.org/guide/reference/api/more-like-this.html>
 and L<http://www.elasticsearch.org/guide/reference/query-dsl/mlt-query.html>
 
+=head3 explain()
+
+    $result = $ex->explain(
+        index                      =>  single,
+        type                       =>  single,
+        id                         =>  single,
+
+
+        query                      => { native query}
+      | queryb                     => { search builder query }
+      | q                          => $query_string,
+
+        analyze_wildcard           => 1 | 0,
+        analyzer                   => $string,
+        default_operator           => 'OR' | 'AND',
+        df                         => $default_field
+        fields                     => ['_source'],
+        lenient                    => 1 | 0,
+        lowercase_expanded_terms   => 1 | 0,
+        preference                 => _local | _primary | _primary_first | $string,
+        routing                    => $routing
+    );
+
+The L<explain()> method is very useful for debugging queries.  It will run
+the query on the specified document and report whether the document matches
+the query or not, and why.
+
+See L<http://www.elasticsearch.org/guide/reference/api/search/explain.html>
+
 =head3 validate_query()
 
     $bool = $es->validate_query(
-        index   => multi,
-        type    => multi,
+        index          => multi,
+        type           => multi,
 
-        query   => { native query }
-      | queryb  => { search builder query }
-      | q       => $query_string
+        query          => { native query }
+      | queryb         => { search builder query }
+      | q              => $query_string
+
+        explain        => 0 | 1,
+        ignore_indices => 'none' | 'missing',
     );
 
-Returns true if the passed in C<query> (native ES query),
-C<queryb> (SearchBuilder style query) or C<q> (Lucene query string) is valid.
-Otherwise returns false.
+Returns a hashref with C<< { valid => 1} >> if the passed in C<query>
+(native ES query) C<queryb> (SearchBuilder style query) or C<q> (Lucene
+query string) is valid. Otherwise C<valid> is false. Set C<explain> to C<1>
+to include the explanation of why the query is invalid.
 
-See L<https://github.com/elasticsearch/elasticsearch/pull/1574>
+See L<http://www.elasticsearch.org/guide/reference/api/validate.html>
 
 =cut
 
@@ -1583,6 +1644,7 @@ See L<https://github.com/elasticsearch/elasticsearch/pull/1574>
         index           => multi,
         recovery        => 0 | 1,
         snapshot        => 0 | 1,
+        ignore_indices  => 'none' | 'missing',
     );
 
 Returns the status of
@@ -1612,7 +1674,8 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-status.html
         merge           => 0|1
         refresh         => 0|1,
 
-        level           => 'shards'
+        level           => 'shards',
+        ignore_indices  => 'none' | 'missing',
     );
 
 Throws a C<Missing> exception if the specified indices do not exist.
@@ -1624,6 +1687,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-stats.html>
 
     $result = $es->index_segments(
         index           => multi,
+        ignore_indices  => 'none' | 'missing',
     );
 
 Returns low-level Lucene segments information for the specified indices.
@@ -1640,6 +1704,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-segments.ht
         # optional
         settings    => {...},
         mappings    => {...},
+        warmers     => {...},
     );
 
 Creates a new index, optionally passing index settings and mappings, eg:
@@ -1665,6 +1730,21 @@ Creates a new index, optionally passing index settings and mappings, eg:
                     user    => { type => 'string' },
                     content => { type => 'string' },
                     date    => { type => 'date'   }
+                }
+            }
+        },
+        warmers => {
+            warmer_1 => {
+                types  => ['tweet'],
+                source => {
+                    queryb => { date    => { gt => '2012-01-01' }},
+                    facets => {
+                        content => {
+                            terms => {
+                                field=>'content'
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1818,6 +1898,7 @@ L<http://www.elasticsearch.org/guide/reference/api/admin-indices-open-close.html
         template => $template,  # required
         mappings => {...},      # optional
         settings => {...},      # optional
+        warmers  => {...},      # optional
     );
 
 Index templates allow you to define templates that will automatically be
@@ -1860,8 +1941,9 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.h
 
     $result = $es->flush_index(
         index           => multi,
-        full            => 0 | 1,       # optional
-        refresh         => 0 | 1,       # optional
+        full            => 0 | 1,
+        refresh         => 0 | 1,
+        ignore_indices  => 'none' | 'missing',
     );
 
 Flushes one or more indices, which frees
@@ -1882,6 +1964,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-flush.html>
 
     $result = $es->refresh_index(
         index           => multi,
+        ignore_indices  => 'none' | 'missing',
     );
 
 Explicitly refreshes one or more indices, making all operations performed
@@ -1906,6 +1989,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-refresh.htm
         refresh             => 0 | 1,  # refresh after optmization
         wait_for_merge      => 1 | 0,  # wait for merge to finish
         max_num_segments    => int,    # number of segments to optimize to
+        ignore_indices      => 'none' | 'missing',
     )
 
 Throws a C<Missing> exception if the specified indices do not exist.
@@ -1916,6 +2000,7 @@ See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-optimize.ht
 
     $result = $es->gateway_snapshot(
         index           => multi,
+        ignore_indices  => 'none' | 'missing',
     );
 
 Explicitly performs a snapshot through the gateway of one or more indices
@@ -1943,7 +2028,8 @@ C<snapshot_index()> is a synonym for L</"gateway_snapshot()">
         field_data      => 0 | 1,
         filter          => 0 | 1,
         id              => 0 | 1,
-        fields          => 'field1' | ['field1','fieldn',...]
+        fields          => 'field1' | ['field1','fieldn',...],
+        ignore_indices  => 'none' | 'missing',
     );
 
 Clears the caches for the specified indices. By default, clears all caches,
@@ -2042,7 +2128,86 @@ index (or indices) that the alias points to.
 
 See also: L<http://www.elasticsearch.org/guide/reference/api/admin-indices-get-mapping.html>
 
+=head3 type_exists()
+
+    $result = $e->type_exists(
+        index          => multi,             # optional
+        type           => multi,             # required
+        ignore_indices => 'none' | 'missing',
+    );
+
+Returns C<< {ok => 1} >> if all specified types exist in all specified indices,
+or an empty list if they doesn't.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-indices-types-exists.html>
+
+
 =cut
+
+=head2 Warmer methods
+
+Index warming allow you to run typical search requests to "warm up"
+new segments before they become available for search.
+Warmup searches typically include requests that require heavy loading of
+data, such as faceting or sorting on specific fields.
+
+=head3 create_warmer()
+
+    $es->create_warmer(
+        warmer        => $warmer,
+        index         => multi,
+        type          => multi,
+
+        # optional
+
+        query         => { raw query }
+      | queryb        => { search builder query },
+
+        filter        => { raw filter }
+      | filterb       => { search builder filter},
+
+        facets        => { facets },
+        script_fields => { script fields },
+        sort          => { sort },
+    );
+
+Create an index warmer called C<$warmer>: a search which is run whenever a
+matching C<index>/C<type> segment is about to be brought online.
+
+See L<https://github.com/elasticsearch/elasticsearch/issues/1913> for more.
+
+=head2 warmer()
+
+    $result = $es->warmer(
+        index          => multi,       # optional
+        warmer         => $warmer,     # optional
+
+        ignore_missing => 0 | 1
+    );
+
+Returns any matching registered warmers. The C<$warmer> can be blank,
+the name of a particular warmer, or use wilcards, eg C<"warmer_*">. Throws
+an error if no matching warmer is found, and C<ignore_missing> is false.
+
+See L<https://github.com/elasticsearch/elasticsearch/issues/1913> for more.
+
+=head2 delete_warmer()
+
+    $result = $es->delete_warmer(
+        index          => multi,       # required
+        warmer         => $warmer,     # required
+
+        ignore_missing => 0 | 1
+    );
+
+Deletes any matching registered warmers. The C<index> parameter is
+required and can be set to C<_all> to match all indices. The C<$warmer> can be
+the name of a particular warmer, or use wilcards, eg C<"warmer_*">
+or C<"*"> for any warmer. Throws an error if no matching warmer is found,
+and C<ignore_missing> is false.
+
+See L<https://github.com/elasticsearch/elasticsearch/issues/1913> for more.
+
 
 =head2 River admin methods
 
@@ -2334,6 +2499,46 @@ See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-info
 Returns various statistics about one or more nodes in the cluster.
 
 See: L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-stats.html>
+
+=head3 cluster_reroute()
+
+    $result = $es->cluster_reroute(
+        commands => [
+            { move => {
+                  index     => 'test',
+                  shard     => 0,
+                  from_node => 'node1',
+                  to_node   => 'node2',
+            }},
+            { allocate => {
+                  index         => 'test',
+                  shard         => 1,
+                  node          => 'node3',
+                  allow_primary => 0 | 1
+            }},
+            { cancel => {
+                  index         => 'test',
+                  shard         => 2,
+                  node          => 'node4',
+                  allow_primary => 0 | 1
+            }},
+        ],
+        dry_run  => 0 | 1
+    );
+
+The L</cluster_reroute> command allows you to explicitly affect shard allocation
+within a cluster. For example, a shard can be moved from one node to another,
+an allocation can be cancelled, or an unassigned shard can be explicitly
+allocated on a specific node.
+
+B<NOTE:> after executing the commands, the cluster will automatically
+rebalance itself if it is out of balance.  Use the C<dry_run> parameter
+to see what the final outcome will be after automatic rebalancing, before
+executing the real L</cluster_reroute> call.
+
+Without any C<\@commands>, the current cluster routing will be returned.
+
+See L<http://www.elasticsearch.org/guide/reference/api/admin-cluster-reroute.html>
 
 =head3 shutdown()
 

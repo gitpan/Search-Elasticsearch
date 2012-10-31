@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.58';
+  $ElasticSearch::VERSION = '0.59';
 }
 
 use strict;
@@ -23,11 +23,13 @@ use constant {
     CMD_INDEX_type_ID => [ index => ONE_REQ, type => ONE_ALL, id => ONE_REQ ],
     CMD_Index           => [ index => ONE_OPT ],
     CMD_index           => [ index => MULTI_BLANK ],
+    CMD_indices         => [ index => MULTI_ALL ],
     CMD_INDICES         => [ index => MULTI_REQ ],
     CMD_INDEX           => [ index => ONE_REQ ],
     CMD_INDEX_TYPE      => [ index => ONE_REQ, type => ONE_REQ ],
     CMD_INDEX_type      => [ index => ONE_REQ, type => MULTI_BLANK ],
     CMD_index_TYPE      => [ index => MULTI_ALL, type => ONE_REQ ],
+    CMD_index_types     => [ index => MULTI_ALL, type => MULTI_REQ ],
     CMD_INDICES_TYPE    => [ index => MULTI_REQ, type => ONE_REQ ],
     CMD_index_type      => [ index => MULTI_ALL, type => MULTI_BLANK ],
     CMD_index_then_type => [ index => ONE_OPT, type => ONE_OPT ],
@@ -45,6 +47,7 @@ use constant {
             'count',                'scan'
         ]
     ],
+    IGNORE_INDICES => [ 'enum', [ 'missing', 'none' ] ],
 
 };
 
@@ -56,8 +59,8 @@ our %QS_Format = (
     'int'    => "integer",
     string   => sub {
         my $k = shift;
-        return
-              $k eq 'preference' ? '_local | _primary | $string'
+        return $k eq 'preference'
+            ? '_local | _primary | _primary_first | $string'
             : $k eq 'percolate' || $k eq 'q' ? '$query_string'
             : $k eq 'scroll_id' ? '$scroll_id'
             : $k eq 'df'        ? '$default_field'
@@ -285,9 +288,11 @@ sub update {
             data    => {
                 script => 'script',
                 params => ['params'],
+                upsert => ['upsert'],
             },
             qs => {
                 consistency       => CONSISTENCY,
+                fields            => ['flatten'],
                 ignore_missing    => [ 'boolean', 1 ],
                 parent            => ['string'],
                 percolate         => ['string'],
@@ -546,10 +551,10 @@ sub _bulk_response {
                   /x
             )
         {
-            $on_conflict->( $action, $actions->[$i]{$action}, $error );
+            $on_conflict->( $action, $actions->[$i]{$action}, $error, $i );
         }
         elsif ($on_error) {
-            $on_error->( $action, $actions->[$i]{$action}, $error );
+            $on_error->( $action, $actions->[$i]{$action}, $error, $i );
         }
         else {
             push @errors, { action => $actions->[$i], error => $error };
@@ -593,14 +598,19 @@ sub _data_fixup {
     my $self = shift;
     my $data = shift;
     $self->_to_dsl( { queryb => 'query', filterb => 'filter' }, $data );
-    my @facets = values %{ $data->{facets} || {} };
-    if (@facets) {
+
+    my $facets = $data->{facets} or return;
+    die "(facets) must be a HASH ref" unless ref $facets eq 'HASH';
+    $facets = $data->{facets} = {%$facets};
+    for ( values %$facets ) {
+        die "All (facets) must be HASH refs" unless ref $_ eq 'HASH';
+        $_ = my $facet = {%$_};
         $self->_to_dsl( {
                 queryb        => 'query',
                 filterb       => 'filter',
                 facet_filterb => 'facet_filter'
             },
-            @facets,
+            $facet
         );
     }
 }
@@ -614,6 +624,20 @@ sub _query_fixup {
     if ( my $query = delete $args->{data}{query} ) {
         my ( $k, $v ) = %$query;
         $args->{data}{$k} = $v;
+    }
+}
+
+#===================================
+sub _warmer_fixup {
+#===================================
+    my ( $self, $args ) = @_;
+    my $warmers = $args->{data}{warmers} or return;
+    $warmers = $args->{data}{warmers} = {%$warmers};
+    for ( values %$warmers ) {
+        $_ = {%$_};
+        my $source = $_->{source} or next;
+        $_->{source} = $source = {%$source};
+        $self->_data_fixup($source);
     }
 }
 
@@ -647,13 +671,14 @@ my %Search_Defn = (
         partial_fields => ['partial_fields']
     },
     qs => {
-        search_type => SEARCH_TYPE,
-        preference  => ['string'],
-        routing     => ['flatten'],
-        timeout     => ['duration'],
-        scroll      => ['duration'],
-        stats       => ['flatten'],
-        version     => [ 'boolean', 1 ]
+        search_type    => SEARCH_TYPE,
+        ignore_indices => IGNORE_INDICES,
+        preference     => ['string'],
+        routing        => ['flatten'],
+        timeout        => ['duration'],
+        scroll         => ['duration'],
+        stats          => ['flatten'],
+        version        => [ 'boolean', 1 ]
     },
     fixup => sub { $_[0]->_data_fixup( $_[1]->{data} ) },
 );
@@ -670,6 +695,7 @@ my %SearchQS_Defn = (
         explain                  => [ 'boolean', 1 ],
         fields                   => ['flatten'],
         from                     => ['int'],
+        ignore_indices           => IGNORE_INDICES,
         lenient                  => [ 'boolean', 1 ],
         lowercase_expanded_terms => [ 'boolean', 1 ],
         min_score                => ['float'],
@@ -836,7 +862,11 @@ sub validate_query {
                 query  => ['query'],
                 queryb => ['queryb'],
             },
-            qs    => { q => ['string'] },
+            qs => {
+                q              => ['string'],
+                explain        => [ 'boolean', 1 ],
+                ignore_indices => IGNORE_INDICES,
+            },
             fixup => sub {
                 my $args = $_[1];
                 if ( defined $args->{qs}{q} ) {
@@ -850,7 +880,45 @@ sub validate_query {
                     };
                 }
             },
-            post_process => sub { !!shift->{valid} }
+        },
+        @_
+    );
+}
+
+#===================================
+sub explain {
+#===================================
+    shift->_do_action(
+        'explain',
+        {   cmd     => CMD_INDEX_TYPE_ID,
+            postfix => '_explain',
+            data    => {
+                query  => ['query'],
+                queryb => ['queryb'],
+            },
+            qs => {
+                preference               => ['string'],
+                routing                  => ['string'],
+                q                        => ['string'],
+                df                       => ['string'],
+                analyzer                 => ['string'],
+                analyze_wildcard         => [ 'boolean', 1 ],
+                default_operator         => [ 'enum', [ 'OR', 'AND' ] ],
+                fields                   => ['flatten'],
+                lowercase_expanded_terms => [ 'boolean', undef, 0 ],
+                lenient => [ 'boolean', 1 ],
+            },
+            fixup => sub {
+                my $args = $_[1];
+                if ( defined $args->{qs}{q} ) {
+                    die "Cannot specify q and query/queryb parameters.\n"
+                        if %{ $args->{data} };
+                    delete $args->{data};
+                }
+                else {
+                    $_[0]->_data_fixup( $args->{data} );
+                }
+            },
         },
         @_
     );
@@ -912,7 +980,10 @@ sub count {
         {   %Search_Defn,
             postfix => '_count',
             %Query_Defn,
-            qs    => { routing => ['flatten'] },
+            qs => {
+                routing        => ['flatten'],
+                ignore_indices => IGNORE_INDICES,
+            },
             fixup => \&_query_fixup,
         },
         @_
@@ -1057,8 +1128,9 @@ sub index_status {
         {   cmd     => CMD_index,
             postfix => '_status',
             qs      => {
-                recovery => [ 'boolean', 1 ],
-                snapshot => [ 'boolean', 1 ]
+                recovery       => [ 'boolean', 1 ],
+                snapshot       => [ 'boolean', 1 ],
+                ignore_indices => IGNORE_INDICES,
             },
         },
         @_
@@ -1086,6 +1158,7 @@ sub index_stats {
                 types    => ['flatten'],
                 groups   => ['flatten'],
                 level => [ 'enum', [qw(shards)] ],
+                ignore_indices => IGNORE_INDICES,
             },
         },
         @_
@@ -1099,6 +1172,7 @@ sub index_segments {
         'index_segments',
         {   cmd     => CMD_index,
             postfix => '_segments',
+            qs      => { ignore_indices => IGNORE_INDICES, }
         },
         @_
     );
@@ -1113,9 +1187,11 @@ sub create_index {
             cmd     => CMD_INDEX,
             postfix => '',
             data    => {
-                settings => [ 'settings', 'defn' ],
+                settings => ['settings'],
                 mappings => ['mappings'],
+                warmers  => ['warmers'],
             },
+            fixup => \&_warmer_fixup
         },
         @_
     );
@@ -1192,8 +1268,14 @@ sub aliases {
             fixup  => sub {
                 my $self    = shift;
                 my $args    = shift;
-                my @actions = map { values %$_ } @{ $args->{data}{actions} };
-                $self->_to_dsl( { filterb => 'filter' }, @actions );
+                my @actions = @{ $args->{data}{actions} };
+                for (@actions) {
+                    my ( $key, $value ) = %$_;
+                    $value = {%$value};
+                    $self->_to_dsl( { filterb => 'filter' }, $value );
+                    $_ = { $key => $value };
+                }
+                $args->{data}{actions} = \@actions;
             },
         },
         $params
@@ -1213,6 +1295,76 @@ sub get_aliases {
 }
 
 #===================================
+sub create_warmer {
+#===================================
+    shift()->_do_action(
+        'create_warmer',
+        {   method  => 'PUT',
+            cmd     => CMD_index_type,
+            postfix => '_warmer/',
+            data    => {
+                warmer        => 'warmer',
+                facets        => ['facets'],
+                filter        => ['filter'],
+                filterb       => ['filterb'],
+                script_fields => ['script_fields'],
+                'sort'        => ['sort'],
+                query         => ['query'],
+                queryb        => ['queryb'],
+            },
+            fixup => sub {
+                my ( $self, $args ) = @_;
+                $args->{cmd} .= delete $args->{data}{warmer};
+                $self->_data_fixup( $args->{data} );
+            },
+        },
+        @_
+    );
+}
+
+#===================================
+sub warmer {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+    $params->{warmer} = '*'
+        unless defined $params->{warmer} and length $params->{warmer};
+
+    $self->_do_action(
+        'warmer',
+        {   method  => 'GET',
+            cmd     => CMD_indices,
+            postfix => '_warmer/',
+            data    => { warmer => ['warmer'] },
+            qs      => { ignore_missing => [ 'boolean', 1 ] },
+            fixup   => sub {
+                my ( $self, $args ) = @_;
+                $args->{cmd} .= delete $args->{data}{warmer};
+            },
+        },
+        $params
+    );
+}
+
+#===================================
+sub delete_warmer {
+#===================================
+    shift()->_do_action(
+        'delete_warmer',
+        {   method  => 'DELETE',
+            cmd     => CMD_INDICES,
+            postfix => '_warmer/',
+            data    => { warmer => 'warmer' },
+            qs      => { ignore_missing => [ 'boolean', 1 ] },
+            fixup   => sub {
+                my ( $self, $args ) = @_;
+                $args->{cmd} .= delete $args->{data}{warmer};
+            },
+        },
+        @_
+    );
+}
+
+#===================================
 sub create_index_template {
 #===================================
     shift()->_do_action(
@@ -1223,8 +1375,10 @@ sub create_index_template {
             data   => {
                 template => 'template',
                 settings => ['settings'],
-                mappings => ['mappings']
+                mappings => ['mappings'],
+                warmers  => ['warmers'],
             },
+            fixup => \&_warmer_fixup
         },
         @_
     );
@@ -1266,8 +1420,9 @@ sub flush_index {
             cmd     => CMD_index,
             postfix => '_flush',
             qs      => {
-                refresh => [ 'boolean', 1 ],
-                full    => [ 'boolean', 1 ],
+                refresh        => [ 'boolean', 1 ],
+                full           => [ 'boolean', 1 ],
+                ignore_indices => IGNORE_INDICES,
             },
         },
         @_
@@ -1281,7 +1436,8 @@ sub refresh_index {
         'refresh_index',
         {   method  => 'POST',
             cmd     => CMD_index,
-            postfix => '_refresh'
+            postfix => '_refresh',
+            qs      => { ignore_indices => IGNORE_INDICES, }
         },
         @_
     );
@@ -1302,6 +1458,7 @@ sub optimize_index {
                 refresh          => [ 'boolean', undef, 0 ],
                 flush            => [ 'boolean', undef, 0 ],
                 wait_for_merge   => [ 'boolean', undef, 0 ],
+                ignore_indices   => IGNORE_INDICES,
             },
         },
         @_
@@ -1315,7 +1472,8 @@ sub snapshot_index {
         'snapshot_index',
         {   method  => 'POST',
             cmd     => CMD_index,
-            postfix => '_gateway/snapshot'
+            postfix => '_gateway/snapshot',
+            qs      => { ignore_indices => IGNORE_INDICES, }
         },
         @_
     );
@@ -1410,6 +1568,20 @@ sub mapping {
 }
 
 #===================================
+sub type_exists {
+#===================================
+    shift()->_do_action(
+        'type_exists',
+        {   method => 'HEAD',
+            cmd    => CMD_index_types,
+            qs     => { ignore_indices => IGNORE_INDICES, },
+            fixup  => sub { $_[1]->{qs}{ignore_missing} = 1 }
+        },
+        @_
+    );
+}
+
+#===================================
 sub clear_cache {
 #===================================
     shift()->_do_action(
@@ -1418,11 +1590,12 @@ sub clear_cache {
             cmd     => CMD_index,
             postfix => '_cache/clear',
             qs      => {
-                id         => [ 'boolean', 1 ],
-                filter     => [ 'boolean', 1 ],
-                field_data => [ 'boolean', 1 ],
-                bloom      => [ 'boolean', 1 ],
-                fields     => ['flatten'],
+                id             => [ 'boolean', 1 ],
+                filter         => [ 'boolean', 1 ],
+                field_data     => [ 'boolean', 1 ],
+                bloom          => [ 'boolean', 1 ],
+                fields         => ['flatten'],
+                ignore_indices => IGNORE_INDICES,
             }
         },
         @_
@@ -1697,6 +1870,25 @@ sub update_cluster_settings {
     );
 }
 
+#===================================
+sub cluster_reroute {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+    $params->{commands} = [ $params->{commands} ]
+        if $params->{commands} and ref( $params->{commands} ) ne 'ARRAY';
+
+    $self->_do_action(
+        'cluster_reroute',
+        {   prefix => '_cluster/reroute',
+            cmd    => [],
+            method => 'POST',
+            data   => { commands => ['commands'] },
+            qs     => { dry_run => [ 'boolean', 1 ], },
+        },
+        $params
+    );
+}
+
 ##################################
 ## FLAGS
 ##################################
@@ -1794,7 +1986,10 @@ sub _usage {
             : $type == ONE_OPT ? "\$$key"
             :                    "\$$key | [\$${key}_1,\$${key}_n]";
 
-        my $required = $type == ONE_REQ ? 'required' : 'optional';
+        my $required
+            = ( $type == ONE_REQ or $type == MULTI_REQ )
+            ? 'required'
+            : 'optional';
         $usage .= sprintf( "  - %-26s =>  %-45s # %s\n",
             $key, $arg_format, $required );
     }
