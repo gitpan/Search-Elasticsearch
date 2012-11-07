@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.59';
+  $ElasticSearch::VERSION = '0.60';
 }
 
 use strict;
@@ -286,8 +286,9 @@ sub update {
             cmd     => CMD_INDEX_TYPE_ID,
             postfix => '_update',
             data    => {
-                script => 'script',
+                script => ['script'],
                 params => ['params'],
+                doc    => ['doc'],
                 upsert => ['upsert'],
             },
             qs => {

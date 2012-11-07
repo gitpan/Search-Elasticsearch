@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTPTiny;
 {
-  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.59';
+  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.60';
 }
 
 use strict;
@@ -34,6 +34,7 @@ sub send_request {
     my $opts = {};
     if ( my $data = $params->{data} ) {
         utf8::encode($data);
+        $self->check_content_length( \$data );
         $opts = {
             content => $data,
             headers =>

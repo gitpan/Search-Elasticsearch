@@ -1,6 +1,6 @@
 package ElasticSearch::QueryParser;
 {
-  $ElasticSearch::QueryParser::VERSION = '0.59';
+  $ElasticSearch::QueryParser::VERSION = '0.60';
 }
 
 use strict;
@@ -435,8 +435,8 @@ sub _multi_clauses {
         if ( !defined $clause ) {
             last
                 if @{ $self->{_stack} } > 1
-                    || !$self->{_opts}{fix}
-                    || $self->{_done};
+                || !$self->{_opts}{fix}
+                || $self->{_done};
             $self->_next_token;
             next;
         }
@@ -648,7 +648,7 @@ sub _FIELD {
 
     return "$field:$next"
         if $opts->{fields}
-            and !ref $opts->{fields} || $opts->{fields}{$field};
+        and !ref $opts->{fields} || $opts->{fields}{$field};
 
     die qq("Field "$field" not allowed)
         unless $opts->{fix};

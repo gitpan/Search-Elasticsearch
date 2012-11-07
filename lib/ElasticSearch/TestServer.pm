@@ -1,6 +1,6 @@
 package ElasticSearch::TestServer;
 {
-  $ElasticSearch::TestServer::VERSION = '0.59';
+  $ElasticSearch::TestServer::VERSION = '0.60';
 }
 
 use strict;

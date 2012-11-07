@@ -1,6 +1,6 @@
 package ElasticSearch::Transport;
 {
-  $ElasticSearch::Transport::VERSION = '0.59';
+  $ElasticSearch::Transport::VERSION = '0.60';
 }
 
 use strict;
@@ -10,7 +10,7 @@ use URI();
 use JSON();
 use Encode qw(decode_utf8);
 use Scalar::Util qw(openhandle);
-use List::Util qw(shuffle);
+use List::Util qw(shuffle min);
 use IO::Handle();
 
 our %Transport = (
@@ -25,9 +25,9 @@ our %Transport = (
 
 our %Min_Versions = (
     'ElasticSearch::Transport::Thrift' => '0.03',
-    'ElasticSearch::Transport::Curl'   => '0.04',
-    'ElasticSearch::Transport::AEHTTP' => '0.04',
-    'ElasticSearch::Transport::AECurl' => '0.04',
+    'ElasticSearch::Transport::Curl'   => '0.05',
+    'ElasticSearch::Transport::AEHTTP' => '0.05',
+    'ElasticSearch::Transport::AECurl' => '0.05',
 );
 
 #===================================
@@ -52,10 +52,11 @@ sub new {
     }
 
     my $self = bless {
-        _JSON         => JSON->new(),
-        _timeout      => 120,
-        _max_requests => 10_000,
-        _failed       => {},
+        _JSON               => JSON->new(),
+        _timeout            => 120,
+        _max_requests       => 10_000,
+        _max_content_length => 104_857_600,
+        _failed             => {},
         },
         $transport_class;
 
@@ -65,7 +66,7 @@ sub new {
     $self->{_default_servers}
         = [ shuffle( ref $servers eq 'ARRAY' ? @$servers : $servers ) ];
 
-    for (qw(timeout max_requests no_refresh deflate)) {
+    for (qw(timeout max_requests no_refresh deflate max_content_length)) {
         next unless exists $params->{$_};
         $self->$_( delete $params->{$_} );
     }
@@ -180,14 +181,14 @@ sub _handle_error {
 
     return
         if $error->isa('ElasticSearch::Error::Missing')
-            && $params->{qs}{ignore_missing};
+        && $params->{qs}{ignore_missing};
 
     $error->{-vars}{request} = $params;
 
     if ( my $raw = $error->{-vars}{content} ) {
         $error->{-vars}{current_version} = $1
             if $error->isa('ElasticSearch::Error::Conflict')
-                and $raw =~ /: version conflict, current \[(\d+)\]/;
+            and $raw =~ /: version conflict, current \[(\d+)\]/;
 
         my $content = eval { $self->JSON->decode($raw) } || $raw;
         $self->log_response($content);
@@ -238,8 +239,10 @@ sub refresh_servers {
     foreach my $server (@all_servers) {
         next unless $server;
 
-        my $nodes
-            = eval { $self->request( { cmd => '/_cluster/nodes' }, $server ) }
+        my $nodes = eval {
+            $self->request( { cmd => '/_cluster/nodes', qs => { http => 1 } },
+                $server );
+        }
             or next;
 
         my @servers = grep {$_}
@@ -250,6 +253,13 @@ sub refresh_servers {
                 || ''
             } values %{ $nodes->{nodes} };
         next unless @servers;
+
+        if ( $protocol eq 'http' ) {
+            my $content_length = min( $self->max_content_length,
+                grep {$_} map { $_->{http}{max_content_length_in_bytes} }
+                    values %{ $nodes->{nodes} } );
+            $self->max_content_length($content_length);
+        }
 
         @servers = shuffle(@servers);
 
@@ -344,6 +354,31 @@ sub max_requests {
         $self->{_max_requests} = shift;
     }
     return $self->{_max_requests} || 0;
+}
+
+#===================================
+sub max_content_length {
+#===================================
+    my $self = shift;
+    if (@_) {
+        $self->{_max_content_length} = shift;
+    }
+    return $self->{_max_content_length} || 0;
+}
+
+#===================================
+sub check_content_length {
+#===================================
+    my $self   = shift;
+    my $length = length ${ $_[0] };
+    return unless $length > $self->max_content_length;
+
+    my $msg
+        = "Content length ($length) greater than max_content_length ("
+        . $self->max_content_length
+        . ") for request:\n"
+        . substr( ${ $_[0] }, 0, 500 ) . '...';
+    $self->throw( 'Request', $msg );
 }
 
 #===================================
@@ -623,6 +658,12 @@ in which case the transport module will round robin through the
 C<servers> list only. Failed nodes will be removed from the list
 (but added back in every C<max_requests> or when all nodes have failed):
 
+The HTTP clients check that the post body content length is not greater than the
+L<max_content_length>, which defaults to 104,857,600 bytes (100MB) - the default
+that is configured in Elasticsearch.  From version 0.19.12, when C<no_refresh>
+set to false, the HTTP transport clients will auto-detect the minimum
+C<max_content_length> from the cluster.
+
 Currently, the available backends are:
 
 =over
@@ -675,11 +716,12 @@ happens via the main L<ElasticSearch> class.
 
     use ElasticSearch;
     my $e = ElasticSearch->new(
-        servers     => 'search.foo.com:9200',
-        transport   => 'httplite',
-        timeout     => '10',
-        no_refresh  => 0 | 1,
-        deflate     => 0 | 1,
+        servers            => 'search.foo.com:9200',
+        transport          => 'httplite',
+        timeout            => '10',
+        no_refresh         => 0 | 1,
+        deflate            => 0 | 1,
+        max_content_length => 104_857_600,
     );
 
     my $t = $e->transport;
@@ -704,6 +746,8 @@ happens via the main L<ElasticSearch> class.
                                     # useful if ES is on a remote network.
                                     # ES needs compression enabled with
                                     #     http.compression: true
+
+    $t->max_content_length(1000);   # set the max HTTP body content length
 
     $t->register('foo',$class)      # register new Transport backend
 
