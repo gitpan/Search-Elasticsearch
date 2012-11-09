@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.60';
+  $ElasticSearch::VERSION = '0.61';
 }
 
 use strict;
@@ -588,7 +588,8 @@ sub _to_dsl {
                 if $clause->{$new};
             $builder ||= $self->builder;
             my $method = $new eq 'query' ? 'query' : 'filter';
-            $clause->{$new} = $builder->$method($src)->{$method};
+            my $sub_clause = $builder->$method($src) or next;
+            $clause->{$new} = $sub_clause->{$method};
         }
     }
 }
