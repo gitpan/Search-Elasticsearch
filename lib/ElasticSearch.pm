@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.61';
+our $VERSION = '0.62';
 our $DEBUG   = 0;
 
 #===================================
@@ -156,7 +156,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.59, tested against ElasticSearch server version 0.20.0.RC1.
+Version 0.62, tested against ElasticSearch server version 0.20.2.
 
 =head1 DESCRIPTION
 
@@ -1901,6 +1901,7 @@ L<http://www.elasticsearch.org/guide/reference/api/admin-indices-open-close.html
         mappings => {...},      # optional
         settings => {...},      # optional
         warmers  => {...},      # optional
+        order    => $order,     # optional
     );
 
 Index templates allow you to define templates that will automatically be
@@ -2810,7 +2811,7 @@ To run the full test suite locally, run it as:
 
 =head1 ACKNOWLEDGEMENTS
 
-Thanks to Shay Bannon, the ElasticSearch author, for producing an amazingly
+Thanks to Shay Banon, the ElasticSearch author, for producing an amazingly
 easy to use search engine.
 
 =head1 LICENSE AND COPYRIGHT

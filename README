@@ -2,7 +2,7 @@ NAME
     ElasticSearch - An API for communicating with ElasticSearch
 
 VERSION
-    Version 0.59, tested against ElasticSearch server version 0.20.0.RC1.
+    Version 0.62, tested against ElasticSearch server version 0.20.2.
 
 DESCRIPTION
     ElasticSearch is an Open Source (Apache 2 license), distributed, RESTful
@@ -1673,6 +1673,7 @@ METHODS
             mappings => {...},      # optional
             settings => {...},      # optional
             warmers  => {...},      # optional
+            order    => $order,     # optional
         );
 
     Index templates allow you to define templates that will automatically be
@@ -2540,7 +2541,7 @@ TEST SUITE
         ES_HOME=/path/to/elasticsearch make test
 
 ACKNOWLEDGEMENTS
-    Thanks to Shay Bannon, the ElasticSearch author, for producing an
+    Thanks to Shay Banon, the ElasticSearch author, for producing an
     amazingly easy to use search engine.
 
 LICENSE AND COPYRIGHT

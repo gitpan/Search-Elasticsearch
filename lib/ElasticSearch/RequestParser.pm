@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.61';
+  $ElasticSearch::VERSION = '0.62';
 }
 
 use strict;
@@ -1379,6 +1379,7 @@ sub create_index_template {
                 settings => ['settings'],
                 mappings => ['mappings'],
                 warmers  => ['warmers'],
+                order    => ['order'],
             },
             fixup => \&_warmer_fixup
         },

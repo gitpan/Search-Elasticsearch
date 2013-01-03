@@ -1,6 +1,6 @@
 package ElasticSearch::Transport;
 {
-  $ElasticSearch::Transport::VERSION = '0.61';
+  $ElasticSearch::Transport::VERSION = '0.62';
 }
 
 use strict;
@@ -25,9 +25,9 @@ our %Transport = (
 
 our %Min_Versions = (
     'ElasticSearch::Transport::Thrift' => '0.03',
-    'ElasticSearch::Transport::Curl'   => '0.05',
-    'ElasticSearch::Transport::AEHTTP' => '0.05',
-    'ElasticSearch::Transport::AECurl' => '0.05',
+    'ElasticSearch::Transport::Curl'   => '0.07',
+    'ElasticSearch::Transport::AEHTTP' => '0.06',
+    'ElasticSearch::Transport::AECurl' => '0.06',
 );
 
 #===================================
