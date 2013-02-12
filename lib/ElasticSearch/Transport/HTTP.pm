@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTP;
 {
-  $ElasticSearch::Transport::HTTP::VERSION = '0.62';
+  $ElasticSearch::Transport::HTTP::VERSION = '0.63';
 }
 
 use strict;

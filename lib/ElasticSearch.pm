@@ -7,7 +7,7 @@ use ElasticSearch::Error();
 use ElasticSearch::RequestParser;
 use ElasticSearch::Util qw(throw parse_params);
 
-our $VERSION = '0.62';
+our $VERSION = '0.63';
 our $DEBUG   = 0;
 
 #===================================
@@ -107,7 +107,7 @@ sub reindex {
             );
             $results = $results->recv
                 if ref $results ne 'HASH'
-                && $results->isa('AnyEvent::CondVar');
+                    && $results->isa('AnyEvent::CondVar');
             if ( my $err = $results->{errors} ) {
                 my @errors = splice @$err, 0, 5;
                 push @errors, sprintf "...and %d more", scalar @$err
@@ -156,7 +156,7 @@ ElasticSearch - An API for communicating with ElasticSearch
 
 =head1 VERSION
 
-Version 0.62, tested against ElasticSearch server version 0.20.2.
+Version 0.63, tested against ElasticSearch server version 0.20.2.
 
 =head1 DESCRIPTION
 
@@ -1553,10 +1553,8 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
         fields               =>  {fields}
         filter               =>  { native filter },
         filterb              =>  { search builder filter },
-        from                 =>  {from}
         indices_boost        =>  { index_1 => 1.5,... }
         min_score            =>  $score
-        preference           =>  '_local' | '_primary' | '_primary_first' | $string
         routing              =>  [$routing,...]
         script_fields        =>  { script_fields }
         search_scroll        =>  '5m' | '10s',
@@ -1565,10 +1563,8 @@ and L<http://www.elasticsearch.org/guide/reference/query-dsl>
         search_size          =>  integer,
         search_type          =>  $search_type
         search_types         =>  ['type1','type],
-        size                 =>  {size}
         sort                 =>  {sort}
         scroll               =>  '5m' | '30s'
-        timeout              =>  '10s'
     )
 
 More-like-this (mlt) finds related/similar documents. It is possible to run
