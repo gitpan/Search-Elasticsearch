@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.63';
+  $ElasticSearch::VERSION = '0.64';
 }
 
 use strict;
@@ -986,7 +986,10 @@ sub count {
                 routing        => ['flatten'],
                 ignore_indices => IGNORE_INDICES,
             },
-            fixup => \&_query_fixup,
+            fixup => sub {
+                _query_fixup(@_);
+                delete $_[1]{data} unless %{ $_[1]{data} };
+            },
         },
         @_
     );

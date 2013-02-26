@@ -1,6 +1,6 @@
 package ElasticSearch::Util;
 {
-  $ElasticSearch::Util::VERSION = '0.63';
+  $ElasticSearch::Util::VERSION = '0.64';
 }
 
 use strict;
