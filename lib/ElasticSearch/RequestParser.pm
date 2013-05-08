@@ -1,6 +1,6 @@
 package ElasticSearch;
 {
-  $ElasticSearch::VERSION = '0.64';
+  $ElasticSearch::VERSION = '0.65';
 }
 
 use strict;
@@ -1304,6 +1304,7 @@ sub get_aliases {
         'aliases',
         {   postfix => '_aliases',
             cmd     => CMD_index,
+            qs      => { ignore_missing => [ 'boolean', 1 ] },
         },
         @_
     );

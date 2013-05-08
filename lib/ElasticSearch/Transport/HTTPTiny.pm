@@ -1,6 +1,6 @@
 package ElasticSearch::Transport::HTTPTiny;
 {
-  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.64';
+  $ElasticSearch::Transport::HTTPTiny::VERSION = '0.65';
 }
 
 use strict;

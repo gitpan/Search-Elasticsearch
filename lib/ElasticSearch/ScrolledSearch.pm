@@ -1,6 +1,6 @@
 package ElasticSearch::ScrolledSearch;
 {
-  $ElasticSearch::ScrolledSearch::VERSION = '0.64';
+  $ElasticSearch::ScrolledSearch::VERSION = '0.65';
 }
 
 use strict;
