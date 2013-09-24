@@ -1,5 +1,552 @@
-Revision history for Elasticsearch
+Revision history for ElasticSearch
+0.66    2013-09-24
+        Deprecated in favour of the new Elasticsearch.pm
 
-0.04    2013-09-23
-        First release
+0.65    2013-05-08
+        Add support for ignore_missing to get_aliases()
+
+0.64    2013-02-26
+        Default query for count()
+
+0.63    2013-02-12
+        Removed unsupported params from mlt()
+
+0.62    2013-01-03
+        BUG FIX
+        Don't destroy params passed in to new()
+
+        ENHANCEMENT
+        Added the 'order' param to index templates
+
+0.61    2012-11-09
+        ENHANCEMENT
+        Ignore empty queryb/filterb sections
+
+0.60    2012-11-07
+        ENHANCEMENT:
+        Added a max_content_length attribute to ElasticSearch::Transport
+        to avoid posting too large a body to elasticsearch. The value
+        is auto-detected in versions 0.19.12 onwards.
+        Added doc param to update()
+
+0.59    2012-10-31
+        BREAKING CHANGE:
+        Added the 'explain' parameter to validate_query(), which now returns
+        a hash instead of true|false
+
+        BUG FIXES:
+        The queryb->query, filterb->filter SearchBuilder conversions no longer
+        change the original parameters
+
+        ENHANCEMENTS:
+        Added cluster_reroute()
+        Added type_exists()
+        Added warmer APIs
+        Added explain API
+        Added upsert to update()
+        Added ignore_indices param to search(), searchqs() and msearch()
+        Bulk error handlers now receive the element number of the error
+        to identify the original item in the array (required for Elastic::Model)
+        Errors now have string comparison overloaded
+
+0.58    2012-08-09
+        Added a _method_name parameter to reindex() so that objects other
+        than ScrolledSearch can be passed as the $source.  The scrolling
+        defaults to $source->next, but with $method_name will be called
+        as $source->$method_name.
+
+0.57    2012-07-31
+        Minor changes to ElasticSearch::TestServer to make it work consistently
+        on Travis CI
+
+0.56    2012-07-31
+        BUG FIXES
+         - Trying to bulk create a doc that already exists should also trigger
+           a conflict error, not a general error.
+
+0.55    2012-07-06
+        ENHANCEMENTS
+        - Added on_conflict and on_error callbacks to bulk actions and reindex()
+
+0.54    2012-06-30
+        NEW FEATURES
+         - Added exists()
+        ENHANCEMENTS
+         - An ElasticSearch::Error::Conflict object now contains the latest
+           version number
+         - delete_mapping() now throws an error when the index or type is
+         - get() now accepts a 'parent' param
+         - searchqs() now accecpts 'lenient', 'quote_analyzer' and
+           'quote_field_suffix' params
+         - msearch() now accepts a 'search_type' param
+        BUG FIXES
+         - Removed dependencies on Module::Build and base
+           missing
+         - Worked around bug https://github.com/elasticsearch/elasticsearch/issues/2072
+           in ES which causes the default HTTP backend to hang by returning
+           a response body to a HEAD request
+         - Fixed current_server_version() to work with async backends
+
+0.53    2012-04-14
+        Bug fix:
+         - the timestamp param to index() should be a 'string', not
+           a 'duration'
+
+0.52    2012-03-17
+        BREAKING CHANGE:
+         - get_alias() now uses the native GET alias request, and its output
+           format has changed.
+
+        Bug fix:
+         - put_mapping() incorrectly required a single index. Now it
+           can contain zero or more indices
+
+0.51    2012-03-05
+        index() and create() were missing consistency and replication parameters
+
+0.50    2012-03-02
+        - Added msearch()
+        - The short-circuit functions for bulk/mget weren't working correctly
+          either with as_json or async backends
+        - Fixed bug in TestServer where it wasn't shutting down ES correctly
+          if it failed to create a new ES.pm object
+
+0.49    2012-02-17
+        Don't pass a custom port param through to ElasticSearch::TestServer
+
+0.48    2012-02-17
+        BREAKING CHANGE:
+        Updated the bulk* methods to support index, type, timestamp and ttl
+        args.  As a result, the method signatures have changed.
+
+        ENHANCEMENTS:
+         - index(), create() and the index/create bulk actions now accept
+           a JSON encoded string as a value for the 'data' param.
+         - added update()
+         - Added 'fields' to clear_cache
+         - Added index_segments()
+         - Added validate_query()
+         - Added ClusterBlock exception (code 403)
+         - Added NotReady exception (code 503)
+         - index_stats() now supports the 'all' flag
+         - Added params to nodes():
+           - http, jvm, network, os, process, thread_pool, transport
+         - Added params to nodes_stats():
+           - indices, clear, all, fs, http, jvm, network, os, process,
+             thread_pool, transport
+         - Added params to analyze():
+           - tokenizer, filters, field
+         - Added param 'partial_fields' to search()
+         - ElasticSearch::TestServer will now die if it can't find the
+           PID of the started ES process
+         - Added drain_buffer(), refill_buffer() and facets() to
+           ElasticSearch::ScrolledSearch
+
+        BUG FIXES:
+         - Fixed support for as_json in ScrolledSearch
+         - Fixed implicit IO::Handle bug when trying to log in older Perls
+         - Fixed a bug in index_stats and addded 'get' stats and groups.
+         - Corrected spelling of 'quorom' to 'quorum'
+         - create() now uses the index op_type instead of /_create to
+           fix a bug when creating a doc without an ID
+         - put_mapping wasn't respecting a type set with use_type()
+
+0.47    2011-10-24
+        Merged patch from AVAR, which ensures that the servers are used in
+        random order.
+
+0.46    2011-09-07
+        Fixed support for parent/child in reindex() - thanks to PERLER for
+        reporting
+
+0.45    2011-08-27
+        Doc typo corrected
+
+0.44    2011-08-27
+        Added support for deflate() to all HTTP Transport modules.
+
+0.43    2011-08-26
+        Added ElasticSearch::Transport::AECurl, and async backend which uses
+        libcurl, via AnyEvent::Curl::Multi
+
+0.42    2011-08-26
+        Dull Dist::Zilla change, for CPAN
+
+0.41    2011-08-26
+
+        BREAKING CHANGES:
+         - ElasticSearch::Transport::Thrift is now in a separate release
+         - delete_index() and delete_mapping() now require an index
+           parameter, to avoid accidental deletes.
+         - the return value for the bulk() methods, when { as_json => 1}
+           is specified, is now the JSON equivalent of the normal
+           return value, not the raw value from ES
+
+        OTHER:
+         - started using Dist::Zilla
+         - Added ElasticSearch::Transport::Curl, as a separate release
+         - get_aliases now works with {as_json => 1}
+
+0.40    2011-08-10
+
+        BREAKING CHANGE:
+         - index_exists now returns an empty list if the index doesn't exist.
+           Previously, it threw an error.
+
+        OTHER:
+         - Deprecated the use of top level mapping parameters in put_mapping()
+           in favour of just using the 'mapping' param
+         - IDs could not contain eg "/" before - now fixed with Any::URI::Escape
+           ie (URI::Escape or URI::Escape::XS)
+         - The 'servers' param to new() now defaults to localhost if not
+           specified
+         - The "scroll" param to scrolled_search() now defaults to '1m'
+         - added search_from and search_size to mlt()
+         - added analyze_wildcard and lowercase_expanded_terms to searchqs()
+         - mget() now returns [] if no docs specified, instead of dieing
+         - Made Test::More v 0.96 a dependency, and fixed the hashbang path
+           in the example (thanks to AVAR)
+
+0.39    2011-07-19
+         - "type" is now optional for get() requests
+         - added index_exists()
+         - added mget()
+         - added SearchBuilder integration for aliases
+
+0.38    2011-07-03
+        - Integrated ElasticSearch::SearchBuilder
+        - Deprecated the use of query types as top level params to count()
+          and delete_by_query() in favour of query or queryb
+        - trace_calls() now also accepts a filehandle (thanks FERREIRA)
+        - TestServer now supports ES_TRANSPORT=all
+
+0.37    2011-05-01
+
+        BREAKING CHANGES:
+         -  ElasticSearch::ScrolledSearch
+
+            $scrolled_search->next() now returns 1 result by default, instead
+            of $size results, to make it easier to write:
+
+                while (my $result = $scroll->next) {}
+
+         - ElasticSearch::TestServer is now an object which subclasses
+           ElasticSearch itself.  connect_to_server() has been removed.
+           Also, the port parameter can be used to specify a custom start port
+           when starting the test server, making it easier to run the
+           test server while there is an existing ES server running.
+
+0.36    2011-04-24
+        Updated ElasticSearch.pm to work with ElasticSearch version 0.16.0
+
+        New features:
+         - no_refresh:
+           Disable the automatic discovery of live nodes, to work with
+           remote clusters or proxied clusters
+
+         - scrolled_search():
+           Convenience iterator to wrap search/scroll requests
+
+         - reindex():
+           Utility to reindex data from one index to another, or one
+           cluster to another
+
+         - use_index()/use_type():
+           Set default index/type parameters
+
+         - searchqs():
+           URI/query string search, (as opposed to search() which uses a
+           request body)
+
+         - New search_type's : 'scan' and 'count'
+
+         - index_settings():
+           Retrieve index settings
+
+0.35    2011-04-07
+        Added the 'dynamic_templates' option to put_mapping
+
+0.34    2011-03-20
+
+        Fixed the tests for scrolling - turns out sorting when scrolling works
+        correctly. It was my tests which were bad.
+
+0.33    2011-03-19
+        Added the ElasticSearch::Transport::HTTPTiny backend
+
+0.32    2011-03-19
+
+         - Added as_json as an arg to all ES requests.
+         - Fixed a logic bug when setting the port manually in
+           ElasticSearch::TestServer
+         - Fixed a bug in ElasticSearch::TestServer which was
+           preventing it from working on OSX
+
+         Thanks to PERLER for the above
+
+          - Changed some query syntax in t/10-queryparser.t for perl 5.8.3
+
+0.31    2011-03-16
+
+        Fixed a bad test plan
+
+0.30    2011-03-16
+
+        - Added some missing requirements to Build.PL
+        - scroll() now accepts a 'scroll' parameter and works (but
+          sorting when scrolling still broken on the server)
+        - reindex_es.pl now also preserves the _parent and _routing fields
+
+0.29    2011-03-15
+         - Updated the Changes file
+
+0.28    2011-03-14
+
+        Support added for:
+         - Percolators
+               - create_percolator()
+               - delete_percolator()
+               - get_percolator()
+               - percolate()
+
+         - Open / Close index
+               - open_index()
+               - close_index()
+
+         - Index templates
+               - create_index_template()
+               - delete_index_template()
+               - index_template()
+
+         - Routing
+         - Parent docs
+         - Versioning
+         - Analyzer
+               - analyze()
+
+         - ElasticSearch::QueryParser
+               - Parses and filters query strings, to ensure that user
+                 data is in an acceptable form for passing to ES
+
+         - ElasticSearch::TestServer
+               - starts a test server for use by the test suite
+               - factored out to make it easier for others to use
+
+        Also:
+         - create_index() now supports adding mappings at the same time
+         - Added bulk_create(), bulk_index() and bulk_delete()
+         - Bulk actions now accept _id and id etc, which means that
+           search results can be passed directly to bulk without renaming
+           these parameters
+         - Added river_status()
+         - New errors
+            - ElasticSearch::Error::Conflict - versioning conflict
+            - ElasticSearch::Error::Missing - requested index/doct etc missing
+            - both these errors inherit from ElasticSearch::Error::Request
+         - Added ignore_missing to many methods which allows you to ignore
+           Missing errors
+         - Added query_parser
+         - added timeout() as sugar for $es->transport->timeout()
+         - added refresh_servers() as sugar for $es->transport->refresh_servers()
+
+        In ElasticSearch::Transport
+         - added max_requests() to force a refresh of known live nodes
+           every $max_requests
+         - on the first request, the list of live nodes is automatically
+           updated
+         - made httplite recognise more error states as temporary Connection
+           errors
+         - added support for recognising 404 and 409 HTTP codes
+         - upgraded Thrift to version 5.0
+         - improvements to logging
+
+        Miscellaneous:
+          - added examples/reindex_es.pl
+          - fixed a bug in the Makefile.PL
+
+0.27    2010-10-21
+        Fixed an undefined bug in Transport::refresh_servers which would
+        die if no nodes were found
+
+0.26    2010-10-20
+        Added a missing dependency on parent.pm
+
+0.25    2010-10-20
+        Another ambiguous use of localtime in ElasticSearch::Transport
+
+0.24    2010-10-20
+        Corrected an ambiguous use of localtime in ElasticSearch::Transport
+        Added examples/search_issues.pl
+        Minor tidying to tests
+
+0.23    2010-10-19
+        POD corrections
+
+0.22    2010-10-19
+        Support ElasticSearch version 0.12.0
+
+        Added the bulk() method, for bulk indexing, creating and deleting
+        Added create_river(), delete_river() and get_river()
+        Added delete_mapping()
+        Added error_trace()
+
+        Completely refactored ElasticSearch to enable pluggable backends:
+         - The request parser methods now live in ElasticSearch/RequestParser.pm
+           although they are loaded into the ElasticSeach namespace
+         - Added ElasticSearch::Transport as a transport base class
+         - Added ElasticSearch::Transport::HTTP (default) as the LWP backend
+         - Added ElasticSearch::Transport::HTTPLite as the HTTP::Lite backend
+         - Added ElasticSearch::Transport::Thrift as the Thrift backend
+         - Added ElasticSearch::Error class for exception objects
+         - Added ElasticSearch::Util with some generally useful utilities
+         - A number of methods have from ElasticSearch to
+           ElasticSearch::transport including current_server(), servers(),
+           refresh_servers()
+         - Removed the debug() method - now use $ElasticSearch::DEBUG instead
+         - Added filter_keywords to ElasticSearch::Util
+
+0.21    2010-09-18
+        Supports ElasticSearch version 0.10.0
+        Added the _source parameter to put_mapping()
+
+0.20    2010-09-04
+        Supports ElasticSearch version 0.10.0
+        Added update_index_settings() plus test
+        Added pod coverage test
+
+0.19    2010-08-19
+        Supports ElasticSearch version 0.9.1
+        Minor bug fix to cluster_state
+        Updated tests to use facet_filter instead of filter
+
+0.18    2010-08-01
+        Updated Changes file
+
+0.17    2010-08-01
+
+        Supports ElasticSearch version 0.9, which removes support for some
+        features of older versions.
+
+      - In search() added support for 'script_fields'
+      - In count() and delete_by_query() added support for 'custom_score',
+        'fuzzy', 'span_term', 'span_first', 'span_near', 'span_not',
+        'span_or'
+      - Removed terms() - now handled by search facets
+      - Added the 'full' parameter to flush_index()
+      - Changed put_mapping() to automatically prefix the type properties
+        definition with the type name
+      - Removed get_mapping() and replaced it with mapping(), which uses
+        the newly exposed GET _mapping API
+      - Added current_server_version()
+      - Added the 'filter_nodes', 'filter_metadata', 'filter_routing_table'
+        and 'filter_indices' params to cluster_state()
+
+
+
+0.16    2010-05-20
+        Added an ElasticSearch::Error::Timeout error class, to catch
+        occassions when the request times out, instead of failing
+        for a different reason.
+
+        Also, catch 'Server closed connection' errors, and automatically
+        refresh_servers and retry the request.
+
+0.15    2010-05-16
+        Fixed a bug in refresh_servers() introduced in 0.14, when forking
+        processes.
+
+0.14    2010-05-16
+        The object now stores the original servers parameter, so that
+        if the nodes disassociate and the live server list is limited,
+        the object can still try the original servers.
+
+0.13    2010-05-13
+        Added nodes_stats(), shutdown(), restart() and camel_case()
+        Removed Alien::ElasticSearch, as it is now easier to install
+        ElasticSearch directly.
+        Tested against ElasticSearch version 0.7.0
+
+0.12    2010-04-16
+        Added scroll() and the indices_boost param to search()
+        Tested against ElasticSearch version 0.6.0
+
+0.11    2010-04-07
+        Updated changelog
+
+0.10    2010-04-07
+        Fixed the duration regex
+        Improved docs for shutdown()
+
+0.09    2010-04-07
+        Changed refresh_servers to handle http_address and httpAddress
+        Added a terms filter test
+
+0.08    2010-04-05
+      - Changed all_field to _all
+
+0.07    2010-04-05
+
+      - All tests pass as of version 8cfa04cea3bc2317ee613384ced4da20cf2737aa
+        on 2010-04-04:
+        http://github.com/elasticsearch/elasticsearch/commit/8cfa04cea3bc2317ee613384ced4da20cf2737aa
+
+      - Updated the API to take into account ElasticSearch's change from
+        using camelCase to underscore_separators
+      - create() now uses the /_create postfix instead of op_type=create,
+        although that flag is still available through index() and set()
+      - Changed more_like_this and more_like_this_field to mlt and mlt_field
+      - Changed fuzzy_like_this and fuzzy_like_this_field to flt and flt_field
+      - Changed term() to use gt/gte/lt/lte instead of from/to and
+        fromInclusive/toInclusive
+      - put_mapping now defaults to { ignore_conflicts => 0 }, so the
+        default now is to complain
+      - In mlt, boost_terms:boolean and boost_terms_factor:float have now
+        been merged to boost_terms:float
+
+0.06    2010-04-03
+      - The test suite now requires Alien::ElasticSearch, and uses its own
+        config file and work dir, so as not to interfere with existing
+        data
+      - Added clear_cache()
+      - Added fuzzy_like_this and fuzzy_like_this_field clauses to
+        count() and delete_by_query()
+      - Added more_like_this()
+      - Added more_like_this/more_like_this_field clauses to count()
+        and delete_by_query()
+      - Changed exclude_from and exclude_to to from_inclusive and to_inclusive
+        in the terms() query
+      - the filteredQuery clause renamed to 'filtered' as per a change in ES
+      - Added aliases() and get_aliases()
+      - Deleted the QueryDSL doc, as the ElasticSearch docs are much improved
+
+0.05    2010-03-04
+      - Delayed connecting to the cluster until actually required (previously
+        it refreshed the server list in new() )
+      - Restructured the internals again, to make it easier to read
+      - Added cluster_health()
+      - Fixed the test suite so that auto-started nodes don't take over
+        the terminal
+      - Enabled more tests as ElasticSearch now less buggy
+
+0.04    2010-02-23
+      - Added terms()
+      - Added get_mapping()
+      - Renamed create_mapping() to put_mapping()
+      - Added ignore_duplicate param to put_mapping
+      - skip create-duplicate-mapping test if cluster has more than one nodes
+
+0.03    2010-02-21
+      - Corrected the docs for search/count/delete_by_query
+      - Added POD for the Query DSL
+      - Added a SIG{INT} to the test file, so that it shuts down the servers
+        if the test suite is interrupted
+
+0.02    2010-02-21
+      - Rewrote the module completely to use a dispatch table -
+        makes it easier to extend
+      - Added a test suite
+      - Added Alien::ElasticSearch so that we can test against a live server
+
+0.01    2010-02-16
+        First version, released on an unsuspecting world.
 
