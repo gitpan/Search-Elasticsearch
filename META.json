@@ -1,23 +1,23 @@
 {
-   "abstract" : "An API for communicating with ElasticSearch",
+   "abstract" : "The official client for Elasticsearch (beta)",
    "author" : [
       "Clinton Gormley <drtech@cpan.org>"
    ],
    "dynamic_config" : 0,
    "generated_by" : "Dist::Zilla version 4.300039, CPAN::Meta::Converter version 2.130880",
    "license" : [
-      "perl_5"
+      "apache_2_0"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
       "version" : "2"
    },
-   "name" : "ElasticSearch",
+   "name" : "Elasticsearch",
    "prereqs" : {
       "build" : {
          "requires" : {
             "File::Temp" : "0.20",
-            "Test::More" : "0.96"
+            "Test::More" : "0.98"
          }
       },
       "configure" : {
@@ -34,61 +34,20 @@
          "recommends" : {
             "JSON::XS" : "0",
             "URI::Escape::XS" : "0"
-         },
-         "requires" : {
-            "Any::URI::Escape" : "0",
-            "Carp" : "0",
-            "Data::Dumper" : "0",
-            "ElasticSearch::SearchBuilder" : "0.18",
-            "Encode" : "0",
-            "Exporter" : "0",
-            "File::Path" : "0",
-            "File::Spec::Functions" : "0",
-            "File::Temp" : "0.22",
-            "HTTP::Lite" : "0",
-            "HTTP::Request" : "0",
-            "HTTP::Tiny" : "0",
-            "IO::Handle" : "0",
-            "IO::Socket" : "0",
-            "IO::Uncompress::Inflate" : "0",
-            "JSON" : "0",
-            "LWP::ConnCache" : "0",
-            "LWP::UserAgent" : "0",
-            "List::Util" : "0",
-            "POSIX" : "0",
-            "Scalar::Util" : "1.07",
-            "Task::Weaken" : "0",
-            "URI" : "0",
-            "YAML" : "0",
-            "constant" : "0",
-            "overload" : "0",
-            "parent" : "0",
-            "strict" : "0",
-            "warnings" : "0"
-         }
-      },
-      "test" : {
-         "requires" : {
-            "ElasticSearch::SearchBuilder" : "0",
-            "Test::Differences" : "0",
-            "Test::Exception" : "0",
-            "Test::More" : "0.96",
-            "lib" : "0"
          }
       }
    },
    "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
-         "web" : "https://github.com/clintongormley/ElasticSearch.pm/issues"
+         "web" : "https://github.com/elasticsearch/elasticsearch-perl/issues"
       },
-      "homepage" : "http://clintongormley.github.com/ElasticSearch.pm/",
       "repository" : {
          "type" : "git",
-         "url" : "git://github.com/clintongormley/ElasticSearch.pm.git",
-         "web" : "https://github.com/clintongormley/ElasticSearch.pm"
+         "url" : "git://github.com/elasticsearch/elasticsearch-perl.git",
+         "web" : "https://github.com/elasticsearch/elasticsearch-perl"
       }
    },
-   "version" : "0.66"
+   "version" : "0.70"
 }
 
