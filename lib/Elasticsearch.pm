@@ -3,7 +3,7 @@ package Elasticsearch;
 use Moo;
 use namespace::autoclean;
 
-our $VERSION = '0.70';
+our $VERSION = '0.71';
 
 use Elasticsearch::Util qw(parse_params load_plugin);
 
@@ -47,11 +47,11 @@ sub new {
 
 =head1 NAME
 
-Elasticsearch - The official client for Elasticsearch (beta)
+Elasticsearch - The official client for Elasticsearch
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 SYNOPSIS
 
@@ -527,7 +527,7 @@ To trace requests/responses in C<curl> format, do:
     $e = Elasticsearch->new (trace_to => 'Stderr');
 
     # To a file
-    $e = Elasticsearch->new (trace_to => ['File','/path/to/file.log');
+    $e = Elasticsearch->new (trace_to => ['File','/path/to/file.log']);
 
 =head2 SearchBuilder
 
@@ -644,5 +644,5 @@ This is free software, licensed under:
 
 __END__
 
-# ABSTRACT: The official client for Elasticsearch (beta)
+# ABSTRACT: The official client for Elasticsearch
 

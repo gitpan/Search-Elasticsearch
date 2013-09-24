@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Cxn::HTTP;
 {
-  $Elasticsearch::Role::Cxn::HTTP::VERSION = '0.70';
+  $Elasticsearch::Role::Cxn::HTTP::VERSION = '0.71';
 }
 
 use Moo::Role;
@@ -152,7 +152,7 @@ Elasticsearch::Role::Cxn::HTTP - Provides common functionality to HTTP Cxn imple
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 

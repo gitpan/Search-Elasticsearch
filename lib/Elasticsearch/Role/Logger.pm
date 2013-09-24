@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Logger;
 {
-  $Elasticsearch::Role::Logger::VERSION = '0.70';
+  $Elasticsearch::Role::Logger::VERSION = '0.71';
 }
 
 use Moo::Role;
@@ -56,7 +56,8 @@ sub trace_request {
     return unless $self->is_trace;
 
     my $uri = URI->new( 'http://localhost:9200' . $params->{path} );
-    $uri->query_form( { %{ $params->{qs} }, pretty => 1 } );
+    my %qs = ( %{ $params->{qs} }, pretty => 1 );
+    $uri->query_form( [ map { $_, $qs{$_} } sort keys %qs ] );
 
     my $body
         = $params->{serialize} eq 'std'
@@ -138,7 +139,7 @@ Elasticsearch::Role::Logger - Provides common functionality to Logger implementa
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 

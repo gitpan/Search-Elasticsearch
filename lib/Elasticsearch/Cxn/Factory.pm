@@ -1,6 +1,6 @@
 package Elasticsearch::Cxn::Factory;
 {
-  $Elasticsearch::Cxn::Factory::VERSION = '0.70';
+  $Elasticsearch::Cxn::Factory::VERSION = '0.71';
 }
 
 use Moo;
@@ -47,7 +47,7 @@ Elasticsearch::Cxn::Factory - Used by CxnPools to create new Cxn instances.
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 

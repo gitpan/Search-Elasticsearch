@@ -1,6 +1,6 @@
 package Elasticsearch::Error;
 {
-  $Elasticsearch::Error::VERSION = '0.70';
+  $Elasticsearch::Error::VERSION = '0.71';
 }
 
 use Moo;
@@ -159,7 +159,7 @@ Elasticsearch::Error - Errors thrown by Elasticsearch
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Cxn;
 {
-  $Elasticsearch::Role::Cxn::VERSION = '0.70';
+  $Elasticsearch::Role::Cxn::VERSION = '0.71';
 }
 
 use Moo::Role;
@@ -182,7 +182,7 @@ Elasticsearch::Role::Cxn - Provides common functionality to Cxn implementations
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 

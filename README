@@ -1,8 +1,8 @@
 NAME
-    Elasticsearch - The official client for Elasticsearch (beta)
+    Elasticsearch - The official client for Elasticsearch
 
 VERSION
-    version 0.70
+    version 0.71
 
 SYNOPSIS
         use Elasticsearch;
@@ -379,7 +379,7 @@ MIGRATING FROM ElasticSearch.pm
         $e = Elasticsearch->new (trace_to => 'Stderr');
 
         # To a file
-        $e = Elasticsearch->new (trace_to => ['File','/path/to/file.log');
+        $e = Elasticsearch->new (trace_to => ['File','/path/to/file.log']);
 
   SearchBuilder
     The old API integrated ElasticSearch::SearchBuilder for an SQL::Abstract

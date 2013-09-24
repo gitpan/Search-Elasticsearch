@@ -1,6 +1,6 @@
 package Elasticsearch::CxnPool::Static;
 {
-  $Elasticsearch::CxnPool::Static::VERSION = '0.70';
+  $Elasticsearch::CxnPool::Static::VERSION = '0.71';
 }
 
 use Moo;
@@ -71,7 +71,7 @@ Elasticsearch::CxnPool::Static - A CxnPool for connecting to a remote cluster wi
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 SYNOPSIS
 

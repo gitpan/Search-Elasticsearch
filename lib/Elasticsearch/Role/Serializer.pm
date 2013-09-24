@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Serializer;
 {
-  $Elasticsearch::Role::Serializer::VERSION = '0.70';
+  $Elasticsearch::Role::Serializer::VERSION = '0.71';
 }
 
 use Moo::Role;
@@ -22,7 +22,7 @@ Elasticsearch::Role::Serializer - An interface for Serializer modules
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 

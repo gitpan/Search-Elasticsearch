@@ -1,3 +1,4 @@
+CONTRIBUTING.asciidoc
 Changes
 LICENSE
 MANIFEST
@@ -5,6 +6,7 @@ META.json
 META.yml
 Makefile.PL
 README
+cpanfile
 lib/Elasticsearch.pm
 lib/Elasticsearch/Bulk.pm
 lib/Elasticsearch/Client/Direct.pm

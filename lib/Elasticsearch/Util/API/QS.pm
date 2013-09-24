@@ -1,6 +1,6 @@
 package Elasticsearch::Util::API::QS;
 {
-  $Elasticsearch::Util::API::QS::VERSION = '0.70';
+  $Elasticsearch::Util::API::QS::VERSION = '0.71';
 }
 
 use strict;
@@ -225,7 +225,7 @@ Elasticsearch::Util::API::QS - A utility class for query string parameters in th
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 

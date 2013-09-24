@@ -1,6 +1,6 @@
 package Elasticsearch::Bulk;
 {
-  $Elasticsearch::Bulk::VERSION = '0.70';
+  $Elasticsearch::Bulk::VERSION = '0.71';
 }
 
 use Moo;
@@ -308,7 +308,7 @@ Elasticsearch::Bulk - A helper utility for the Bulk API
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Elasticsearch::Role::CxnPool;
 {
-  $Elasticsearch::Role::CxnPool::VERSION = '0.70';
+  $Elasticsearch::Role::CxnPool::VERSION = '0.71';
 }
 
 use Moo::Role;
@@ -136,7 +136,7 @@ Elasticsearch::Role::CxnPool - Provides common functionality to the CxnPool impl
 
 =head1 VERSION
 
-version 0.70
+version 0.71
 
 =head1 DESCRIPTION
 
