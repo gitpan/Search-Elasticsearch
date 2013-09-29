@@ -1,12 +1,12 @@
 package Elasticsearch::CxnPool::Static::NoPing;
 {
-  $Elasticsearch::CxnPool::Static::NoPing::VERSION = '0.71';
+  $Elasticsearch::CxnPool::Static::NoPing::VERSION = '0.72';
 }
 
 use Moo;
 with 'Elasticsearch::Role::CxnPool';
 use Elasticsearch::Util qw(throw);
-use namespace::autoclean;
+use namespace::clean;
 
 has 'max_retries' => ( is => 'lazy' );
 has '_dead_cxns' => ( is => 'ro', default => sub { [] } );
@@ -76,7 +76,7 @@ Elasticsearch::CxnPool::Static::NoPing - A CxnPool for connecting to a remote cl
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 SYNOPSIS
 

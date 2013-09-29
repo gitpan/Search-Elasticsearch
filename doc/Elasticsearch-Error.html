@@ -1,0 +1,106 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<link rel='stylesheet' href='https://metacpan.org/_asset/288683e3285b02987a848283f0f92207' type='text/css'>
+<script type='text/javascript' src='https://metacpan.org/_asset/12b19d083bf773523c065d4d729f0327'></script>
+</head>
+<body>
+<div class="pod">
+
+
+<ul id="index">
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#ERROR-CLASSES">ERROR CLASSES</a></li>
+</ul>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Errors thrown by Elasticsearch are error objects, which can include a strack trace and information to help debug problems. An error object consists of the following:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    {
+        type  =&gt; $type,              # eg Missing
+        text  =&gt; &#39;Error message&#39;,
+        vars  =&gt; {...},              # vars which may help to explain the error
+        stack =&gt; [...],              # a stack trace
+    }</pre>
+
+<p>The <code>$Elasticsearch::Error::DEBUG</code> variable can be set to <code>1</code> or <code>2</code> to increase the verbosity of errors.</p>
+
+<h1 id="ERROR-CLASSES">ERROR CLASSES</h1>
+
+<p>The following error classes are defined:</p>
+
+<ul>
+
+<li><p><code>Elasticsearch::Error::Param</code></p>
+
+<p>A bad parameter has been passed to a method.</p>
+
+</li>
+<li><p><code>Elasticsearch::Error::Request</code></p>
+
+<p>There was some generic error performing your request in Elasticsearch. This error is triggered by HTTP status codes <code>400</code> and <code>500</code>. This class has the following sub-classes:</p>
+
+<ul>
+
+<li><p><code>Elasticsearch::Error::Missing</code></p>
+
+<p>A resource that you requested was not found. These errors are triggered by the <code>404</code> HTTP status code.</p>
+
+</li>
+<li><p><code>Elastisearch::Error::Conflict</code></p>
+
+<p>Your request could not be performed because of some conflict. For instance, if you try to delete a document with a particular version number, and the document has already changed, it will throw a <code>Conflict</code> error. If it can, it will include the <code>current_version</code> in the error vars. This error is triggered by the <code>409</code> HTTP status code.</p>
+
+</li>
+<li><p><code>Elasticsearch::Error::ContentLength</code></p>
+
+<p>The request body was longer than the <a href="./Elasticsearch::Role::Cxn::HTTP#max_content_length">max_content_length</a>.</p>
+
+</li>
+</ul>
+
+</li>
+<li><p><code>Elasticsearch::Error::Timeout</code></p>
+
+<p>The request timed out.</p>
+
+</li>
+<li><p><code>Elasticsearch::Error::Cxn</code></p>
+
+<p>There was an error connecting to a node in the cluster. This error indicates node failure and will be retried on another node. This error has the following sub-class:</p>
+
+<ul>
+
+<li><p><code>Elasticsearch::Error::Unavailable</code></p>
+
+<p>The current node is unable to handle your request at the moment. Your request will be retried on another node. This error is triggered by the <code>503</code> HTTP status code.</p>
+
+</li>
+</ul>
+
+</li>
+<li><p><code>Elasticsearch::Error::ClusterBlocked</code></p>
+
+<p>The cluster was unable to process the request because it is currently blocking, eg there are not enough master nodes to form a cluster. This error is triggered by the <code>403</code> HTTP status code.</p>
+
+</li>
+<li><p><code>Elasticsearch::Error::Serializer</code></p>
+
+<p>There was an error serializing a variable or deserializing a string.</p>
+
+</li>
+<li><p><code>Elasticsarch::Error::Internal</code></p>
+
+<p>An internal error occurred - please report this as a bug in this module.</p>
+
+</li>
+</ul>
+
+
+</div>
+</body>
+</html>
+
+

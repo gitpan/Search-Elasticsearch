@@ -1,12 +1,12 @@
 package Elasticsearch::Role::Client::Direct;
 {
-  $Elasticsearch::Role::Client::Direct::VERSION = '0.71';
+  $Elasticsearch::Role::Client::Direct::VERSION = '0.72';
 }
 
 use Moo::Role;
 with 'Elasticsearch::Role::Client';
-use namespace::autoclean;
 use Try::Tiny;
+use namespace::clean;
 
 #===================================
 sub parse_request {
@@ -28,7 +28,7 @@ sub parse_request {
     }
     catch {
         chomp $_;
-        my $name = $defn->{name}||'<unknown method>';
+        my $name = $defn->{name} || '<unknown method>';
         $self->logger->throw_error( 'Param',
                   "$_ in ($name) request. "
                 . "See http://elasticsearch.org/guide/reference/"
@@ -119,7 +119,7 @@ Elasticsearch::Role::Client::Direct - Request parsing for Direct clients
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

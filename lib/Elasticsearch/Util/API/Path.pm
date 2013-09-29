@@ -1,6 +1,6 @@
 package Elasticsearch::Util::API::Path;
 {
-  $Elasticsearch::Util::API::Path::VERSION = '0.71';
+  $Elasticsearch::Util::API::Path::VERSION = '0.72';
 }
 
 use strict;
@@ -130,7 +130,7 @@ Elasticsearch::Util::API::Path - A utility class for converting path templates i
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

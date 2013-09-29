@@ -1,13 +1,13 @@
 package Elasticsearch::Cxn::HTTPTiny;
 {
-  $Elasticsearch::Cxn::HTTPTiny::VERSION = '0.71';
+  $Elasticsearch::Cxn::HTTPTiny::VERSION = '0.72';
 }
 
 use Moo;
 with 'Elasticsearch::Role::Cxn::HTTP';
 
-use namespace::autoclean;
-use HTTP::Tiny v0.33 ();
+use HTTP::Tiny 0.036 ();
+use namespace::clean;
 
 my $Cxn_Error = qr/ Connection.(?:timed.out|re(?:set|fused))
                        | connect:.timeout
@@ -83,7 +83,7 @@ Elasticsearch::Cxn::HTTPTiny - A Cxn implementation which uses HTTP::Tiny
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

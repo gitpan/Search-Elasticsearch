@@ -1,11 +1,11 @@
 package Elasticsearch::Cxn::Factory;
 {
-  $Elasticsearch::Cxn::Factory::VERSION = '0.71';
+  $Elasticsearch::Cxn::Factory::VERSION = '0.72';
 }
 
 use Moo;
-use namespace::autoclean;
 use Elasticsearch::Util qw(parse_params load_plugin);
+use namespace::clean;
 
 has '_factory'           => ( is => 'ro', required => 1 );
 has 'default_host'       => ( is => 'ro', required => 1 );
@@ -47,7 +47,7 @@ Elasticsearch::Cxn::Factory - Used by CxnPools to create new Cxn instances.
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

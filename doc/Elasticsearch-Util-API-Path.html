@@ -1,0 +1,50 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<link rel='stylesheet' href='https://metacpan.org/_asset/288683e3285b02987a848283f0f92207' type='text/css'>
+<script type='text/javascript' src='https://metacpan.org/_asset/12b19d083bf773523c065d4d729f0327'></script>
+</head>
+<body>
+<div class="pod">
+
+
+<ul id="index">
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#EXPORTS">EXPORTS</a>
+    <ul>
+      <li><a href="#path_init-"><code>path_init()</code></a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>This module converts path templates in <a href="./Elasticsearch::Role::API">Elasticsearch::Role::API</a> such as <code>/{index}/{type}/{id}</code> into real paths such as <code>/my_index/my_type/123</code>.</p>
+
+<h1 id="EXPORTS">EXPORTS</h1>
+
+<h2 id="path_init-"><code>path_init()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    use Elasticsearch::Util::API::Path qw(path_init);
+
+    $handler = path_init($template);
+    $path    = $handler-&gt;(\%params);</pre>
+
+<p>The <code>path_init()</code> sub accepts a path template and returns an anonymous sub which converts <code>\%params</code> into a real path, removing the keys that it has used from <code>%params</code>, eg:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $handler = path_init(&#39;/{indices}/_search&#39;);
+    $params  = { index =&gt; [&#39;foo&#39;,&#39;bar&#39;], size =&gt; 10 };
+    $path    = $handler-&gt;($params);</pre>
+
+<p>Would result in:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $path:      &#39;/foo,bar/_search&#39;;
+    $params:    { size =&gt; 10 };</pre>
+
+
+</div>
+</body>
+</html>
+
+

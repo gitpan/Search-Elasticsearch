@@ -2,7 +2,7 @@ NAME
     Elasticsearch - The official client for Elasticsearch
 
 VERSION
-    version 0.71
+    version 0.72
 
 SYNOPSIS
         use Elasticsearch;
@@ -392,17 +392,11 @@ MIGRATING FROM ElasticSearch.pm
     client, and the "bulk()" method itself now simply returns the response
     from Elasticsearch. It doesn't interfere with processing at all.
 
-    The helper methods will be replaced by the Elasticsearch::Bulk class,
-    which has been written but not yet documented or fully tested.
-
-    Similarly, "scrolled_search()" will be replaced by the
-    Elasticsearch::Scroll class which is similarly unfinished.
+    These helper methods have been replaced by the Elasticsearch::Bulk
+    class. Similarly, "scrolled_search()" has been replaced by the
+    Elasticsearch::Scroll.
 
 TODO
-    *   Elasticsearch::Bulk
-
-    *   Elasticsearch::Scroll
-
     *   Elasticsearch::Compat
 
         This module will provide an easy migration path from the old

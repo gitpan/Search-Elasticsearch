@@ -1,0 +1,566 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<link rel='stylesheet' href='https://metacpan.org/_asset/288683e3285b02987a848283f0f92207' type='text/css'>
+<script type='text/javascript' src='https://metacpan.org/_asset/12b19d083bf773523c065d4d729f0327'></script>
+</head>
+<body>
+<div class="pod">
+
+
+<ul id="index">
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#INDEX-METHODS">INDEX METHODS</a>
+    <ul>
+      <li><a href="#create-"><code>create()</code></a></li>
+      <li><a href="#exists-"><code>exists()</code></a></li>
+      <li><a href="#delete-"><code>delete()</code></a></li>
+      <li><a href="#close-"><code>close()</code></a></li>
+      <li><a href="#open-"><code>open()</code></a></li>
+      <li><a href="#clear_cache-"><code>clear_cache()</code></a></li>
+      <li><a href="#refresh-"><code>refresh()</code></a></li>
+      <li><a href="#flush-"><code>flush()</code></a></li>
+      <li><a href="#optimize-"><code>optimize()</code></a></li>
+      <li><a href="#snapshot_index-"><code>snapshot_index()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#MAPPING-METHODS">MAPPING METHODS</a>
+    <ul>
+      <li><a href="#put_mapping-"><code>put_mapping()</code></a></li>
+      <li><a href="#get_mapping-"><code>get_mapping()</code></a></li>
+      <li><a href="#exists_type-"><code>exists_type()</code></a></li>
+      <li><a href="#delete_mapping-"><code>delete_mapping()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#ALIAS-METHODS">ALIAS METHODS</a>
+    <ul>
+      <li><a href="#update_aliases-"><code>update_aliases()</code></a></li>
+      <li><a href="#get_aliases-"><code>get_aliases()</code></a></li>
+      <li><a href="#put_alias-"><code>put_alias()</code></a></li>
+      <li><a href="#get_alias-"><code>get_alias()</code></a></li>
+      <li><a href="#exists_alias-"><code>exists_alias()</code></a></li>
+      <li><a href="#delete_alias-"><code>delete_alias()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#SETTINGS-METHODS">SETTINGS METHODS</a>
+    <ul>
+      <li><a href="#put_settings-"><code>put_settings()</code></a></li>
+      <li><a href="#get_settings-"><code>get_settings()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#TEMPLATE-METHODS">TEMPLATE METHODS</a>
+    <ul>
+      <li><a href="#put_template-"><code>put_template()</code></a></li>
+      <li><a href="#get_template-"><code>get_template()</code></a></li>
+      <li><a href="#delete_template-"><code>delete_template()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#WARMER-METHODS">WARMER METHODS</a>
+    <ul>
+      <li><a href="#put_warmer-"><code>put_warmer()</code></a></li>
+      <li><a href="#get_warmer-"><code>get_warmer()</code></a></li>
+      <li><a href="#delete_warmer-"><code>delete_warmer()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#STATS-METHODS">STATS METHODS</a>
+    <ul>
+      <li><a href="#stats-"><code>stats()</code></a></li>
+      <li><a href="#status-"><code>status()</code></a></li>
+      <li><a href="#segments-"><code>segments()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#QUERY-AND-ANALYSIS-METHODS">QUERY AND ANALYSIS METHODS</a>
+    <ul>
+      <li><a href="#analyze-"><code>analyze()</code></a></li>
+      <li><a href="#validate_query-"><code>validate_query()</code></a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>This module provides methods to make index-level requests, such as creating and deleting indices, managing type mappings, index settings, warmers, index templates and aliases.</p>
+
+<p>It does <a href="./Elasticsearch::Role::Client::Direct">Elasticsearch::Role::Client::Direct</a>.</p>
+
+<h1 id="INDEX-METHODS">INDEX METHODS</h1>
+
+<h2 id="create-"><code>create()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;create(
+        index =&gt; &#39;my_index&#39;             # required
+
+        body  =&gt; {                      # optional
+            index settings
+            mappings
+            warmers
+        }
+    );</pre>
+
+<p>The <code>create()</code> method is used to creat an index. Optionally, index settings, type mappings and index warmers can be added at the same time.</p>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-create-index/">create index docs</a> for more information.</p>
+
+<h2 id="exists-"><code>exists()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bool = $e-&gt;indices-&gt;exists(
+        index =&gt; &#39;index&#39; | \@indices    # required
+    );</pre>
+
+<p>The <code>exists()</code> method returns <code>1</code> or the empty string to indicate whether the specified index or indices exist.</p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-indices-exists/">index exists docs</a> for more information.</p>
+
+<h2 id="delete-"><code>delete()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;delete(
+        index =&gt; &#39;index&#39; | \@indices    # required
+    );</pre>
+
+<p>The <code>delete()</code> method deletes the specified indices.</p>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-index/">delete index docs</a> for more information.</p>
+
+<h2 id="close-"><code>close()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;close(
+        index =&gt; &#39;index&#39; | \@indices    # required
+    );</pre>
+
+<p>The <code>close()</code> method closes the specified indices, reducing resource usage but allowing them to be reopened later.</p>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-open-close/">close index docs</a> for more information.</p>
+
+<h2 id="open-"><code>open()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;open(
+        index =&gt; &#39;index&#39; | \@indices    # optional
+    );</pre>
+
+<p>The <code>open()</code> method opens closed indices.</p>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-open-close/">open index docs</a> for more information.</p>
+
+<h2 id="clear_cache-"><code>clear_cache()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;clear_cache(
+        index =&gt; &#39;index&#39; | \@indices        # optional
+    );</pre>
+
+<p>The <code>clear_cache()</code> method is used to clear the in-memory filter, fielddata, or id cache for the specified indices.</p>
+
+<p>Query string parameters: <code>fielddata</code>, <code>fields</code>, <code>filter</code>, <code>filter_cache</code>, <code>filter_keys</code>, <code>id</code>, <code>ignore_indices</code>, <code>index</code>, <code>recycler</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-clearcache/">clear_cache docs</a> for more information.</p>
+
+<h2 id="refresh-"><code>refresh()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;refresh(
+        index =&gt; &#39;index&#39; | \@indices    # optional
+    );</pre>
+
+<p>The <code>refresh()</code> method refreshes the specified indices (or all indices), allowing recent changes to become visible to search. This process normally happens automatically once every second by default.</p>
+
+<p>Query string parameters: <code>ignore_indices</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-refresh/">refresh index docs</a> for more information.</p>
+
+<h2 id="flush-"><code>flush()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;flush(
+        index =&gt; &#39;index&#39; | \@indices    # optional
+    );</pre>
+
+<p>The <code>flush()</code> method causes the specified indices (or all indices) to be written to disk with an <code>fsync</code>, and clears out the transaction log. This process normally happens automatically.</p>
+
+<p>Query string parameters: <code>force</code>, <code>full</code>, <code>ignore_indices</code>, <code>refresh</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-flush/">flush index docs</a> for more information.</p>
+
+<h2 id="optimize-"><code>optimize()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;optimize(
+        index =&gt; &#39;index&#39; | \@indices    # optional
+    );</pre>
+
+<p>The <code>optimize()</code> method rewrites all the data in an index into at most <code>max_num_segments</code>. This is a very heavy operation and should only be run with care, and only on indices that are no longer being updated.</p>
+
+<p>Query string parameters: <code>flush</code>, <code>ignore_indices</code>, <code>max_num_segments</code>, <code>only_expunge_deletes</code>, <code>refresh</code>, <code>wait_for_merge</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-optimize/">optimize index docs</a> for more information.</p>
+
+<h2 id="snapshot_index-"><code>snapshot_index()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;snapshot_index(
+        index =&gt; &#39;index&#39; | \@indices    # optional
+    );</pre>
+
+<p>Deprecated.</p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/">snapshot_index docs</a> for more information.</p>
+
+<h1 id="MAPPING-METHODS">MAPPING METHODS</h1>
+
+<h2 id="put_mapping-"><code>put_mapping()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;put_mapping(
+        index =&gt; &#39;index&#39; | \@indices    # optional,
+        type  =&gt; &#39;type&#39;,                # required
+
+        body  =&gt; { mapping }            # required
+    )</pre>
+
+<p>The <code>put_mapping()</code> method is used to create or update a type mapping on an existing index. Mapping updates are allowed to add new fields, but not to overwrite or change existing fields.</p>
+
+<p>For instance:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;put_mapping(
+        index   =&gt; &#39;users&#39;,
+        type    =&gt; &#39;user&#39;,
+        body    =&gt; {
+            user =&gt; {
+                properties =&gt; {
+                    name =&gt; { type =&gt; &#39;string&#39;  },
+                    age  =&gt; { type =&gt; &#39;integer&#39; }
+                }
+            }
+        }
+    );</pre>
+
+<p>Query string parameters: <code>ignore_conflicts</code>, <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-put-mapping/">put_mapping docs</a> for more information.</p>
+
+<h2 id="get_mapping-"><code>get_mapping()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;get_mapping(
+        index =&gt; &#39;index&#39; | \@indices    # optional,
+        type  =&gt; &#39;type&#39;  | \@types      # optional
+    );</pre>
+
+<p>The <code>get_mapping()</code> method returns the type definitions for one, more or all types in one, more or all indices.</p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-get-mapping/">get_mapping docs</a> for more information.</p>
+
+<h2 id="exists_type-"><code>exists_type()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bool = $e-&gt;indices-&gt;exists_type(
+        index =&gt; &#39;index&#39; | \@indices    # optional,
+        type  =&gt; &#39;type&#39;  | \@types      # required
+    );</pre>
+
+<p>The <code>exists_type()</code> method checks for the existence of all specified types in all specified indices, and returns <code>1</code> or the empty string.</p>
+
+<p>Query string parameters: <code>ignore_indices</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-types-exists/">exists_type docs</a> for more information.</p>
+
+<h2 id="delete_mapping-"><code>delete_mapping()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;delete(
+        index =&gt; &#39;index&#39; | \@indices    # required,
+        type  =&gt; &#39;type&#39;                 # required
+    );</pre>
+
+<p>The <code>delete_mapping()</code> method deletes the type mappings (and all documents of that type) in all specified indices.</p>
+
+<p>Query string parameters: <code>master_timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-delete-mapping/">delete_mapping docs</a> for more information.</p>
+
+<h1 id="ALIAS-METHODS">ALIAS METHODS</h1>
+
+<h2 id="update_aliases-"><code>update_aliases()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;update_aliases(
+        body =&gt; { actions }             # required
+    );</pre>
+
+<p>The <code>update_aliases()</code> method changes (by adding or removing) multiple index aliases atomically. For instance:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;update_aliases(
+        body =&gt; {
+            actions =&gt; [
+                { add    =&gt; { alias =&gt; &#39;current&#39;, index =&gt; &#39;logs_2013_09&#39; }},
+                { remove =&gt; { alias =&gt; &#39;current&#39;, index =&gt; &#39;logs_2013_08&#39; }}
+            ]
+        }
+    );</pre>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases/">update_aliases docs</a> for more information.</p>
+
+<h2 id="get_aliases-"><code>get_aliases()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;get_aliases(
+        index   =&gt; &#39;index&#39; | \@indices      # optional
+    );</pre>
+
+<p>The <code>get_aliases()</code> method returns a list of aliases per index for all the specified indices.</p>
+
+<p>Query string parameters: <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases/">get_aliases docs</a> for more information.</p>
+
+<h2 id="put_alias-"><code>put_alias()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;put_alias(
+        index =&gt; &#39;index&#39;,                   # required
+        name  =&gt; &#39;alias&#39;,                   # required
+
+        body  =&gt; { alias defn }             # optional
+    );</pre>
+
+<p>The <code>put_alias()</code> method creates a single index alias. For instance:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;put_alias(
+        index =&gt; &#39;my_index&#39;,
+        name  =&gt; &#39;twitter&#39;,
+        body =&gt; {
+            filter =&gt; { term =&gt; { user_id =&gt; &#39;twitter&#39; }}
+        }
+    );</pre>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases/">put_alias docs</a> for more information.</p>
+
+<h2 id="get_alias-"><code>get_alias()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;get_alias(
+        index   =&gt; &#39;index&#39; | \@indices,     # optional
+        name    =&gt; &#39;alias&#39; | \@aliases      # required
+    );</pre>
+
+<p>The <code>get_alias()</code> method returns the aliase defintions for the specified aliases in the specified indices.</p>
+
+<p>Query string parameters: <code>ignore_indices</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases/">get_alias docs</a> for more information.</p>
+
+<h2 id="exists_alias-"><code>exists_alias()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bool = $e-&gt;indices-&gt;exists_alias(
+        index   =&gt; &#39;index&#39; | \@indices,     # optional
+        name    =&gt; &#39;alias&#39; | \@aliases      # required
+    );</pre>
+
+<p>The <code>exists_alias()</code> method returns <code>1</code> or the empty string depending on whether the specified aliases exist in the specified indices.</p>
+
+<p>Query string parameters: <code>ignore_indices</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases/">exists_alias docs</a> for more information.</p>
+
+<h2 id="delete_alias-"><code>delete_alias()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;delete_alias(
+        index   =&gt; &#39;index&#39;,                 # required
+        name    =&gt; &#39;alias&#39;                  # required
+    );</pre>
+
+<p>The <code>delete_alias()</code> method deletes a single alias in a a single index.</p>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-aliases/">delete_alias docs</a> for more information.</p>
+
+<h1 id="SETTINGS-METHODS">SETTINGS METHODS</h1>
+
+<h2 id="put_settings-"><code>put_settings()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;get_settings(
+        index   =&gt; &#39;index&#39; | \@indices      # optional
+
+        body    =&gt; { settings }
+    );</pre>
+
+<p>The <code>put_settings()</code> method sets the index settings for the specified indices or all indices. For instance:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;put_settings(
+        body =&gt; {
+            &quot;index.refresh_interval&quot; =&gt; -1
+        }
+    );</pre>
+
+<p>Query string parameters: <code>master_timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-update-settings/">put_settings docs</a> for more information.</p>
+
+<h2 id="get_settings-"><code>get_settings()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;get_settings(
+        index   =&gt; &#39;index&#39; | \@indices      # optional
+    );</pre>
+
+<p>The <code>get_settings()</code> method retrieves the index settings for the specified indices or all indices.</p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-get-settings/">get_settings docs</a> for more information.</p>
+
+<h1 id="TEMPLATE-METHODS">TEMPLATE METHODS</h1>
+
+<h2 id="put_template-"><code>put_template()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;put_template(
+        name =&gt; &#39;template&#39;                  # required
+        body =&gt; { template defn }           # required
+    );</pre>
+
+<p>The <code>put_template()</code> method is used to create or update index templates.</p>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>order</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-templates/">put_template docs</a> for more information.</p>
+
+<h2 id="get_template-"><code>get_template()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;get_template(
+        name  =&gt; &#39;template&#39;                 # required
+    );</pre>
+
+<p>The <code>get_template()</code> method is used to retrieve a named template.</p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-templates/">get_template docs</a> for more information.</p>
+
+<h2 id="delete_template-"><code>delete_template()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;delete_template(
+        name  =&gt; &#39;template&#39;                 # required
+    );</pre>
+
+<p>The <code>delete_template()</code> method is used to delete a named template.</p>
+
+<p>Query string parameters: <code>master_timeout</code>, <code>timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-templates/">delete_template docs</a> for more information.</p>
+
+<h1 id="WARMER-METHODS">WARMER METHODS</h1>
+
+<h2 id="put_warmer-"><code>put_warmer()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;put_warmer(
+        index   =&gt; &#39;index&#39; | \@indices,     # optional
+        name    =&gt; &#39;warmer&#39;,                # required
+
+        body    =&gt; { warmer defn }          # required
+    );</pre>
+
+<p>The <code>put_warmer()</code> method is used to create or update named warmers which are used to <i>warm up</i> new segments in the index before they are exposed to user searches. For instance:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;put_warmer(
+        index   =&gt; &#39;my_index&#39;,
+        name    =&gt; &#39;date_field_warmer&#39;,
+        body    =&gt; {
+            sort =&gt; &#39;date&#39;
+        }
+    );</pre>
+
+<p>Query string parameters: <code>master_timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-warmers/">put_warmer docs</a> for more information.</p>
+
+<h2 id="get_warmer-"><code>get_warmer()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;get_warmer(
+        index   =&gt; &#39;index&#39;  | \@indices,    # optional
+        name    =&gt; &#39;warmer&#39; | \@warmers,    # optional
+    );</pre>
+
+<p>The <code>get_warmer()</code> method is used to retrieve warmers by name.</p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-warmers/">get_warmer docs</a> for more information.</p>
+
+<h2 id="delete_warmer-"><code>delete_warmer()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $response = $e-&gt;indices-&gt;get_warmer(
+        index   =&gt; &#39;index&#39;  | \@indices,    # required
+        name    =&gt; &#39;warmer&#39; | \@warmers,    # optional
+    );</pre>
+
+<p>The <code>delete_warmer()</code> method is used to delete warmers by name.</p>
+
+<p>Query string parameters: <code>master_timeout</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-warmers/">delete_warmer docs</a> for more information.</p>
+
+<h1 id="STATS-METHODS">STATS METHODS</h1>
+
+<h2 id="stats-"><code>stats()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;stats(
+        index   =&gt; &#39;index&#39; | \@indices      # optional
+    );</pre>
+
+<p>The <code>stats()</code> method returns statistical information about one, more or all indices. Use the query string parameters to specify what information you want returned.</p>
+
+<p>Query string parameters: <code>all</code>, <code>clear</code>, <code>completion</code>, <code>completion_fields</code>, <code>docs</code>, <code>fielddata</code>, <code>fielddata_fields</code>, <code>fields</code>, <code>filter_cache</code>, <code>flush</code>, <code>get</code>, <code>groups</code>, <code>id_cache</code>, <code>ignore_indices</code>, <code>indexing</code>, <code>merge</code>, <code>refresh</code>, <code>search</code>, <code>store</code>, <code>warmer</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-stats/">stats docs</a> for more information.</p>
+
+<h2 id="status-"><code>status()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;status(
+        index   =&gt; &#39;index&#39; | \@indices      # optional
+    );</pre>
+
+<p>Deprecated.</p>
+
+<p>Query string parameters: <code>ignore_indices</code>, <code>recovery</code>, <code>snapshot</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-status/">status docs</a> for more information.</p>
+
+<h2 id="segments-"><code>segments()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;segments(
+        index   =&gt; &#39;index&#39; | \@indices      # optional
+    );</pre>
+
+<p>The <code>segments()</code> method is used to return information about the segments that an index contains.</p>
+
+<p>Query string parameters: <code>ignore_indices</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-segments/">segments docs</a> for more information.</p>
+
+<h1 id="QUERY-AND-ANALYSIS-METHODS">QUERY AND ANALYSIS METHODS</h1>
+
+<h2 id="analyze-"><code>analyze()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;analyze(
+        index   =&gt; &#39;index&#39;                  # optional,
+        body    =&gt; &#39;text to analyze&#39;
+    );</pre>
+
+<p>The <code>analyze()</code> method passes the text in the <code>body</code> through the specified <code>analyzer</code>, <code>tokenizer</code> or token <code>filter</code> - which may be global, or associated with a particular index or field - and returns the tokens. Very useful for debugging analyzer configurations.</p>
+
+<p>Query string parameters: <code>analyzer</code>, <code>field</code>, <code>filters</code>, <code>format</code>, <code>index</code>, <code>prefer_local</code>, <code>text</code>, <code>tokenizer</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/admin-indices-analyze/">analyze docs</a> for more information.</p>
+
+<h2 id="validate_query-"><code>validate_query()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $e-&gt;indices-&gt;validate_query(
+        index   =&gt; &#39;index&#39; | \@indices,     # optional
+        body    =&gt; { query }
+    );</pre>
+
+<p>The <code>validate_query()</code> method accepts a query in the <code>body</code> and checks whether the query is valid or not. Most useful when <code>explain</code> is set to <code>true</code>, in which case it includes an execution plan in the output.</p>
+
+<p>Query string parameters: <code>explain</code>, <code>ignore_indices</code>, <code>q</code>, <code>source</code></p>
+
+<p>See the <a href="http://www.elasticsearch.org/guide/reference/api/validate/">validate_query docs</a> for more information.</p>
+
+
+</div>
+</body>
+</html>
+
+

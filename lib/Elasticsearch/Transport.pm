@@ -1,15 +1,15 @@
 package Elasticsearch::Transport;
 {
-  $Elasticsearch::Transport::VERSION = '0.71';
+  $Elasticsearch::Transport::VERSION = '0.72';
 }
 
 use Moo;
-use namespace::autoclean;
 
 use URI();
 use Time::HiRes qw(time);
 use Try::Tiny;
 use Elasticsearch::Util qw(parse_params upgrade_error);
+use namespace::clean;
 
 has 'serializer' => ( is => 'ro', required => 1 );
 has 'logger'     => ( is => 'ro', required => 1 );
@@ -92,7 +92,7 @@ Elasticsearch::Transport - Interface between the client class the Elasticsearch 
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

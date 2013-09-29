@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Cxn;
 {
-  $Elasticsearch::Role::Cxn::VERSION = '0.71';
+  $Elasticsearch::Role::Cxn::VERSION = '0.72';
 }
 
 use Moo::Role;
@@ -9,7 +9,7 @@ use List::Util qw(min);
 use Try::Tiny;
 use URI();
 use Elasticsearch::Util qw(to_list);
-use namespace::autoclean;
+use namespace::clean;
 
 requires qw(protocol perform_request error_from_text);
 
@@ -129,7 +129,7 @@ sub process_response {
 
     if ( $code >= 200 and $code <= 209 ) {
         return ( $code, $self->serializer->decode($body) )
-            if length $body;
+            if defined $body and length $body;
         return ( $code, 1 ) if $params->{method} eq 'HEAD';
         return ( $code, '' );
     }
@@ -182,7 +182,7 @@ Elasticsearch::Role::Cxn - Provides common functionality to Cxn implementations
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

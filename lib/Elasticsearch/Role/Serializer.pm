@@ -1,12 +1,11 @@
 package Elasticsearch::Role::Serializer;
 {
-  $Elasticsearch::Role::Serializer::VERSION = '0.71';
+  $Elasticsearch::Role::Serializer::VERSION = '0.72';
 }
 
 use Moo::Role;
 
 requires qw(encode decode encode_pretty encode_bulk mime_type);
-use Encode qw(encode_utf8 decode_utf8 is_utf8);
 
 1;
 
@@ -22,7 +21,7 @@ Elasticsearch::Role::Serializer - An interface for Serializer modules
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

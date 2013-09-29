@@ -1,14 +1,14 @@
 package Elasticsearch::Role::API;
 {
-  $Elasticsearch::Role::API::VERSION = '0.71';
+  $Elasticsearch::Role::API::VERSION = '0.72';
 }
 
 use Moo::Role;
-use namespace::autoclean;
 
 use Elasticsearch::Util qw(throw);
 use Elasticsearch::Util::API::QS qw(qs_init);
 use Elasticsearch::Util::API::Path qw(path_init);
+use namespace::clean;
 
 our %API;
 
@@ -639,7 +639,7 @@ Elasticsearch::Role::API - This class contains the spec for the Elasticsearch AP
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

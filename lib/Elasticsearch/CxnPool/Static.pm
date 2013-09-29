@@ -1,12 +1,12 @@
 package Elasticsearch::CxnPool::Static;
 {
-  $Elasticsearch::CxnPool::Static::VERSION = '0.71';
+  $Elasticsearch::CxnPool::Static::VERSION = '0.72';
 }
 
 use Moo;
 with 'Elasticsearch::Role::CxnPool';
 use Elasticsearch::Util qw(throw);
-use namespace::autoclean;
+use namespace::clean;
 
 #===================================
 sub BUILD {
@@ -71,7 +71,7 @@ Elasticsearch::CxnPool::Static - A CxnPool for connecting to a remote cluster wi
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 SYNOPSIS
 

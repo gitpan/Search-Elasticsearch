@@ -52,7 +52,7 @@ sub test_dir {
 #===================================
     my $dir = shift;
     my $files = $ENV{TESTS} || '*.yaml';
-    test_files(<"$dir/$files">);
+    test_files( glob "$dir/$files" );
 }
 
 #===================================
@@ -232,7 +232,6 @@ sub reset_es {
 #===================================
     $es->logger->trace_comment("RESETTING");
     $es->indices->delete( index => '_all', ignore => 404 );
-    $es->indices->delete_template( name => '*', ignore => 404 );
 }
 
 #===================================

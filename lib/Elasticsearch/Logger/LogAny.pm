@@ -1,12 +1,12 @@
 package Elasticsearch::Logger::LogAny;
 {
-  $Elasticsearch::Logger::LogAny::VERSION = '0.71';
+  $Elasticsearch::Logger::LogAny::VERSION = '0.72';
 }
 
 use Moo;
 with 'Elasticsearch::Role::Logger';
 use Elasticsearch::Util qw(parse_params to_list);
-use namespace::autoclean;
+use namespace::clean;
 
 use Log::Any();
 use Log::Any::Adapter();
@@ -45,7 +45,7 @@ Elasticsearch::Logger::LogAny - A Log::Any-based Logger implemenation
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

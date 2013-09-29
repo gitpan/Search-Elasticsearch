@@ -1,0 +1,469 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<link rel='stylesheet' href='https://metacpan.org/_asset/288683e3285b02987a848283f0f92207' type='text/css'>
+<script type='text/javascript' src='https://metacpan.org/_asset/12b19d083bf773523c065d4d729f0327'></script>
+</head>
+<body>
+<div class="pod">
+
+
+<ul id="index">
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#CREATING-A-NEW-INSTANCE">CREATING A NEW INSTANCE</a>
+    <ul>
+      <li><a href="#new-"><code>new()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#FLUSHING-THE-BUFFER">FLUSHING THE BUFFER</a>
+    <ul>
+      <li><a href="#flush-"><code>flush()</code></a></li>
+      <li><a href="#Auto-flushing">Auto-flushing</a></li>
+      <li><a href="#Errors-when-flushing">Errors when flushing</a></li>
+      <li><a href="#Using-callbacks">Using callbacks</a>
+        <ul>
+          <li><a href="#on_success"><code>on_success</code></a></li>
+          <li><a href="#on_conflict"><code>on_conflict</code></a></li>
+          <li><a href="#on_error"><code>on_error</code></a></li>
+        </ul>
+      </li>
+      <li><a href="#Disabling-callbacks-and-autoflush">Disabling callbacks and autoflush</a></li>
+    </ul>
+  </li>
+  <li><a href="#CREATE-INDEX-UPDATE-DELETE">CREATE, INDEX, UPDATE, DELETE</a>
+    <ul>
+      <li><a href="#add_action-"><code>add_action()</code></a></li>
+      <li><a href="#create-"><code>create()</code></a></li>
+      <li><a href="#create_docs-"><code>create_docs()</code></a></li>
+      <li><a href="#index-"><code>index()</code></a></li>
+      <li><a href="#delete-"><code>delete()</code></a></li>
+      <li><a href="#delete_ids-"><code>delete_ids()</code></a></li>
+      <li><a href="#update-"><code>update()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#REINDEXING-DOCUMENTS">REINDEXING DOCUMENTS</a>
+    <ul>
+      <li><a href="#reindex-"><code>reindex()</code></a></li>
+      <li><a href="#Reindexing-from-another-index">Reindexing from another index</a></li>
+      <li><a href="#Reindexing-from-a-generic-source">Reindexing from a generic source</a></li>
+      <li><a href="#Transforming-docs-on-the-fly">Transforming docs on the fly</a></li>
+      <li><a href="#Reindexing-from-another-cluster">Reindexing from another cluster</a></li>
+      <li><a href="#Parents-and-routing">Parents and routing</a></li>
+      <li><a href="#Working-with-version-numbers">Working with version numbers</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    use Elasticsearch;
+    use Elasticsearch::Bulk;
+
+    my $es   = Elasticsearch-&gt;new;
+    my $bulk = Elasticsearch::Bulk-&gt;new(
+        es      =&gt; $es,
+        index   =&gt; &#39;my_index&#39;,
+        type    =&gt; &#39;my_type&#39;
+    );
+
+    # Index docs:
+    $bulk-&gt;index({ id =&gt; 1, source =&gt; { foo =&gt; &#39;bar&#39; }});
+    $bulk-&gt;add_action( index =&gt; { id =&gt; 1, source =&gt; { foo=&gt; &#39;bar&#39; }});
+
+    # Create docs:
+    $bulk-&gt;create({ id =&gt; 1, source =&gt; { foo =&gt; &#39;bar&#39; }});
+    $bulk-&gt;add_action( create =&gt; { id =&gt; 1, source =&gt; { foo=&gt; &#39;bar&#39; }});
+    $bulk-&gt;create_docs({ foo =&gt; &#39;bar&#39; })
+
+    # Delete docs:
+    $bulk-&gt;delete({ id =&gt; 1});
+    $bulk-&gt;add_action( delete =&gt; { id =&gt; 1 });
+    $bulk-&gt;delete_ids(1,2,3)
+
+    # Update docs:
+    $bulk-&gt;update({ id =&gt; 1, script =&gt; &#39;...&#39; });
+    $bulk-&gt;add_action( update =&gt; { id =&gt; 1, script =&gt; &#39;...&#39; });
+
+    # Manual flush
+    $bulk-&gt;flush
+
+    # Reindex docs:
+    $bulk = Elasticsearch::Bulk-&gt;new(
+        es      =&gt; $es,
+        index   =&gt; &#39;new_index&#39;,
+        verbose =&gt; 1
+    );
+
+    $bulk-&gt;reindex( source =&gt; { index =&gt; &#39;old_index&#39; });</pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>This module provides a wrapper for the <a href="./Elasticsearch::Client::Direct#bulk-">&quot;bulk()&quot; in Elasticsearch::Client::Direct</a> method which makes it easier to run multiple create, index, update or delete actions in a single request. It also provides a simple interface for <a href="#REINDEXING-DOCUMENTS">reindexing documents</a>.</p>
+
+<p>The <a href="./Elasticsearch::Bulk">Elasticsearch::Bulk</a> module acts as a queue, buffering up actions until it reaches a maximum count of actions, or a maximum size of JSON request body, at which point it issues a <code>bulk()</code> request.</p>
+
+<p>Once you have finished adding actions, call <a href="#flush-">&quot;flush()&quot;</a> to force the final <code>bulk()</code> request on the items left in the queue.</p>
+
+<h1 id="CREATING-A-NEW-INSTANCE">CREATING A NEW INSTANCE</h1>
+
+<h2 id="new-"><code>new()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk = Elasticsearch::Bulk-&gt;new(
+        es          =&gt; $es,                 # required
+
+        index       =&gt; &#39;default_index&#39;,     # optional
+        type        =&gt; &#39;default_type&#39;,      # optional
+        %other_bulk_params                  # optional
+
+        max_count   =&gt; 1_000,               # optional
+        max_size    =&gt; 1_000_000,           # optional
+
+        verbose     =&gt; 0 | 1,               # optional
+
+        on_success  =&gt; sub {...},           # optional
+        on_error    =&gt; sub {...},           # optional
+        on_conflict =&gt; sub {...},           # optional
+
+
+    );</pre>
+
+<p>The <code>new()</code> method returns a new <code>$bulk</code> object. You must pass your Elasticsearch client as the <code>es</code> argument.</p>
+
+<p>The <code>index</code> and <code>type</code> parameters provide default values for <code>index</code> and <code>type</code>, which can be overridden in each action. You can also pass any other values which are accepted by the <a href="./Elasticsearch::Client::Direct#bulk-">bulk()</a> method.</p>
+
+<p>See <a href="#flush-">&quot;flush()&quot;</a> for more information about the other parameters.</p>
+
+<h1 id="FLUSHING-THE-BUFFER">FLUSHING THE BUFFER</h1>
+
+<h2 id="flush-"><code>flush()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $result = $bulk-&gt;flush;</pre>
+
+<p>The <code>flush()</code> method sends all buffered actions to Elasticsearch using a <a href="./Elasticsearch::Client::Direct#bulk-">bulk()</a> request.</p>
+
+<h2 id="Auto-flushing">Auto-flushing</h2>
+
+<p>An autmatic <a href="#flush-">&quot;flush()&quot;</a> is triggered whenever the <code>max_count</code> or <code>max_size</code> threshold is breached. This causes all actions in the buffer to be sent to Elasticsearch.</p>
+
+<ul>
+
+<li><p><code>max_count</code></p>
+
+<p>The maximium number of actions to allow before triggering a <a href="#flush-">&quot;flush()&quot;</a>. This can be disabled by setting <code>max_count</code> to <code>0</code>. Defaults to <code>1,000</code>.</p>
+
+</li>
+<li><p><code>max_size</code></p>
+
+<p>The maximum size of JSON request body to allow before triggering a <a href="#flush-">&quot;flush()&quot;</a>. This can be disabled by setting <code>max_size</code> to <code>0</code>. Defaults to <code>1_000,000</code> bytes.</p>
+
+</li>
+</ul>
+
+<h2 id="Errors-when-flushing">Errors when flushing</h2>
+
+<p>There are three levels of error which can be thrown when <a href="#flush-">&quot;flush()&quot;</a> is called, either manually or automatically.</p>
+
+<ul>
+
+<li><p>Temporary Elasticsearch errors</p>
+
+<p>For instance, a <code>NoNodes</code> error which indicates that your cluster is down. These errors do not clear the buffer, as they can be retried later on.</p>
+
+</li>
+<li><p>Request errors</p>
+
+<p>For instance, if one of your actions is malformed (eg you are missing a required parameter like <code>index</code>) then the whole <a href="#flush-">&quot;flush()&quot;</a> request is aborted and the buffer is cleared of all actions.</p>
+
+</li>
+<li><p>Action errors</p>
+
+<p>Individual actions may fail. For instance, a <code>create</code> action will fail if a document with the same <code>index</code>, <code>type</code> and <code>id</code> already exists. These action errors are reported via <a href="#Using-callbacks">callbacks</a>.</p>
+
+</li>
+</ul>
+
+<h2 id="Using-callbacks">Using callbacks</h2>
+
+<p>By default, any <i>Action errors</i> (see above) cause warnings to be written to <code>STDERR</code>. However, you can use the <code>on_error</code>, <code>on_conflict</code> and <code>on_success</code> callbacks for more fine-grained control.</p>
+
+<p>All callbacks receive the following arguments:</p>
+
+<dl>
+
+<dt id="action"><code>$action</code></dt>
+<dd>
+
+<p>The name of the action, ie <code>index</code>, <code>create</code>, <code>update</code> or <code>delete</code>.</p>
+
+</dd>
+<dt id="response"><code>$response</code></dt>
+<dd>
+
+<p>The response that Elasticsearch returned for this action.</p>
+
+</dd>
+<dt id="i"><code>$i</code></dt>
+<dd>
+
+<p>The index of the action, ie the first action in the flush request will have <code>$i</code> set to <code>0</code>, the second will have <code>$i</code> set to <code>1</code> etc.</p>
+
+</dd>
+</dl>
+
+<h3 id="on_success"><code>on_success</code></h3>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk = Elasticsearch-&gt;new(
+        es          =&gt; $es,
+        on_success  =&gt; sub {
+            my ($action,$response,$i) = @_;
+            # do something
+        },
+    );</pre>
+
+<p>The <code>on_success</code> callback is called for every action that has a successful response.</p>
+
+<h3 id="on_conflict"><code>on_conflict</code></h3>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk = Elasticsearch-&gt;new(
+        es           =&gt; $es,
+        on_conflict  =&gt; sub {
+            my ($action,$response,$i,$version) = @_;
+            # do something
+        },
+    );</pre>
+
+<p>The <code>on_conflict</code> callback is called for actions have have triggered a <code>Conflict</code> error, eg trying to <code>create</code> a document which already exists. The <code>$version</code> argument will contain the version number of the document currently stored in Elasticsearch (if found).</p>
+
+<h3 id="on_error"><code>on_error</code></h3>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk = Elasticsearch-&gt;new(
+        es        =&gt; $es,
+        on_error  =&gt; sub {
+            my ($action,$response,$i) = @_;
+            # do something
+        },
+    );</pre>
+
+<p>The <code>on_error</code> callback is called for any error (unless the <code>on_conflict</code>) callback has already been called).</p>
+
+<h2 id="Disabling-callbacks-and-autoflush">Disabling callbacks and autoflush</h2>
+
+<p>If you want to be in control of flushing, and you just want to receive the raw response that Elasticsearch sends instead of using callbacks, then you can do so as follows:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk = Elasticsearch-&gt;new(
+        es          =&gt; $es,
+        max_count   =&gt; 0,
+        max_size    =&gt; 0,
+        on_error    =&gt; undef
+    );
+
+    $bulk-&gt;add_actions(....);
+    $response = $bulk-&gt;flush;</pre>
+
+<h1 id="CREATE-INDEX-UPDATE-DELETE">CREATE, INDEX, UPDATE, DELETE</h1>
+
+<h2 id="add_action-"><code>add_action()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;add_action(
+        create =&gt; { ...params... },
+        index  =&gt; { ...params... },
+        update =&gt; { ...params... },
+        delete =&gt; { ...params... }
+    );</pre>
+
+<p>The <code>add_action()</code> method allows you to add multiple <code>create</code>, <code>index</code>, <code>update</code> and <code>delete</code> actions to the queue. The first value is the action type, and the second value is the parameters that describe that action. See the individual helper methods below for details.</p>
+
+<p><b>Note:</b> Parameters like <code>index</code> or <code>type</code> can be specified as <code>index</code> or as <code>_index</code>, so the following two lines are equivalent:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    index =&gt; { index  =&gt; &#39;index&#39;, type  =&gt; &#39;type&#39;, id  =&gt; 1, source  =&gt; {...}},
+    index =&gt; { _index =&gt; &#39;index&#39;, _type =&gt; &#39;type&#39;, _id =&gt; 1, _source =&gt; {...}},</pre>
+
+<p><b>Note:</b> The <code>index</code> and <code>type</code> parameters can be specified in the params for any action, but if not specified, will default to the <code>index</code> and <code>type</code> values specified in <a href="#new-">&quot;new()&quot;</a>. These are required parameters: they must be specified either in <a href="#new-">&quot;new()&quot;</a> or in every action.</p>
+
+<h2 id="create-"><code>create()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;create(
+        { index =&gt; &#39;custom_index&#39;,         source =&gt; { doc body }},
+        { type  =&gt; &#39;custom_type&#39;, id =&gt; 1, source =&gt; { doc body }},
+        ...
+    );</pre>
+
+<p>The <code>create()</code> helper method allows you to add multiple <code>create</code> actions. It accepts the same parameters as <a href="./Elasticsearch::Client::Direct#create-">&quot;create()&quot; in Elasticsearch::Client::Direct</a> except that the document body should be passed as the <code>source</code> or <code>_source</code> parameter, instead of as <code>body</code>.</p>
+
+<h2 id="create_docs-"><code>create_docs()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;create_docs(
+        { doc body },
+        { doc body },
+        ...
+    );</pre>
+
+<p>The <code>create_docs()</code> helper is a shorter form of <a href="#create-">&quot;create()&quot;</a> which can be used when you are using the default <code>index</code> and <code>type</code> as set in <a href="#new-">&quot;new()&quot;</a> and you are not specifying a custom <code>id</code> per document. In this case, you can just pass the individual document bodies.</p>
+
+<h2 id="index-"><code>index()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;index(
+        { index =&gt; &#39;custom_index&#39;,         source =&gt; { doc body }},
+        { type  =&gt; &#39;custom_type&#39;, id =&gt; 1, source =&gt; { doc body }},
+        ...
+    );</pre>
+
+<p>The <code>index()</code> helper method allows you to add multiple <code>index</code> actions. It accepts the same parameters as <a href="./Elasticsearch::Client::Direct#index-">&quot;index()&quot; in Elasticsearch::Client::Direct</a> except that the document body should be passed as the <code>source</code> or <code>_source</code> parameter, instead of as <code>body</code>.</p>
+
+<h2 id="delete-"><code>delete()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;delete(
+        { index =&gt; &#39;custom_index&#39;, id =&gt; 1},
+        { type  =&gt; &#39;custom_type&#39;,  id =&gt; 2},
+        ...
+    );</pre>
+
+<p>The <code>delete()</code> helper method allows you to add multiple <code>delete</code> actions. It accepts the same parameters as <a href="./Elasticsearch::Client::Direct#delete-">&quot;delete()&quot; in Elasticsearch::Client::Direct</a>.</p>
+
+<h2 id="delete_ids-"><code>delete_ids()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;delete_ids(1,2,3...)</pre>
+
+<p>The <code>delete_ids()</code> helper method can be used when all of the documents you want to delete have the default <code>index</code> and <code>type</code> as set in <a href="#new-">&quot;new()&quot;</a>. In this case, all you have to do is to pass in a list of IDs.</p>
+
+<h2 id="update-"><code>update()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;update(
+        { id            =&gt; 1,
+          doc           =&gt; { partial doc },
+          doc_as_upsert =&gt; 1
+        },
+        { id            =&gt; 2,
+          lang          =&gt; &#39;mvel&#39;,
+          script        =&gt; &#39;_ctx.source.counter+=incr&#39;,
+          params        =&gt; { incr =&gt; 1},
+          upsert        =&gt; { upsert doc }
+        },
+        ...
+    );</pre>
+
+<p>The <code>update()</code> helper method allows you to add multiple <code>update</code> actions. It accepts the same parameters as <a href="./Elasticsearch::Client::Direct#update-">&quot;update()&quot; in Elasticsearch::Client::Direct</a>. An update can either use a <i>partial doc</i> which gets merged with an existing doc (example 1 above), or can use a <code>script</code> to update an existing doc (example 2 above).</p>
+
+<h1 id="REINDEXING-DOCUMENTS">REINDEXING DOCUMENTS</h1>
+
+<p>A common use case for bulk indexing is to reindex a whole index when changing the type mappings or analysis chain. This typically combines bulk indexing with <a href="./Elasticsearch::Scroll">scrolled searches</a>: the scrolled search pulls all of the data from the source index, and the bulk indexer indexes the data into the new index.</p>
+
+<h2 id="reindex-"><code>reindex()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;reindex(
+        source       =&gt; $source,                # required
+        transform    =&gt; \&amp;transform,            # optional
+        version_type =&gt; &#39;external|internal&#39;,    # optional
+    );</pre>
+
+<p>The <code>reindex()</code> method requires a <code>$source</code> parameter, which provides the source for the documents which are to be reindexed.</p>
+
+<h2 id="Reindexing-from-another-index">Reindexing from another index</h2>
+
+<p>If the <code>source</code> argument is a HASH ref, then the hash is passed to <a href="./Elasticsearch::Scroll#new-">&quot;new()&quot; in Elasticsearch::Scroll</a> to create a new scrolled search.</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk = Elasticsearch::Bulk-&gt;new(
+        index   =&gt; &#39;new_index&#39;,
+        verbose =&gt; 1
+    );
+
+    $bulk-&gt;reindex(
+        source  =&gt; {
+            index       =&gt; &#39;old_index&#39;,
+            size        =&gt; 500,         # default
+            search_type =&gt; &#39;scan&#39;       # default
+        }
+    );</pre>
+
+<p>If a default <code>index</code> or <code>type</code> has been specified in the call to <a href="#new-">&quot;new()&quot;</a>, then it will replace the <code>index</code> and <code>type</code> values for the docs returned from the scrolled search. In the example above, all docs will be retrieved from <code>&quot;old_index&quot;</code> and will be bulk indexed into <code>&quot;new_index&quot;</code>.</p>
+
+<h2 id="Reindexing-from-a-generic-source">Reindexing from a generic source</h2>
+
+<p>The <code>source</code> parameter also accepts a coderef or an anonymous sub, which should return one or more new documents every time is is executed. This allows you to pass any iterator, wrapped in an anonymous sub:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    my $iter = get_iterator_from_somewhere();
+
+    $bulk-&gt;reindex(
+        source =&gt; sub { $iter-&gt;next }
+    );</pre>
+
+<h2 id="Transforming-docs-on-the-fly">Transforming docs on the fly</h2>
+
+<p>The <code>transform</code> parameter allows you to change documents on the fly, using a callback. The callback receives the document as the only argument, and should return the updated document, or <code>undef</code> if the document should not be indexed:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;reindex(
+        source      =&gt; { index =&gt; &#39;old_index&#39; },
+        transform   =&gt; sub {
+            my $doc = shift;
+
+            # don&#39;t index doc marked as valid:false
+            return undef unless $doc-&gt;{_source}{valid};
+
+            # convert $tag to @tags
+            $doc-&gt;{_source}{tags} = [ delete $doc-&gt;{_source}{tag}];
+            return $doc
+        }
+    );</pre>
+
+<h2 id="Reindexing-from-another-cluster">Reindexing from another cluster</h2>
+
+<p>By default, <a href="#reindex-">&quot;reindex()&quot;</a> expects the source and destination indices to be in the same cluster. To pull data from one cluster and index it into another, you can use two separate <code>$es</code> objects:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $es_local  = Elasticsearch-&gt;new( nodes =&gt; &#39;localhost:9200&#39; );
+    $es_remote = Elasticsearch-&gt;new( nodes =&gt; &#39;search1:9200&#39; );
+
+    Elasticsearch::Bulk-&gt;new(
+        es =&gt; $es_local,
+        verbose =&gt; 1
+    )
+    -&gt; reindex( es =&gt; $es_remote );</pre>
+
+<h2 id="Parents-and-routing">Parents and routing</h2>
+
+<p>If you are using parent-child relationships or custom <code>routing</code> values, and you want to preserve these when you reindex your documents, then you will need to request these values specifically, as follows:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;reindex(
+        source =&gt; {
+            index   =&gt; &#39;old_index&#39;,
+            fields  =&gt; [&#39;_source&#39;,&#39;_parent&#39;,&#39;_routing&#39;]
+        }
+    );</pre>
+
+<h2 id="Working-with-version-numbers">Working with version numbers</h2>
+
+<p>Every document in Elasticsearch has a current <code>version</code> number, which is used for <a href="http://en.wikipedia.org/wiki/Optimistic_concurrency_control">optimistic concurrency control</a>, that is, to ensure that you don&#39;t overwrite changes that have been made by another process.</p>
+
+<p>All CRUD operations accept a <code>version</code> parameter and a <code>version_type</code> parameter which tells Elasticsearch that the change should only be made if the current document corresponds to these parameters. The <code>version_type</code> parameter can have the following values:</p>
+
+<ul>
+
+<li><p><code>internal</code></p>
+
+<p>Use Elasticsearch version numbers. Documents are only changed if the document in Elasticsearch has the <b>same</b> <code>version</code> number that is specified in the CRUD operation. After the change, the new version number is <code>version+1</code>.</p>
+
+</li>
+<li><p><code>external</code></p>
+
+<p>Use an external versioning system, such as timestamps or version numbers from an external database. Documents are only changed if the document in Elasticsearch has a <b>lower</b> <code>version</code> number than the one specified in the CRUD operation. After the change, the new version number is <code>version</code>.</p>
+
+</li>
+</ul>
+
+<p>If you would like to reindex documents from one index to another, preserving the <code>version</code> numbers from the original index, then you need the following:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bulk-&gt;reindex(
+        source =&gt; {
+            index   =&gt; &#39;old_index&#39;,
+            version =&gt; 1,               # retrieve version numbers in search
+        },
+        version_type =&gt; &#39;external&#39;      # use these &quot;external&quot; version numbers
+    );</pre>
+
+
+</div>
+</body>
+</html>
+
+

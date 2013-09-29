@@ -1,0 +1,84 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<link rel='stylesheet' href='https://metacpan.org/_asset/288683e3285b02987a848283f0f92207' type='text/css'>
+<script type='text/javascript' src='https://metacpan.org/_asset/12b19d083bf773523c065d4d729f0327'></script>
+</head>
+<body>
+<div class="pod">
+
+
+<ul id="index">
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#CONFIGURATION">CONFIGURATION</a>
+    <ul>
+      <li><a href="#nodes"><code>nodes</code></a></li>
+      <li><a href="#See-also">See also</a></li>
+    </ul>
+  </li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#next_cxn-"><code>next_cxn()</code></a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool =&gt; &#39;Static::NoPing&#39;
+        nodes    =&gt; [
+            &#39;search1:9200&#39;,
+            &#39;search2:9200&#39;
+        ],
+    );</pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>The <a href="./Elasticsearch::CxnPool::Static::NoPing">Static::NoPing</a> connection pool (like the <a href="./ElasticSearch::CxnPool::Static">Static</a> pool) should be used when your access to the cluster is limited. However, the <code>Static</code> pool needs to be able to ping nodes in the cluster, with a <code>HEAD /</code> request. If you can&#39;t ping your nodes, then you should use the <code>Static::NoPing</code> connection pool instead.</p>
+
+<p>Because the cluster cannot be pinged, this CxnPool cannot use a short ping request to determin whether nodes are live or not - it just has to send requests to the nodes to determine whether they are alive or not.</p>
+
+<p>Most of the time, a dead node will cause the request to fail quickly. However, in situations where node failure takes time (eg malfunctioning routers or firewalls), a failure may not be reported until the request itself times out (see <a href="./Elasticsearch::Cxn#request_timeout">&quot;request_timeout&quot; in Elasticsearch::Cxn</a>).</p>
+
+<p>Failed nodes will be retried regularly to check if they have recovered.</p>
+
+<p>This class does <a href="./Elasticsearch::Role::CxnPool">Elasticsearch::Role::CxnPool</a>.</p>
+
+<h1 id="CONFIGURATION">CONFIGURATION</h1>
+
+<h2 id="nodes"><code>nodes</code></h2>
+
+<p>The list of nodes to use to serve requests. Can accept a single node, multiple nodes, and defaults to <code>localhost:9200</code> if no <code>nodes</code> are specified. See <a href="./Elasticsearch::Role::Cxn::HTTP#node">&quot;node&quot; in Elasticsearch::Role::Cxn::HTTP</a> for details of the node specification.</p>
+
+<h2 id="See-also">See also</h2>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Role::Cxn#request_timeout">&quot;request_timeout&quot; in Elasticsearch::Role::Cxn</a></p>
+
+</li>
+<li><p><a href="./Elasticsearch::Role::Cxn#dead_timeout">&quot;dead_timeout&quot; in Elasticsearch::Role::Cxn</a></p>
+
+</li>
+<li><p><a href="./Elasticsearch::Role::Cxn#max_dead_timeout">&quot;max_dead_timeout&quot; in Elasticsearch::Role::Cxn</a></p>
+
+</li>
+</ul>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="next_cxn-"><code>next_cxn()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $cxn = $cxn_pool-&gt;next_cxn</pre>
+
+<p>Returns the next available node in round robin fashion - either a live node which has previously responded successfully, or a previously failed node which should be retried. If all nodes are dead, it will throw a <code>NoNodes</code> error.</p>
+
+
+</div>
+</body>
+</html>
+
+

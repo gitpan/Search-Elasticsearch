@@ -1,0 +1,63 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<link rel='stylesheet' href='https://metacpan.org/_asset/288683e3285b02987a848283f0f92207' type='text/css'>
+<script type='text/javascript' src='https://metacpan.org/_asset/12b19d083bf773523c065d4d729f0327'></script>
+</head>
+<body>
+<div class="pod">
+
+
+<ul id="index">
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#encode-"><code>encode()</code></a></li>
+      <li><a href="#encode_pretty-"><code>encode_pretty()</code></a></li>
+      <li><a href="#encode_bulk-"><code>encode_bulk()</code></a></li>
+      <li><a href="#decode-"><code>decode()</code></a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>This module uses <a href="./JSON">JSON</a> to Perl data structures into JSON strings, and to decode JSON strings into Perl data structures.</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="encode-"><code>encode()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bytes = $serializer-&gt;encode($ref);
+    $bytes = $serializer-&gt;encode($str);</pre>
+
+<p>The <a href="#encode-">&quot;encode()&quot;</a> method converts array and hash refs into their JSON equivalents. If a string is passed in, it is returned as the UTF8 encoded version of itself. The empty string and <code>undef</code> are returned as is.</p>
+
+<h2 id="encode_pretty-"><code>encode_pretty()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bytes = $serializer-&gt;encode_pretty($ref);
+    $bytes = $serializer-&gt;encode_pretty($str);</pre>
+
+<p>Works exactly as <a href="#encode-">&quot;encode()&quot;</a> but the JSON output is pretty-printed.</p>
+
+<h2 id="encode_bulk-"><code>encode_bulk()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bytes = $serializer-&gt;encode_bulk([\%hash,\%hash,...]);
+    $bytes = $serializer-&gt;encode_bulk([$str,$str,...]);</pre>
+
+<p>The <a href="#encode_bulk-">&quot;encode_bulk()&quot;</a> method expects an arry ref of hashes or strings. Each hash or string is processed by <a href="#encode-">&quot;encode()&quot;</a> then joined together by newline characters, with a final newline character appended to the end. This is the special JSON format used for bulk requests.</p>
+
+<h2 id="decode-"><code>decode()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $var = $serializer-&gt;decode($json_bytes);
+    $str = $serializer-&gt;decode($bytes);</pre>
+
+<p>If the passed in value looks like JSON (ie starts with a <code>{</code> or <code>[</code> character), then it is decoded from JSON, otherwise it is returned as the UTF8 decoded version of itself. The empty string and <code>undef</code> are returned as is.</p>
+
+
+</div>
+</body>
+</html>
+
+

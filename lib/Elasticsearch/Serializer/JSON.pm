@@ -1,14 +1,15 @@
 package Elasticsearch::Serializer::JSON;
 {
-  $Elasticsearch::Serializer::JSON::VERSION = '0.71';
+  $Elasticsearch::Serializer::JSON::VERSION = '0.72';
 }
 
 use Moo;
 
-use namespace::autoclean;
 use Elasticsearch::Util qw(throw);
 use JSON();
 use Try::Tiny;
+use Encode qw(encode_utf8 decode_utf8 is_utf8);
+use namespace::clean;
 
 our $JSON = JSON->new->utf8;
 
@@ -78,7 +79,7 @@ sub decode {
 
     return unless defined $json;
 
-    return decode_utf8($json)
+    return is_utf8($json) ? $json : decode_utf8($json)
         unless substr( $json, 0, 1 ) =~ /^[\[{]/;
 
     return try {
@@ -105,7 +106,7 @@ Elasticsearch::Serializer::JSON - A Serializer for JSON
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

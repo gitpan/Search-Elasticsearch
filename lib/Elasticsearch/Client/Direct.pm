@@ -1,6 +1,6 @@
 package Elasticsearch::Client::Direct;
 {
-  $Elasticsearch::Client::Direct::VERSION = '0.71';
+  $Elasticsearch::Client::Direct::VERSION = '0.72';
 }
 
 use Moo;
@@ -8,7 +8,7 @@ with 'Elasticsearch::Role::API';
 with 'Elasticsearch::Role::Client::Direct';
 
 use Elasticsearch::Util qw(parse_params);
-use namespace::autoclean;
+use namespace::clean;
 
 has 'cluster' => ( is => 'lazy' );
 has 'indices' => ( is => 'lazy' );
@@ -75,7 +75,7 @@ Elasticsearch::Client::Direct - Thin client with full support for Elasticsearch 
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 SYNOPSIS
 

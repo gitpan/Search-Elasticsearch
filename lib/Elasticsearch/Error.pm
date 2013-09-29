@@ -1,6 +1,6 @@
 package Elasticsearch::Error;
 {
-  $Elasticsearch::Error::VERSION = '0.71';
+  $Elasticsearch::Error::VERSION = '0.72';
 }
 
 use Moo;
@@ -159,7 +159,7 @@ Elasticsearch::Error - Errors thrown by Elasticsearch
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 
@@ -207,11 +207,6 @@ if you try to delete a document with a particular version number, and the
 document has already changed, it will throw a C<Conflict> error.  If it can,
 it will include the C<current_version> in the error vars. This error
 is triggered by the C<409> HTTP status code.
-
-=item * C<Elasticsearch::Error::Unavailable>
-
-The service you requested is temporarily unavailable. This error
-is triggered by the C<503> HTTP status code.
 
 =item * C<Elasticsearch::Error::ContentLength>
 

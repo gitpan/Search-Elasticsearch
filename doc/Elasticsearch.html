@@ -1,0 +1,547 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<link rel='stylesheet' href='https://metacpan.org/_asset/288683e3285b02987a848283f0f92207' type='text/css'>
+<script type='text/javascript' src='https://metacpan.org/_asset/12b19d083bf773523c065d4d729f0327'></script>
+</head>
+<body>
+<div class="pod">
+
+
+<ul id="index">
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a>
+    <ul>
+      <li><a href="#Motivation">Motivation</a></li>
+      <li><a href="#Features">Features</a></li>
+    </ul>
+  </li>
+  <li><a href="#INSTALLING-ELASTICSEARCH">INSTALLING ELASTICSEARCH</a></li>
+  <li><a href="#CREATING-A-NEW-INSTANCE">CREATING A NEW INSTANCE</a>
+    <ul>
+      <li><a href="#nodes"><code>nodes</code></a></li>
+      <li><a href="#cxn_pool"><code>cxn_pool</code></a></li>
+      <li><a href="#trace_to"><code>trace_to</code></a></li>
+      <li><a href="#Other">Other</a></li>
+    </ul>
+  </li>
+  <li><a href="#RUNNING-REQUESTS">RUNNING REQUESTS</a></li>
+  <li><a href="#MODULES">MODULES</a>
+    <ul>
+      <li><a href="#client"><code>client</code></a></li>
+      <li><a href="#transport"><code>transport</code></a></li>
+      <li><a href="#cxn"><code>cxn</code></a></li>
+      <li><a href="#cxn_factory"><code>cxn_factory</code></a></li>
+      <li><a href="#cxn_pool-2-"><code>cxn_pool</code> (2)</a></li>
+      <li><a href="#logger"><code>logger</code></a></li>
+      <li><a href="#serializer"><code>serializer</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#MIGRATING-FROM-ElasticSearch.pm">MIGRATING FROM ElasticSearch.pm</a>
+    <ul>
+      <li><a href="#hosts-vs-servers"><code>hosts</code> vs <code>servers</code></a></li>
+      <li><a href="#no_refresh"><code>no_refresh</code></a></li>
+      <li><a href="#Request-parameters">Request parameters</a></li>
+      <li><a href="#trace_calls"><code>trace_calls</code></a></li>
+      <li><a href="#SearchBuilder">SearchBuilder</a></li>
+      <li><a href="#Bulk-methods-and-scrolled_search-">Bulk methods and <code>scrolled_search()</code></a></li>
+    </ul>
+  </li>
+  <li><a href="#TODO">TODO</a></li>
+  <li><a href="#BUGS">BUGS</a></li>
+  <li><a href="#SUPPORT">SUPPORT</a></li>
+  <li><a href="#TEST-SUITE">TEST SUITE</a></li>
+</ul>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    use Elasticsearch;</pre>
+
+<p>Connect to <code>localhost:9200</code>:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    my $e = Elasticsearch-&gt;new();</pre>
+
+<p>Round-robin between two nodes:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    my $e = Elasticsearch-&gt;new(
+        nodes =&gt; [
+            &#39;search1:9200&#39;,
+            &#39;search2:9200&#39;
+        ]
+    );</pre>
+
+<p>Connect to cluster at <code>search1:9200</code>, sniff all nodes and round-robin between them:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    my $e = Elasticsearch-&gt;new(
+        nodes    =&gt; &#39;search1:9200&#39;,
+        cxn_pool =&gt; &#39;Sniff&#39;
+    );</pre>
+
+<p>Index a document:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e-&gt;index(
+        index   =&gt; &#39;my_app&#39;,
+        type    =&gt; &#39;blog_post&#39;,
+        id      =&gt; 1,
+        body    =&gt; {
+            title   =&gt; &#39;Elasticsearch clients&#39;,
+            content =&gt; &#39;Interesting content...&#39;,
+            date    =&gt; &#39;2013-09-24&#39;
+        }
+    );</pre>
+
+<p>Get the document:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    my $doc = $e-&gt;get(
+        index   =&gt; &#39;my_app&#39;,
+        type    =&gt; &#39;blog_post&#39;,
+        id      =&gt; 1
+    );</pre>
+
+<p>Search:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    my $results = $e-&gt;search(
+        index =&gt; &#39;my_app&#39;,
+        body  =&gt; {
+            query =&gt; {
+                match =&gt; { title =&gt; &#39;elasticsearch&#39; }
+            }
+        }
+    );</pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p><a href="./Elasticsearch">Elasticsearch</a> is the official Perl client for Elasticsearch, supported by <a href="http://www.elasticsearch.com">elasticsearch.com</a>. Elasticsearch itself is a flexible and powerful open source, distributed real-time search and analytics engine for the cloud. You can read more about it on <a href="http://www.elasticsearch.org">elasticsearch.org</a>.</p>
+
+<h2 id="Motivation">Motivation</h2>
+
+<ul>
+
+<p><i>The greatest deception men suffer is from their own opinions.</i></p>
+
+<p>Leonardo da Vinci</p>
+
+</ul>
+
+<p>All of us have opinions, especially when it comes to designing APIs. Unfortunately, the opinions of programmers seldom coincide. The intention of this client, and of the officially supported clients available for other languages, is to provide robust support for the full native Elasticsearch API with as few opinions as possible: you should be able to read the <a href="http://www.elasticsearch.org/guide">Elasticsearch reference documentation</a> and understand how to use this client, or any of the other official clients.</p>
+
+<p>Should you decide that you want to customize the API, then this client provides the basis for your code. It does the hard stuff for you, allowing you to build on top of it.</p>
+
+<h2 id="Features">Features</h2>
+
+<p>This client provides:</p>
+
+<ul>
+
+<li><p>Full support for all Elasticsearch APIs</p>
+
+</li>
+<li><p>HTTP backend (currently synchronous only - <a href="./Any::Event">Any::Event</a> support will be added later)</p>
+
+</li>
+<li><p>Robust networking support which handles load balancing, failure detection and failover</p>
+
+</li>
+<li><p>Good defaults</p>
+
+</li>
+<li><p>Helper utilities for more complex operations, such as <a href="./Elasticsearch::Bulk">bulk indexing</a>, <a href="./Elasticsearch::Scroll">scrolled searches</a> and <a href="./Elasticsearch::Bulk#reindex-">reindexing</a>.</p>
+
+</li>
+<li><p>Logging support via <a href="./Log::Any">Log::Any</a></p>
+
+</li>
+<li><p>Compatibility with the official clients for Python, Ruby, PHP and Javascript</p>
+
+</li>
+<li><p>Easy extensibility</p>
+
+</li>
+</ul>
+
+<h1 id="INSTALLING-ELASTICSEARCH">INSTALLING ELASTICSEARCH</h1>
+
+<p>You can download the latest version of Elasticsearch from <a href="http://www.elasticsearch.org/download">http://www.elasticsearch.org/download</a>. See the <a href="http://www.elasticsearch.org/guide/reference/setup/installation/">installation instructions</a> for details. You will need to have a recent version of Java installed, preferably the Java v7 from Sun.</p>
+
+<h1 id="CREATING-A-NEW-INSTANCE">CREATING A NEW INSTANCE</h1>
+
+<p>The <a href="#new-">&quot;new()&quot;</a> method returns a new <a href="./Elasticsearch::Client::Direct">client</a> which can be used to run requests against the Elasticsearch cluster.</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    use Elasticsearch;
+    my $e = Elasticsearch-&gt;new( %params );</pre>
+
+<p>The most important arguments to <a href="#new-">&quot;new()&quot;</a> are the following:</p>
+
+<h2 id="nodes"><code>nodes</code></h2>
+
+<p>The <code>nodes</code> parameter tells the client which Elasticsearch nodes it should talk to. It can be a single node, multiples nodes or, if not specified, will default to <code>localhost:9200</code>:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    # default: localhost:9200
+    $e = Elasticsearch-&gt;new();
+
+    # single
+    $e = Elasticsearch-&gt;new( nodes =&gt; &#39;search_1:9200&#39;);
+
+    # multiple
+    $e = Elasticsearch-&gt;new(
+        nodes =&gt; [
+            &#39;search_1:9200&#39;,
+            &#39;search_2:9200&#39;
+        ]
+    );</pre>
+
+<p>Each <code>node</code> can be a URL including a scheme, host, port, path and userinfo (for authentication). For instance, this would be a valid node:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    https://username:password@search.domain.com:443/prefix/path</pre>
+
+<p>See <a href="./Elasticsearch::Role::Cxn::HTTP#node">&quot;node&quot; in Elasticsearch::Role::Cxn::HTTP</a> for more on node specification.</p>
+
+<h2 id="cxn_pool"><code>cxn_pool</code></h2>
+
+<p>The <a href="./Elasticsearch::Role::CxnPool">CxnPool</a> modules manage connections to nodes in the Elasticsearch cluster. They handle the load balancing between nodes and failover when nodes fail. Which <code>CxnPool</code> you should use depends on where your cluster is. There are three choices:</p>
+
+<ul>
+
+<li><p><code>Static</code></p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool =&gt; &#39;Static&#39;     # default
+        nodes    =&gt; [
+            &#39;search1.domain.com:9200&#39;,
+            &#39;search2.domain.com:9200&#39;
+        ],
+    );</pre>
+
+<p>The <a href="./Elasticsearch::CxnPool::Static">Static</a> connection pool, which is the default, should be used when you don&#39;t have direct access to the Elasticsearch cluster, eg when you are accessing the cluster through a proxy. See <a href="./Elasticsearch::CxnPool::Static">Elasticsearch::CxnPool::Static</a> for more.</p>
+
+</li>
+<li><p><code>Sniff</code></p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool =&gt; &#39;Sniff&#39;,
+        nodes    =&gt; [
+            &#39;search1:9200&#39;,
+            &#39;search2:9200&#39;
+        ],
+    );</pre>
+
+<p>The <a href="./Elasticsearch::CxnPool::Sniff">Sniff</a> connection pool should be used when you <b>do</b> have direct access to the Elasticsearch cluster, eg when your web servers and Elasticsearch servers are on the same network. The nodes that you specify are used to <i>discover</i> the cluster, which is then <i>sniffed</i> to find the current list of live nodes that the cluster knows about. See <a href="./Elasticsearch::CxnPool::Sniff">Elasticsearch::CxnPool::Sniff</a>.</p>
+
+</li>
+<li><p><code>Static::NoPing</code></p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool =&gt; &#39;Static::NoPing&#39;
+        nodes    =&gt; [
+            &#39;proxy1.domain.com:80&#39;,
+            &#39;proxy2.domain.com:80&#39;
+        ],
+    );</pre>
+
+<p>The <a href="./Elasticsearch::CxnPool::Static::NoPing">Static::NoPing</a> connection pool should be used when your access to a remote cluster is so limited that you cannot ping individual nodes with a <code>HEAD /</code> request.</p>
+
+<p>See <a href="./Elasticsearch::CxnPool::Static::NoPing">Elasticsearch::CxnPool::Static::NoPing</a> for more.</p>
+
+</li>
+</ul>
+
+<h2 id="trace_to"><code>trace_to</code></h2>
+
+<p>For debugging purposes, it is useful to be able to dump the actual HTTP requests which are sent to the cluster, and the response that is received. This can be enabled with the <code>trace_to</code> parametere, as follows:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    # To STDERR
+    $e = Elasticsearch-&gt;new(
+        trace_to =&gt; &#39;Stderr&#39;
+    );
+
+    # To a file
+    $e = Elasticsearch-&gt;new(
+        trace_to =&gt; [&#39;File&#39;,&#39;/path/to/filename&#39;]
+    );</pre>
+
+<p>Logging is handled by <a href="./Log::Any">Log::Any</a>. See <a href="./Elasticsearch::Logger::LogAny">Elasticsearch::Logger::LogAny</a> for more information.</p>
+
+<h2 id="Other">Other</h2>
+
+<p>Other arguments are explained in the respective <a href="#MODULES">module docs</a>.</p>
+
+<h1 id="RUNNING-REQUESTS">RUNNING REQUESTS</h1>
+
+<p>When you create a new instance of Elasticsearch, it returns a <a href="./Elasticsearch::Client::Direct">client</a> object, which can be used for running requests.</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    use Elasticsearch;
+    my $e = Elasticsearch-&gt;new( %params );
+
+    # create an index
+    $e-&gt;indices-&gt;create( index =&gt; &#39;my_index&#39; );
+
+    # index a document
+    $e-&gt;index(
+        index   =&gt; &#39;my_index&#39;,
+        type    =&gt; &#39;blog_post&#39;,
+        id      =&gt; 1,
+        body    =&gt; {
+            title   =&gt; &#39;Elasticsearch clients&#39;,
+            content =&gt; &#39;Interesting content...&#39;,
+            date    =&gt; &#39;2013-09-24&#39;
+        }
+    );</pre>
+
+<p>See <a href="./Elasticsearch::Client::Direct">Elasticsearch::Client::Direct</a> for more details about the requests that can be run.</p>
+
+<h1 id="MODULES">MODULES</h1>
+
+<p>Each chunk of functionality is handled by a different module, which can be specified in the call to <a href="./new()">new()</a> as shown in <a href="./cxn_pool">cxn_pool</a> above. For instance, the following will use the <a href="./Elasticsearch::CxnPool::Sniff">Elasticsearch::CxnPool::Sniff</a> module for the connection pool.</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool =&gt; &#39;Sniff&#39;
+    );</pre>
+
+<p>Custom modules can be named with the appropriate prefix, eg <code>Elasticsearch::CxnPool::</code>, or by prefixing the full class name with <code>+</code>:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool =&gt; &#39;+My::Custom::CxnClass&#39;
+    );</pre>
+
+<p>The modules that you can override are specfied with the following arguments to <a href="#new-">&quot;new()&quot;</a>:</p>
+
+<h2 id="client"><code>client</code></h2>
+
+<p>The class to use for the client functionality, which provides methods that can be called to execute requests, such as <code>search()</code>, <code>index()</code> or <code>delete()</code>. The client parses the user&#39;s requests and passes them to the <a href="#transport">&quot;transport&quot;</a> class to be executed. See :</p>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Client::Direct">Elasticsearch::Client::Direct</a>.</p>
+
+</li>
+</ul>
+
+<h2 id="transport"><code>transport</code></h2>
+
+<p>The Transport class accepts a parsed request from the <a href="#client">&quot;client&quot;</a> class, fetches a <a href="#cxn">&quot;cxn&quot;</a> from its <a href="#cxn_pool">&quot;cxn_pool&quot;</a> and tries to execute the request, retrying after failure where appropriate. See:</p>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Transport">Elasticsearch::Transport</a></p>
+
+</li>
+</ul>
+
+<h2 id="cxn"><code>cxn</code></h2>
+
+<p>The class which handles raw requests to Elasticsearch nodes. See:</p>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Cxn::HTTPTiny">Elasticsearch::Cxn::HTTPTiny</a></p>
+
+</li>
+</ul>
+
+<h2 id="cxn_factory"><code>cxn_factory</code></h2>
+
+<p>The class which the <a href="#cxn_pool">&quot;cxn_pool&quot;</a> uses to create new <a href="#cxn">&quot;cxn&quot;</a> objects. See:</p>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Cxn::Factory">Elasticsearch::Cxn::Factory</a></p>
+
+</li>
+</ul>
+
+<h2 id="cxn_pool-2-"><code>cxn_pool</code> (2)</h2>
+
+<p>The class to use for the <a href="#cxn_pool">connection pool</a> functionality. It calls the <a href="#cxn_factory">&quot;cxn_factory&quot;</a> class to create new <a href="#cxn">&quot;cxn&quot;</a> objects when appropriate. See:</p>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::CxnPool::Static">Elasticsearch::CxnPool::Static</a> (default)</p>
+
+</li>
+<li><p><a href="./Elasticsearch::CxnPool::Sniff">Elasticsearch::CxnPool::Sniff</a></p>
+
+</li>
+<li><p><a href="./Elasticsearch::CxnPool::Static::NoPing">Elasticsearch::CxnPool::Static::NoPing</a></p>
+
+</li>
+</ul>
+
+<h2 id="logger"><code>logger</code></h2>
+
+<p>The class the use for logging events and tracing HTTP requests/responses. See:</p>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Logger::LogAny">Elasticsearch::Logger::LogAny</a></p>
+
+</li>
+</ul>
+
+<h2 id="serializer"><code>serializer</code></h2>
+
+<p>The class to use for serializing request bodies and deserializing response bodies. See:</p>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Serializer::JSON">Elasticsearch::Serializer::JSON</a></p>
+
+</li>
+</ul>
+
+<h1 id="MIGRATING-FROM-ElasticSearch.pm">MIGRATING FROM ElasticSearch.pm</h1>
+
+<p>The <a href="./Elasticseach">Elasticseach</a> API is pretty similar to the old <a href="./ElasticSearch">ElasticSearch</a> API, but there are a few differences. The most notable are:</p>
+
+<h2 id="hosts-vs-servers"><code>hosts</code> vs <code>servers</code></h2>
+
+<p>When instantiating a new Elasticsearch instance, use <code>nodes</code> instead of <code>servers</code>:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        nodes =&gt; [ &#39;search1:9200&#39;, &#39;search2:9200&#39; ]
+    );</pre>
+
+<h2 id="no_refresh"><code>no_refresh</code></h2>
+
+<p>By default, the new client does not sniff the cluster to discover nodes. To enable sniffing, use:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool =&gt; &#39;Sniff&#39;,
+        nodes    =&gt; [ &#39;search1:9200&#39;, &#39;search2:9200&#39; ]
+    );</pre>
+
+<p>To disable sniffing (the equivalent of setting <code>no_refresh</code> to <code>true</code>), do:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        nodes    =&gt; [ &#39;search1:9200&#39;, &#39;search2:9200&#39; ]
+    );</pre>
+
+<h2 id="Request-parameters">Request parameters</h2>
+
+<p>In the old client, you could specify query string and body parameters at the same level, eg:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e-&gt;search(
+        search_type =&gt; &#39;count&#39;,
+        query       =&gt; {
+            match_all =&gt; {}
+        }
+    );</pre>
+
+<p>In the new client, body parameters should be passed in a <code>body</code> element:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e-&gt;search(
+        search_type =&gt; &#39;count&#39;,
+        body        =&gt; {
+            query       =&gt; {
+                match_all =&gt; {}
+            }
+        }
+    );</pre>
+
+<h2 id="trace_calls"><code>trace_calls</code></h2>
+
+<p>The new client uses <a href="./Log::Any">Log::Any</a> for event logging and request tracing. To trace requests/responses in <code>curl</code> format, do:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    # To STDERR
+    $e = Elasticsearch-&gt;new (trace_to =&gt; &#39;Stderr&#39;);
+
+    # To a file
+    $e = Elasticsearch-&gt;new (trace_to =&gt; [&#39;File&#39;,&#39;/path/to/file.log&#39;]);</pre>
+
+<h2 id="SearchBuilder">SearchBuilder</h2>
+
+<p>The old API integrated <a href="./ElasticSearch::SearchBuilder">ElasticSearch::SearchBuilder</a> for an <a href="./SQL::Abstract">SQL::Abstract</a> style of writing queries and filters in Elasticsearch. This integration does not exist in the new client, but will be added in a future module.</p>
+
+<h2 id="Bulk-methods-and-scrolled_search-">Bulk methods and <code>scrolled_search()</code></h2>
+
+<p>Bulk indexing has changed a lot in the new client. The helper methods, eg <code>bulk_index()</code> and <code>reindex()</code> have been removed from the main client, and the <code>bulk()</code> method itself now simply returns the response from Elasticsearch. It doesn&#39;t interfere with processing at all.</p>
+
+<p>The helper methods will be replaced by the <a href="./Elasticsearch::Bulk">Elasticsearch::Bulk</a> class, which has been written but not yet documented or fully tested.</p>
+
+<p>Similarly, <code>scrolled_search()</code> will be replaced by the <a href="./Elasticsearch::Scroll">Elasticsearch::Scroll</a> class which is similarly unfinished.</p>
+
+<h1 id="TODO">TODO</h1>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Bulk">Elasticsearch::Bulk</a></p>
+
+</li>
+<li><p><a href="./Elasticsearch::Scroll">Elasticsearch::Scroll</a></p>
+
+</li>
+<li><p><a href="./Elasticsearch::Compat">Elasticsearch::Compat</a></p>
+
+<p>This module will provide an easy migration path from the old <a href="./ElasticSearch">ElasticSearch</a> to the new <a href="./Elasticsearch">Elasticsearch</a>.</p>
+
+</li>
+<li><p>New backends</p>
+
+<p>Release backends for <a href="./LWP">LWP</a>, <a href="./HTTP::Lite">HTTP::Lite</a>, <a href="./WWW::Curl">WWW::Curl</a>, <a href="./Net::Curl">Net::Curl</a>. Also add async support via <a href="./AnyEvent">AnyEvent</a> and perhaps <a href="./Mojo">Mojo</a>.</p>
+
+</li>
+<li><p>New frontend</p>
+
+<p>Add a new client with a similar less verbose interface to <a href="./ElasticSearch">ElasticSearch</a> and integration with <a href="./ElasticSearch::SearchBuilder">ElasticSearch::SearchBuilder</a>.</p>
+
+</li>
+</ul>
+
+<h1 id="BUGS">BUGS</h1>
+
+<p>This is a stable API but this implemenation is new. Watch this space for new releases.</p>
+
+<p>If you have any suggestions for improvements, or find any bugs, please report them to <a href="http://github.com/elasticsearch/elasticsearch-perl/issues">http://github.com/elasticsearch/elasticsearch-perl/issues</a>. I will be notified, and then you&#39;ll automatically be notified of progress on your bug as I make changes.</p>
+
+<h1 id="SUPPORT">SUPPORT</h1>
+
+<p>You can find documentation for this module with the perldoc command.</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    perldoc Elasticsearch</pre>
+
+<p>You can also look for information at:</p>
+
+<ul>
+
+<li><p>GitHub</p>
+
+<p><a href="http://github.com/elasticsearch/elasticsearch-perl">http://github.com/elasticsearch/elasticsearch-perl</a></p>
+
+</li>
+<li><p>CPAN Ratings</p>
+
+<p><a href="http://cpanratings.perl.org/d/Elasticsearch">http://cpanratings.perl.org/d/Elasticsearch</a></p>
+
+</li>
+<li><p>Search MetaCPAN</p>
+
+<p><a href="https://metacpan.org/module/Elasticsearch">https://metacpan.org/module/Elasticsearch</a></p>
+
+</li>
+<li><p>IRC</p>
+
+<p>The <a href="irc://irc.freenode.net/elasticsearch">#elasticsearch</a> channel on <code>irc.freenode.net</code>.</p>
+
+</li>
+<li><p>Mailing list</p>
+
+<p>The main <a href="http://www.elasticsearch.org/community/forum/">Elasticsearch mailing list</a>.</p>
+
+</li>
+</ul>
+
+<h1 id="TEST-SUITE">TEST SUITE</h1>
+
+<p>The full test suite requires a live Elasticsearch node to run, and should be run as :</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    perl Makefile.PL
+    ES=localhost:9200 make test</pre>
+
+<p><b>TESTS RUN IN THIS WAY ARE DESTRUCTIVE! DO NOT RUN AGAINST A CLUSTER WITH DATA YOU WANT TO KEEP!</b></p>
+
+
+</div>
+</body>
+</html>
+
+

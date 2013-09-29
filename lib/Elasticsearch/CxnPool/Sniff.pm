@@ -1,11 +1,11 @@
 package Elasticsearch::CxnPool::Sniff;
 {
-  $Elasticsearch::CxnPool::Sniff::VERSION = '0.71';
+  $Elasticsearch::CxnPool::Sniff::VERSION = '0.72';
 }
 
 use Moo;
 with 'Elasticsearch::Role::CxnPool';
-use namespace::autoclean;
+use namespace::clean;
 
 use Elasticsearch::Util qw(parse_params throw);
 use List::Util qw(min);
@@ -144,7 +144,7 @@ Elasticsearch::CxnPool::Sniff - A CxnPool for connecting to a local cluster with
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 SYNOPSIS
 

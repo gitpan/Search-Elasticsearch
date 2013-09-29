@@ -1,13 +1,13 @@
 package Elasticsearch::Role::Logger;
 {
-  $Elasticsearch::Role::Logger::VERSION = '0.71';
+  $Elasticsearch::Role::Logger::VERSION = '0.72';
 }
 
 use Moo::Role;
-use namespace::autoclean;
 
 use URI();
 use Try::Tiny;
+use namespace::clean;
 
 has 'serializer' => ( is => 'ro', required => 1 );
 has 'log_as'     => ( is => 'ro', default  => 'elasticsearch.event' );
@@ -139,7 +139,7 @@ Elasticsearch::Role::Logger - Provides common functionality to Logger implementa
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

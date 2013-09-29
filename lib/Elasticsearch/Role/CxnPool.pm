@@ -1,16 +1,15 @@
 package Elasticsearch::Role::CxnPool;
 {
-  $Elasticsearch::Role::CxnPool::VERSION = '0.71';
+  $Elasticsearch::Role::CxnPool::VERSION = '0.72';
 }
 
 use Moo::Role;
 use Elasticsearch::Util qw(parse_params);
-use namespace::autoclean;
-
 use List::Util qw(shuffle);
 use IO::Select();
 use Time::HiRes qw(time sleep);
 use Elasticsearch::Util qw(to_list);
+use namespace::clean;
 
 requires qw(next_cxn schedule_check);
 
@@ -136,7 +135,7 @@ Elasticsearch::Role::CxnPool - Provides common functionality to the CxnPool impl
 
 =head1 VERSION
 
-version 0.71
+version 0.72
 
 =head1 DESCRIPTION
 

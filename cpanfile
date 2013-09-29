@@ -1,7 +1,7 @@
 requires "Any::URI::Escape" => "0";
 requires "Data::Dumper" => "0";
 requires "Encode" => "0";
-requires "HTTP::Tiny" => "v0.33.0";
+requires "HTTP::Tiny" => "0.036";
 requires "IO::Select" => "0";
 requires "IO::Socket::SSL" => "0";
 requires "IO::Uncompress::Inflate" => "0";
@@ -11,14 +11,14 @@ requires "Log::Any" => "0";
 requires "Log::Any::Adapter" => "0";
 requires "MIME::Base64" => "0";
 requires "Module::Runtime" => "0";
-requires "Moo" => "0";
+requires "Moo" => "1.003";
 requires "Moo::Role" => "0";
 requires "Scalar::Util" => "0";
 requires "Sub::Exporter" => "0";
 requires "Time::HiRes" => "0";
 requires "Try::Tiny" => "0";
 requires "URI" => "0";
-requires "namespace::autoclean" => "0";
+requires "namespace::clean" => "0";
 requires "overload" => "0";
 requires "strict" => "0";
 requires "warnings" => "0";
@@ -45,7 +45,5 @@ on 'configure' => sub {
 };
 
 on 'develop' => sub {
-  requires "Test::More" => "0";
-  requires "Test::NoTabs" => "0";
   requires "Test::Pod" => "1.41";
 };

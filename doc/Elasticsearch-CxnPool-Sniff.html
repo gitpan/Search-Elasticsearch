@@ -1,0 +1,143 @@
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<link rel='stylesheet' href='https://metacpan.org/_asset/288683e3285b02987a848283f0f92207' type='text/css'>
+<script type='text/javascript' src='https://metacpan.org/_asset/12b19d083bf773523c065d4d729f0327'></script>
+</head>
+<body>
+<div class="pod">
+
+
+<ul id="index">
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#CONFIGURATION">CONFIGURATION</a>
+    <ul>
+      <li><a href="#nodes"><code>nodes</code></a></li>
+      <li><a href="#sniff_interval"><code>sniff_interval</code></a></li>
+      <li><a href="#sniff_max_content_length"><code>sniff_max_content_length</code></a></li>
+      <li><a href="#See-also">See also</a></li>
+    </ul>
+  </li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#next_cxn-"><code>next_cxn()</code></a></li>
+      <li><a href="#schedule_check-"><code>schedule_check()</code></a></li>
+      <li><a href="#sniff-"><code>sniff()</code></a></li>
+      <li><a href="#should_accept_node-"><code>should_accept_node()</code></a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool =&gt; &#39;Sniff&#39;,
+        nodes    =&gt; [
+            &#39;search1:9200&#39;,
+            &#39;search2:9200&#39;
+        ],
+    );</pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>The <a href="./Elasticsearch::CxnPool::Sniff">Sniff</a> connection pool should be used when you <b>do</b> have direct access to the Elasticsearch cluster, eg when your web servers and Elasticsearch servers are on the same network. The nodes that you specify are used to <i>discover</i> the cluster, which is then <i>sniffed</i> to find the current list of live nodes that the cluster knows about.</p>
+
+<p>This sniff process is repeated regularly, or whenever a node fails, to update the list of healthy nodes. So if you add more nodes to your cluster, they will be auto-discovered during a sniff.</p>
+
+<p>If all sniffed nodes fail, then it falls back to sniffing the original <i>seed</i> nodes that you specified in <code>new()</code>.</p>
+
+<p>For <a href="./Elasticsearch::Role::Cxn::HTTP">HTTP Cxn classes</a>, this module will also dynamically detect the <code>max_content_length</code> which the nodes in the cluster will accept.</p>
+
+<p>This class does <a href="./Elasticsearch::Role::CxnPool">Elasticsearch::Role::CxnPool</a>.</p>
+
+<h1 id="CONFIGURATION">CONFIGURATION</h1>
+
+<h2 id="nodes"><code>nodes</code></h2>
+
+<p>The list of nodes to use to discover the cluster. Can accept a single node, multiple nodes, and defaults to <code>localhost:9200</code> if no <code>nodes</code> are specified. See <a href="./Elasticsearch::Role::Cxn::HTTP#node">&quot;node&quot; in Elasticsearch::Role::Cxn::HTTP</a> for details of the node specification.</p>
+
+<h2 id="sniff_interval"><code>sniff_interval</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool       =&gt; &#39;Sniff&#39;,
+        nodes          =&gt; [...],
+        sniff_interval =&gt; 300,
+    );</pre>
+
+<p>How often to perform a sniff to detect new nodes in the cluster. Defaults to <code>300</code> seconds. <b>Note:</b> In case of node failure, the cluster will be resniffed before the next request to update the list of healthy nodes.</p>
+
+<h2 id="sniff_max_content_length"><code>sniff_max_content_length</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $e = Elasticsearch-&gt;new(
+        cxn_pool                 =&gt; &#39;Sniff&#39;,
+        nodes                    =&gt; [...],
+        sniff_max_content_length =&gt; 0,
+    );</pre>
+
+<p>Whether <code>max_content_length</code> should be dynamically updated based on the value returned from each node in the cluster. This defaults to <code>true</code> unless you have manually set <a href="./Elasticsearch::Cxn::HTTP#max_content_length">&quot;max_content_length&quot; in Elasticsearch::Cxn::HTTP</a>.</p>
+
+<h2 id="See-also">See also</h2>
+
+<ul>
+
+<li><p><a href="./Elasticsearch::Role::Cxn#request_timeout">&quot;request_timeout&quot; in Elasticsearch::Role::Cxn</a></p>
+
+</li>
+<li><p><a href="./Elasticsearch::Role::Cxn#sniff_timeout">&quot;sniff_timeout&quot; in Elasticsearch::Role::Cxn</a></p>
+
+</li>
+<li><p><a href="./Elasticsearch::Role::Cxn#sniff_request_timeout">&quot;sniff_request_timeout&quot; in Elasticsearch::Role::Cxn</a></p>
+
+</li>
+</ul>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="next_cxn-"><code>next_cxn()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $cxn = $cxn_pool-&gt;next_cxn</pre>
+
+<p>Returns the next available live node (in round robin fashion), or throws a <code>NoNodes</code> error if no nodes can be sniffed from the cluster.</p>
+
+<h2 id="schedule_check-"><code>schedule_check()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $cxn_pool-&gt;schedule_check</pre>
+
+<p>Forces a sniff before the next Cxn is returned, to updated the list of healthy nodes in the cluster.</p>
+
+<h2 id="sniff-"><code>sniff()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $bool = $cxn_pool-&gt;sniff</pre>
+
+<p>Sniffs the cluster and returns <code>true</code> if the sniff was successful.</p>
+
+<h2 id="should_accept_node-"><code>should_accept_node()</code></h2>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    $host = $cxn_pool-&gt;should_accept_node($host,$node_id,\%node_data)</pre>
+
+<p>This method serves as a hook which can be overridden by the user. When a sniff is performed, this method is called with the <code>host</code> (eg <code>192.168.5.100:9200</code>), the <code>node_id</code> (the ID assigned to the node by Elasticsearch) and the <code>node_data</code> which contains the information about the node that Elasticsearch has returned, eg:</p>
+
+<pre class="brush: pl; class-name: 'highlight'; toolbar: false; gutter: false">    {
+        &quot;transport_address&quot; =&gt; &quot;inet[192.168.5.100/192.168.5.100:9300]&quot;,
+        &quot;http&quot; : {
+           &quot;publish_address&quot;    =&gt; &quot;inet[/192.168.5.100:9200]&quot;,
+           &quot;max_content_length&quot; =&gt; &quot;100mb&quot;,
+           &quot;bound_address&quot;      =&gt; &quot;inet[/0:0:0:0:0:0:0:0:9200]&quot;,
+           &quot;max_content_length_in_bytes&quot; : 104857600
+        },
+        &quot;version&quot;       =&gt; &quot;0.90.4&quot;,
+        &quot;name&quot;          =&gt; &quot;Silver Sable&quot;,
+        &quot;hostname&quot;      =&gt; &quot;search1.domain.com&quot;,
+        &quot;http_address&quot;  =&gt; &quot;inet[/192.168.5.100:9200]&quot;
+    }</pre>
+
+<p>If the node should be <i>accepted</i> (ie used to serve data), then it should return the <code>host</code> value which to use. By default, nodes are always accepted.</p>
+
+
+</div>
+</body>
+</html>
+
+
