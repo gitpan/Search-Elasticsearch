@@ -1,6 +1,6 @@
 package Elasticsearch::Scroll;
 {
-  $Elasticsearch::Scroll::VERSION = '0.72';
+  $Elasticsearch::Scroll::VERSION = '0.73';
 }
 
 use Moo;
@@ -119,7 +119,7 @@ Elasticsearch::Scroll - A helper module for scrolled searches
 
 =head1 VERSION
 
-version 0.72
+version 0.73
 
 =head1 SYNOPSIS
 

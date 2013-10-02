@@ -1,7 +1,7 @@
 #===================================
 package Elasticsearch::Client::Direct::Cluster;
 {
-  $Elasticsearch::Client::Direct::Cluster::VERSION = '0.72';
+  $Elasticsearch::Client::Direct::Cluster::VERSION = '0.73';
 }
 #===================================
 use Moo;
@@ -19,7 +19,7 @@ Elasticsearch::Client::Direct::Cluster - A client for running cluster-level requ
 
 =head1 VERSION
 
-version 0.72
+version 0.73
 
 =head1 DESCRIPTION
 

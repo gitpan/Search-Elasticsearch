@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Cxn;
 {
-  $Elasticsearch::Role::Cxn::VERSION = '0.72';
+  $Elasticsearch::Role::Cxn::VERSION = '0.73';
 }
 
 use Moo::Role;
@@ -147,6 +147,7 @@ sub process_response {
         $error_type = $self->error_from_text( $code, $msg );
     }
 
+    delete $params->{data} if $params->{body};
     my %error_args = ( status_code => $code, request => $params );
 
     if ( $body = $self->serializer->decode($body) ) {
@@ -182,7 +183,7 @@ Elasticsearch::Role::Cxn - Provides common functionality to Cxn implementations
 
 =head1 VERSION
 
-version 0.72
+version 0.73
 
 =head1 DESCRIPTION
 

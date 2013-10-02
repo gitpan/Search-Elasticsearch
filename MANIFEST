@@ -40,6 +40,7 @@ lib/Elasticsearch/Client/Direct/Cluster.pm
 lib/Elasticsearch/Client/Direct/Indices.pm
 lib/Elasticsearch/Cxn/Factory.pm
 lib/Elasticsearch/Cxn/HTTPTiny.pm
+lib/Elasticsearch/Cxn/LWP.pm
 lib/Elasticsearch/CxnPool/Sniff.pm
 lib/Elasticsearch/CxnPool/Static.pm
 lib/Elasticsearch/CxnPool/Static/NoPing.pm
@@ -55,6 +56,7 @@ lib/Elasticsearch/Role/Logger.pm
 lib/Elasticsearch/Role/Serializer.pm
 lib/Elasticsearch/Scroll.pm
 lib/Elasticsearch/Serializer/JSON.pm
+lib/Elasticsearch/TestServer.pm
 lib/Elasticsearch/Transport.pm
 lib/Elasticsearch/Util.pm
 lib/Elasticsearch/Util/API/Path.pm

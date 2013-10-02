@@ -1,6 +1,6 @@
 package Elasticsearch::Util::API::QS;
 {
-  $Elasticsearch::Util::API::QS::VERSION = '0.72';
+  $Elasticsearch::Util::API::QS::VERSION = '0.73';
 }
 
 use strict;
@@ -191,7 +191,7 @@ our %Params = (
     },
     wait_for_active_shards     => { type => 'number' },
     wait_for_merge             => { type => 'bool' },
-    wait_for_nodes             => { type => 'number' },
+    wait_for_nodes             => { type => 'string' },
     wait_for_relocating_shards => { type => 'number' },
     wait_for_status            => {
         default => undef,
@@ -225,7 +225,7 @@ Elasticsearch::Util::API::QS - A utility class for query string parameters in th
 
 =head1 VERSION
 
-version 0.72
+version 0.73
 
 =head1 DESCRIPTION
 

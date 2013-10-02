@@ -38,11 +38,16 @@
             "Any::URI::Escape" : "0",
             "Data::Dumper" : "0",
             "Encode" : "0",
+            "File::Temp" : "0",
+            "HTTP::Headers" : "0",
+            "HTTP::Request" : "0",
             "HTTP::Tiny" : "0.036",
             "IO::Select" : "0",
+            "IO::Socket" : "0",
             "IO::Socket::SSL" : "0",
             "IO::Uncompress::Inflate" : "0",
             "JSON" : "0",
+            "LWP::UserAgent" : "0",
             "List::Util" : "0",
             "Log::Any" : "0",
             "Log::Any::Adapter" : "0",
@@ -50,6 +55,7 @@
             "Module::Runtime" : "0",
             "Moo" : "1.003",
             "Moo::Role" : "0",
+            "POSIX" : "0",
             "Scalar::Util" : "0",
             "Sub::Exporter" : "0",
             "Time::HiRes" : "0",
@@ -85,6 +91,6 @@
          "web" : "https://github.com/elasticsearch/elasticsearch-perl"
       }
    },
-   "version" : "0.72"
+   "version" : "0.73"
 }
 

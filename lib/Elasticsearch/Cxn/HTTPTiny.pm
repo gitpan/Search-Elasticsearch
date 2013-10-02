@@ -1,6 +1,6 @@
 package Elasticsearch::Cxn::HTTPTiny;
 {
-  $Elasticsearch::Cxn::HTTPTiny::VERSION = '0.72';
+  $Elasticsearch::Cxn::HTTPTiny::VERSION = '0.73';
 }
 
 use Moo;
@@ -49,7 +49,7 @@ sub error_from_text {
 #===================================
     local $_ = $_[2];
     return
-          /Timed out/                ? 'Timeout'
+          /[Tt]imed out/             ? 'Timeout'
         : /Unexpected end of stream/ ? 'ContentLength'
         : /$Cxn_Error/               ? 'Cxn'
         :                              'Request';
@@ -83,16 +83,30 @@ Elasticsearch::Cxn::HTTPTiny - A Cxn implementation which uses HTTP::Tiny
 
 =head1 VERSION
 
-version 0.72
+version 0.73
 
 =head1 DESCRIPTION
 
-Provides the default HTTP Cxn class and is based on L<HTTP::Tiny>.
+Provides an HTTP Cxn class based on L<HTTP::Tiny>.
 The HTTP::Tiny backend is fast, uses pure Perl, but doesn't provide
-persistent connections.
+persistent connections. If you are going to use it, make sure you
+have a high open filehandle limit (C<ulimit -l>) so that your system
+doesn't run out of sockets.
 
 This class does L<Elasticsearch::Role::Cxn::HTTP>, whose documentation
 provides more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item * L<Elasticsearch::Role::Cxn::HTTP>
+
+=item * L<Elasticsearch::Cxn::LWP>
+
+=item * L<Elasticsearch::Cxn::NetCurl>
+
+=back
 
 =head1 AUTHOR
 

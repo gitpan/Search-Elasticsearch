@@ -1,6 +1,6 @@
 package Elasticsearch::Serializer::JSON;
 {
-  $Elasticsearch::Serializer::JSON::VERSION = '0.72';
+  $Elasticsearch::Serializer::JSON::VERSION = '0.73';
 }
 
 use Moo;
@@ -106,7 +106,7 @@ Elasticsearch::Serializer::JSON - A Serializer for JSON
 
 =head1 VERSION
 
-version 0.72
+version 0.73
 
 =head1 DESCRIPTION
 

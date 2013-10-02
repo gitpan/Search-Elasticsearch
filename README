@@ -2,7 +2,7 @@ NAME
     Elasticsearch - The official client for Elasticsearch
 
 VERSION
-    version 0.72
+    version 0.73
 
 SYNOPSIS
         use Elasticsearch;
@@ -280,7 +280,10 @@ MODULES
     "delete()". The client parses the user's requests and passes them to the
     "transport" class to be executed. See :
 
-    *   Elasticsearch::Client::Direct.
+    *   Elasticsearch::Client::Direct (default)
+
+    *   Elasticsearch::Client::Compat (for migration from the old
+        ElasticSearch module)
 
   "transport"
     The Transport class accepts a parsed request from the "client" class,
@@ -292,7 +295,11 @@ MODULES
   "cxn"
     The class which handles raw requests to Elasticsearch nodes. See:
 
+    *   Elasticsearch::Cxn::LWP (default)
+
     *   Elasticsearch::Cxn::HTTPTiny
+
+    *   Elasticsearch::Cxn::NetCurl
 
   "cxn_factory"
     The class which the "cxn_pool" uses to create new "cxn" objects. See:
@@ -322,6 +329,9 @@ MODULES
     *   Elasticsearch::Serializer::JSON
 
 MIGRATING FROM ElasticSearch.pm
+    See Elasticsearch::Compat, which allows you to run your old
+    ElasticSearch code with the new Elasticsearch module.
+
     The Elasticseach API is pretty similar to the old ElasticSearch API, but
     there are a few differences. The most notable are:
 
@@ -397,15 +407,9 @@ MIGRATING FROM ElasticSearch.pm
     Elasticsearch::Scroll.
 
 TODO
-    *   Elasticsearch::Compat
+    *   Async support
 
-        This module will provide an easy migration path from the old
-        ElasticSearch to the new Elasticsearch.
-
-    *   New backends
-
-        Release backends for LWP, HTTP::Lite, WWW::Curl, Net::Curl. Also add
-        async support via AnyEvent and perhaps Mojo.
+        Add async support using Promises for AnyEvent and perhaps Mojo.
 
     *   New frontend
 
@@ -460,6 +464,11 @@ TEST SUITE
 
     TESTS RUN IN THIS WAY ARE DESTRUCTIVE! DO NOT RUN AGAINST A CLUSTER WITH
     DATA YOU WANT TO KEEP!
+
+    You can change the Cxn class which is used by setting the "ES_CXN"
+    environment variable:
+
+        ES_CXN=HTTPTiny ES=localhost:9200 make test
 
 AUTHOR
     Clinton Gormley <drtech@cpan.org>
