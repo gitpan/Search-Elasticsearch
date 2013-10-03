@@ -57,4 +57,4 @@ requires:
 resources:
   bugtracker: https://github.com/elasticsearch/elasticsearch-perl/issues
   repository: git://github.com/elasticsearch/elasticsearch-perl.git
-version: 0.73
+version: 0.74

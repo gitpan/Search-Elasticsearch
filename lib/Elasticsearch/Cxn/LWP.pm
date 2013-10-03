@@ -1,6 +1,6 @@
 package Elasticsearch::Cxn::LWP;
 {
-  $Elasticsearch::Cxn::LWP::VERSION = '0.73';
+  $Elasticsearch::Cxn::LWP::VERSION = '0.74';
 }
 
 use Moo;
@@ -28,7 +28,11 @@ sub perform_request {
     );
 
     my $ua = $self->handle;
-    $ua->timeout( $params->{timeout} || $self->request_timeout );
+    my $timeout = $params->{timeout} || $self->request_timeout;
+    if ( $timeout ne $ua->timeout ) {
+        $ua->conn_cache->drop;
+        $ua->timeout($timeout);
+    }
     my $response = $ua->request($request);
 
     return $self->process_response(
@@ -62,7 +66,7 @@ sub _build_handle {
         parse_head      => 0
     );
     if ( $self->is_https ) {
-        $args{verify_hostname} = 0;
+        $args{ssl_opts} = { verify_hostname => 0 };
     }
     return LWP::UserAgent->new( %args, %{ $self->handle_args } );
 }
@@ -81,7 +85,7 @@ Elasticsearch::Cxn::LWP - A Cxn implementation which uses LWP
 
 =head1 VERSION
 
-version 0.73
+version 0.74
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Elasticsearch::TestServer;
 {
-  $Elasticsearch::TestServer::VERSION = '0.73';
+  $Elasticsearch::TestServer::VERSION = '0.74';
 }
 
 use Moo;
@@ -170,7 +170,7 @@ Elasticsearch::TestServer - A helper class to launch Elasticsearch nodes
 
 =head1 VERSION
 
-version 0.73
+version 0.74
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package Elasticsearch::Transport;
 {
-  $Elasticsearch::Transport::VERSION = '0.73';
+  $Elasticsearch::Transport::VERSION = '0.74';
 }
 
 use Moo;
@@ -92,7 +92,7 @@ Elasticsearch::Transport - Interface between the client class the Elasticsearch 
 
 =head1 VERSION
 
-version 0.73
+version 0.74
 
 =head1 DESCRIPTION
 

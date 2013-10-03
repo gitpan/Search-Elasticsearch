@@ -26,6 +26,8 @@
       },
       "develop" : {
          "requires" : {
+            "Test::More" : "0",
+            "Test::NoTabs" : "0",
             "Test::Pod" : "1.41"
          }
       },
@@ -91,6 +93,6 @@
          "web" : "https://github.com/elasticsearch/elasticsearch-perl"
       }
    },
-   "version" : "0.73"
+   "version" : "0.74"
 }
 

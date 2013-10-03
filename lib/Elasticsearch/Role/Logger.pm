@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Logger;
 {
-  $Elasticsearch::Role::Logger::VERSION = '0.73';
+  $Elasticsearch::Role::Logger::VERSION = '0.74';
 }
 
 use Moo::Role;
@@ -139,7 +139,7 @@ Elasticsearch::Role::Logger - Provides common functionality to Logger implementa
 
 =head1 VERSION
 
-version 0.73
+version 0.74
 
 =head1 DESCRIPTION
 

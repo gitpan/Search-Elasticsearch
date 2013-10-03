@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Client::Direct;
 {
-  $Elasticsearch::Role::Client::Direct::VERSION = '0.73';
+  $Elasticsearch::Role::Client::Direct::VERSION = '0.74';
 }
 
 use Moo::Role;
@@ -31,8 +31,9 @@ sub parse_request {
         my $name = $defn->{name} || '<unknown method>';
         $self->logger->throw_error( 'Param',
                   "$_ in ($name) request. "
-                . "See http://elasticsearch.org/guide/reference/"
-                . $defn->{doc} );
+                . "See docs at: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/"
+                . $defn->{doc}
+                . '.html' );
     };
     return $request;
 }
@@ -119,7 +120,7 @@ Elasticsearch::Role::Client::Direct - Request parsing for Direct clients
 
 =head1 VERSION
 
-version 0.73
+version 0.74
 
 =head1 DESCRIPTION
 
