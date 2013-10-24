@@ -1,6 +1,6 @@
 package Elasticsearch::Client::Direct;
 {
-  $Elasticsearch::Client::Direct::VERSION = '0.74';
+  $Elasticsearch::Client::Direct::VERSION = '0.75';
 }
 
 use Moo;
@@ -75,7 +75,7 @@ Elasticsearch::Client::Direct - Thin client with full support for Elasticsearch 
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 SYNOPSIS
 

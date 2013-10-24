@@ -1,6 +1,6 @@
 package Elasticsearch::Role::API;
 {
-  $Elasticsearch::Role::API::VERSION = '0.74';
+  $Elasticsearch::Role::API::VERSION = '0.75';
 }
 
 use Moo::Role;
@@ -479,7 +479,7 @@ sub api {
 
     'indices.get_template' => {
         doc  => 'indices-templates/',
-        path => '_template/{name}',
+        path => '_template/{name|blank}',
     },
 
     'indices.get_warmer' => {
@@ -639,7 +639,7 @@ Elasticsearch::Role::API - This class contains the spec for the Elasticsearch AP
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 DESCRIPTION
 

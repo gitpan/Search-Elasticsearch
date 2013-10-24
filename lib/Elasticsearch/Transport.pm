@@ -1,6 +1,6 @@
 package Elasticsearch::Transport;
 {
-  $Elasticsearch::Transport::VERSION = '0.74';
+  $Elasticsearch::Transport::VERSION = '0.75';
 }
 
 use Moo;
@@ -78,6 +78,7 @@ sub tidy_request {
         ? $self->serializer->encode($body)
         : $self->serializer->encode_bulk($body);
 
+    $params->{mime_type} ||= $self->serializer->mime_type;
     return $params;
 
 }
@@ -92,7 +93,7 @@ Elasticsearch::Transport - Interface between the client class the Elasticsearch 
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 DESCRIPTION
 

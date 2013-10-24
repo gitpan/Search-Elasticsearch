@@ -1,6 +1,6 @@
 package Elasticsearch::Cxn::HTTPTiny;
 {
-  $Elasticsearch::Cxn::HTTPTiny::VERSION = '0.74';
+  $Elasticsearch::Cxn::HTTPTiny::VERSION = '0.75';
 }
 
 use Moo;
@@ -26,8 +26,7 @@ sub perform_request {
     my %args;
     if ( defined $params->{data} ) {
         $args{content} = $params->{data};
-        $args{headers}{'Content-Type'}
-            = $params->{mime_type} || $self->serializer->mime_type;
+        $args{headers}{'Content-Type'} = $params->{mime_type};
     }
 
     my $handle = $self->handle;
@@ -83,7 +82,7 @@ Elasticsearch::Cxn::HTTPTiny - A Cxn implementation which uses HTTP::Tiny
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 DESCRIPTION
 

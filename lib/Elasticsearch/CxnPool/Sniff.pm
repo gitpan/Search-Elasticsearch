@@ -1,6 +1,6 @@
 package Elasticsearch::CxnPool::Sniff;
 {
-  $Elasticsearch::CxnPool::Sniff::VERSION = '0.74';
+  $Elasticsearch::CxnPool::Sniff::VERSION = '0.75';
 }
 
 use Moo;
@@ -99,7 +99,7 @@ sub sniff_cxn {
         my $data = $nodes->{$node_id};
 
         my $host = $data->{ $protocol . "_address" } or next;
-        $host =~ s{^inet\[/([^\]]+)\]}{$1} or next;
+        $host =~ s{^inet\[[^/]*/([^\]]+)\]}{$1} or next;
 
         $host = $self->should_accept_node( $host, $node_id, $data )
             or next;
@@ -144,7 +144,7 @@ Elasticsearch::CxnPool::Sniff - A CxnPool for connecting to a local cluster with
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package Elasticsearch::Util::API::Path;
 {
-  $Elasticsearch::Util::API::Path::VERSION = '0.74';
+  $Elasticsearch::Util::API::Path::VERSION = '0.75';
 }
 
 use strict;
@@ -22,6 +22,7 @@ our %Handler = (
     '{req_types}'        => sub { multi_req( 'type',      @_ ) },
     '{names}'            => sub { multi_opt( 'name',      @_, '*' ) },
     '{name}'             => sub { one_req( 'name',        @_ ) },
+    '{name|blank}'       => sub { one_opt( 'name',        @_ ) },
     '{scroll_ids}'       => sub { multi_req( 'scroll_id', @_ ) },
     '{type}'             => sub { one_req( 'type',        @_ ) },
     '{type|all}'         => sub { one_opt( 'type',        @_, '_all' ) },
@@ -130,7 +131,7 @@ Elasticsearch::Util::API::Path - A utility class for converting path templates i
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 DESCRIPTION
 

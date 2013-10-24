@@ -1,7 +1,7 @@
 #===================================
 package Elasticsearch::Client::Direct::Indices;
 {
-  $Elasticsearch::Client::Direct::Indices::VERSION = '0.74';
+  $Elasticsearch::Client::Direct::Indices::VERSION = '0.75';
 }
 #===================================
 use Moo;
@@ -19,7 +19,7 @@ Elasticsearch::Client::Direct::Indices - A client for running index-level reques
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 DESCRIPTION
 

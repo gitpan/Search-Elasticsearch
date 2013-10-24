@@ -6,6 +6,7 @@ META.json
 META.yml
 Makefile.PL
 README
+bench_cxn.pl
 cpanfile
 doc/Elasticsearch-Bulk.html
 doc/Elasticsearch-Client-Direct-Cluster.html

@@ -1,6 +1,6 @@
 package Elasticsearch::TestServer;
 {
-  $Elasticsearch::TestServer::VERSION = '0.74';
+  $Elasticsearch::TestServer::VERSION = '0.75';
 }
 
 use Moo;
@@ -104,7 +104,10 @@ sub _start_node {
             exec(@config);
         }
         else {
-            sleep 1;
+            for ( 1 .. 5 ) {
+                last if -s $pid_file->filename();
+                sleep 1;
+            }
             open my $pid_fh, '<', $pid_file->filename;
             my $pid = <$pid_fh>;
             throw( 'Internal', "ES is running, but no PID found" )
@@ -170,7 +173,7 @@ Elasticsearch::TestServer - A helper class to launch Elasticsearch nodes
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 SYNOPSIS
 

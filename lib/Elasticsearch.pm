@@ -5,7 +5,7 @@ use Moo 1.003;
 use Elasticsearch::Util qw(parse_params load_plugin);
 use namespace::clean;
 
-our $VERSION = '0.74';
+our $VERSION = '0.75';
 
 my %Default_Plugins = (
     client      => [ 'Client',       'Direct' ],
@@ -73,7 +73,7 @@ Elasticsearch - The official client for Elasticsearch
 
 =head1 VERSION
 
-version 0.74
+version 0.75
 
 =head1 SYNOPSIS
 
