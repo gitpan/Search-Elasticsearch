@@ -5,7 +5,7 @@ use Moo 1.003;
 use Elasticsearch::Util qw(parse_params load_plugin);
 use namespace::clean;
 
-our $VERSION = '0.75';
+our $VERSION = '0.76';
 
 my %Default_Plugins = (
     client      => [ 'Client',       'Direct' ],
@@ -73,7 +73,7 @@ Elasticsearch - The official client for Elasticsearch
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 SYNOPSIS
 
@@ -131,6 +131,17 @@ Search:
             }
         }
     );
+
+Cluster requests:
+
+    $info        = $e->cluster->info;
+    $health      = $e->cluster->health;
+    $node_stats  = $e->cluster->node_stats
+
+Index requests:
+
+    $e->indices->create(index=>'my_index');
+    $e->indices->delete(index=>'my_index');
 
 =head1 DESCRIPTION
 
@@ -315,7 +326,7 @@ See L<Elasticsearch::CxnPool::Static::NoPing> for more.
 
 For debugging purposes, it is useful to be able to dump the actual HTTP
 requests which are sent to the cluster, and the response that is received.
-This can be enabled with the C<trace_to> parametere, as follows:
+This can be enabled with the C<trace_to> parameter, as follows:
 
     # To STDERR
     $e = Elasticsearch->new(
@@ -380,7 +391,7 @@ with C<+>:
         cxn_pool => '+My::Custom::CxnClass'
     );
 
-The modules that you can override are specfied with the following
+The modules that you can override are specified with the following
 arguments to L</new()>:
 
 =head2 C<client>
@@ -578,7 +589,7 @@ and integration with L<ElasticSearch::SearchBuilder>.
 
 =head1 BUGS
 
-This is a stable API but this implemenation is new. Watch this space
+This is a stable API but this implementation is new. Watch this space
 for new releases.
 
 If you have any suggestions for improvements, or find any bugs, please report

@@ -63,7 +63,7 @@ my %WriteMakefileArgs = (
     "YAML" => 0,
     "lib" => 0
   },
-  "VERSION" => "0.75",
+  "VERSION" => "0.76",
   "test" => {
     "TESTS" => "t/*.t t/10_Basic/*.t t/20_Serializer/*.t t/30_Logger/*.t t/40_Transport/*.t t/50_Cxn_Pool/*.t t/60_Cxn/*.t t/70_Helper/*.t t/90_Client_Spec/*.t"
   }

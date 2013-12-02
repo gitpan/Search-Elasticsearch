@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Client::Direct;
 {
-  $Elasticsearch::Role::Client::Direct::VERSION = '0.75';
+  $Elasticsearch::Role::Client::Direct::VERSION = '0.76';
 }
 
 use Moo::Role;
@@ -120,7 +120,7 @@ Elasticsearch::Role::Client::Direct - Request parsing for Direct clients
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 DESCRIPTION
 

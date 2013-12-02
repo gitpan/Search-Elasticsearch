@@ -1,6 +1,6 @@
 package Elasticsearch::Client::Direct;
 {
-  $Elasticsearch::Client::Direct::VERSION = '0.75';
+  $Elasticsearch::Client::Direct::VERSION = '0.76';
 }
 
 use Moo;
@@ -75,7 +75,7 @@ Elasticsearch::Client::Direct - Thin client with full support for Elasticsearch 
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 SYNOPSIS
 
@@ -215,7 +215,7 @@ L<Missing|Elasticsearch::Error/Elasticsearch::Error::Missing> errors, which
 are triggered by a C<404> status code when some requested resource does
 not exist.
 
-Multiple error codes can be specfied with an array:
+Multiple error codes can be specified with an array:
 
     $e->indices->delete(
         index  => 'my_index',
@@ -552,6 +552,7 @@ Query string parameters:
     C<consistency>,
     C<refresh>,
     C<replication>,
+    C<timeout>,
     C<type>
 
 See the L<bulk docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-bulk.html>
@@ -722,6 +723,8 @@ Query string parameters:
 See the L<search reference|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-request-body.html>
 for more information.
 
+Also see L<Elasticsearch::Transport/send_get_body_as>.
+
 =head2 C<count()>
 
     $results = $e->count(
@@ -874,7 +877,7 @@ for more information.
     );
 
 Percolation is search inverted: instead of finding docs which match a
-particular query, it finds queries which match a paticular document, eg
+particular query, it finds queries which match a particular document, eg
 for I<alert-me-when> functionality.
 
 The C<percolate()> method runs a percolation request to find the

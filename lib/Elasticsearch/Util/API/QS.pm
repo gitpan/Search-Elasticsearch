@@ -1,6 +1,6 @@
 package Elasticsearch::Util::API::QS;
 {
-  $Elasticsearch::Util::API::QS::VERSION = '0.75';
+  $Elasticsearch::Util::API::QS::VERSION = '0.76';
 }
 
 use strict;
@@ -11,7 +11,7 @@ use Sub::Exporter -setup => { exports => ['qs_init'] };
 our %Handler = (
     string => sub {"$_[0]"},
     list   => sub {
-        ref $_[0]
+        ref $_[0] eq 'ARRAY'
             ? join( ',', @{ shift() } )
             : shift();
     },
@@ -80,16 +80,17 @@ our %Params = (
         options => [ 'none', 'missing' ],
         type    => 'enum'
     },
-    ignore        => { type => 'list', },
-    index         => { type => 'list' },
-    indexing      => { type => 'bool' },
-    indices       => { type => 'bool' },
-    indices_boost => { type => 'list' },
-    interval      => { type => 'duration' },
-    jvm           => { type => 'bool' },
-    lang          => { type => 'string' },
-    lenient       => { type => 'bool' },
-    level         => {
+    ignore           => { type => 'list', },
+    include_defaults => { type => 'bool' },
+    index            => { type => 'list' },
+    indexing         => { type => 'bool' },
+    indices          => { type => 'bool' },
+    indices_boost    => { type => 'list' },
+    interval         => { type => 'duration' },
+    jvm              => { type => 'bool' },
+    lang             => { type => 'string' },
+    lenient          => { type => 'bool' },
+    level            => {
         default => 'cluster',
         options => [ 'cluster', 'indices', 'shards' ],
         type    => 'enum'
@@ -225,12 +226,12 @@ Elasticsearch::Util::API::QS - A utility class for query string parameters in th
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 DESCRIPTION
 
 This class contains a definition of each query string parameter that
-can be accepeted by actions in the L<API|Elasticsearch::Role::API>.
+can be accepted by actions in the L<API|Elasticsearch::Role::API>.
 
 =head1 EXPORTS
 

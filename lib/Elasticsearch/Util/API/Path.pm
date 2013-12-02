@@ -1,6 +1,6 @@
 package Elasticsearch::Util::API::Path;
 {
-  $Elasticsearch::Util::API::Path::VERSION = '0.75';
+  $Elasticsearch::Util::API::Path::VERSION = '0.76';
 }
 
 use strict;
@@ -10,6 +10,7 @@ use Any::URI::Escape qw(uri_escape);
 use Sub::Exporter -setup => { exports => ['path_init'] };
 
 our %Handler = (
+    '{field}'           => sub { multi_req( 'field', @_ ) },
     '{id}'              => sub { one_req( 'id',      @_ ) },
     '{id|blank}'        => sub { one_opt( 'id',      @_ ) },
     '{index}'           => sub { one_req( 'index',   @_ ) },
@@ -131,7 +132,7 @@ Elasticsearch::Util::API::Path - A utility class for converting path templates i
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 DESCRIPTION
 

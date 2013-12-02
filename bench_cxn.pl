@@ -6,22 +6,22 @@ use Benchmark qw(timeit cmpthese timesum :hireswallclock);
 use Elasticsearch;
 use v5.16;
 
-my $Times = 5;
-my $Total = 2000;
-my $Doc   = '{"foo":"' . ( 'x' x 2000 ) . '"}';
+my $Times = 2;
+my $Total = 50000;
+my $Doc   = '{"foo":"' . ( 'x' x 1) . '"}';
 my $es;
 
 say "Warming up";
-cxn('HTTPTiny');
+cxn('NetCurl');
 reset_es();
-index_docs();
-get_docs();
-reset_es();
+#index_docs();
+#get_docs();
+#reset_es();
 
 my ( %reads, %writes );
 for ( 1 .. $Times ) {
     say "Run $_:";
-    for my $cxn ( 'HTTPTiny','HTTPTiny2') {
+    for my $cxn ( 'NetCurl') {
         say " * $cxn";
         cxn($cxn);
         my $t = timeit( 1, sub { index_docs() } );

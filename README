@@ -2,7 +2,7 @@ NAME
     Elasticsearch - The official client for Elasticsearch
 
 VERSION
-    version 0.75
+    version 0.76
 
 SYNOPSIS
         use Elasticsearch;
@@ -59,6 +59,17 @@ SYNOPSIS
                 }
             }
         );
+
+    Cluster requests:
+
+        $info        = $e->cluster->info;
+        $health      = $e->cluster->health;
+        $node_stats  = $e->cluster->node_stats
+
+    Index requests:
+
+        $e->indices->create(index=>'my_index');
+        $e->indices->delete(index=>'my_index');
 
 DESCRIPTION
     Elasticsearch is the official Perl client for Elasticsearch, supported
@@ -209,8 +220,7 @@ CREATING A NEW INSTANCE
   "trace_to"
     For debugging purposes, it is useful to be able to dump the actual HTTP
     requests which are sent to the cluster, and the response that is
-    received. This can be enabled with the "trace_to" parametere, as
-    follows:
+    received. This can be enabled with the "trace_to" parameter, as follows:
 
         # To STDERR
         $e = Elasticsearch->new(
@@ -271,7 +281,7 @@ MODULES
             cxn_pool => '+My::Custom::CxnClass'
         );
 
-    The modules that you can override are specfied with the following
+    The modules that you can override are specified with the following
     arguments to "new()":
 
   "client"
@@ -417,8 +427,8 @@ TODO
         ElasticSearch and integration with ElasticSearch::SearchBuilder.
 
 BUGS
-    This is a stable API but this implemenation is new. Watch this space for
-    new releases.
+    This is a stable API but this implementation is new. Watch this space
+    for new releases.
 
     If you have any suggestions for improvements, or find any bugs, please
     report them to

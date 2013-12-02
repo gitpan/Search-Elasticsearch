@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Cxn::HTTP;
 {
-  $Elasticsearch::Role::Cxn::HTTP::VERSION = '0.75';
+  $Elasticsearch::Role::Cxn::HTTP::VERSION = '0.76';
 }
 
 use Moo::Role;
@@ -153,13 +153,13 @@ Elasticsearch::Role::Cxn::HTTP - Provides common functionality to HTTP Cxn imple
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 DESCRIPTION
 
 L<Elasticsearch::Role::Cxn::HTTP> provides common functionality to the Cxn
 implementations which use the HTTP protocol. Cxn instances are created by a
-L<Elasticsearch::Role::CxnPool> implentation, using the
+L<Elasticsearch::Role::CxnPool> implementation, using the
 L<Elasticsearch::Cxn::Factory> class.
 
 This class does L<Elasticsearch::Role::Cxn>.

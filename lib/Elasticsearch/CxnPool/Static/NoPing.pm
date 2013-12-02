@@ -1,6 +1,6 @@
 package Elasticsearch::CxnPool::Static::NoPing;
 {
-  $Elasticsearch::CxnPool::Static::NoPing::VERSION = '0.75';
+  $Elasticsearch::CxnPool::Static::NoPing::VERSION = '0.76';
 }
 
 use Moo;
@@ -76,7 +76,7 @@ Elasticsearch::CxnPool::Static::NoPing - A CxnPool for connecting to a remote cl
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 SYNOPSIS
 
@@ -98,7 +98,7 @@ can't ping your nodes, then you should use the C<Static::NoPing>
 connection pool instead.
 
 Because the cluster cannot be pinged, this CxnPool cannot use a short
-ping request to determin whether nodes are live or not - it just has to
+ping request to determine whether nodes are live or not - it just has to
 send requests to the nodes to determine whether they are alive or not.
 
 Most of the time, a dead node will cause the request to fail quickly.

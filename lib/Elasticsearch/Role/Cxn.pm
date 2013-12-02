@@ -1,6 +1,6 @@
 package Elasticsearch::Role::Cxn;
 {
-  $Elasticsearch::Role::Cxn::VERSION = '0.75';
+  $Elasticsearch::Role::Cxn::VERSION = '0.76';
 }
 
 use Moo::Role;
@@ -183,13 +183,13 @@ Elasticsearch::Role::Cxn - Provides common functionality to Cxn implementations
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 DESCRIPTION
 
 L<Elasticsearch::Role::Cxn> provides common functionality to the Cxn
 implementations. Cxn instances are created by a L<Elasticsearch::Role::CxnPool>
-implentation, using the L<Elasticsearch::Cxn::Factory> class.
+implementation, using the L<Elasticsearch::Cxn::Factory> class.
 
 =head1 CONFIGURATION
 

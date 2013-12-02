@@ -1,6 +1,6 @@
 package Elasticsearch::Logger::LogAny;
 {
-  $Elasticsearch::Logger::LogAny::VERSION = '0.75';
+  $Elasticsearch::Logger::LogAny::VERSION = '0.76';
 }
 
 use Moo;
@@ -33,7 +33,7 @@ sub _build_trace_handle {
 
 1;
 
-# ABSTRACT: A Log::Any-based Logger implemenation
+# ABSTRACT: A Log::Any-based Logger implementation
 
 __END__
 
@@ -41,11 +41,11 @@ __END__
 
 =head1 NAME
 
-Elasticsearch::Logger::LogAny - A Log::Any-based Logger implemenation
+Elasticsearch::Logger::LogAny - A Log::Any-based Logger implementation
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 DESCRIPTION
 

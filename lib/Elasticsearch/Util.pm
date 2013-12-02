@@ -1,6 +1,6 @@
 package Elasticsearch::Util;
 {
-  $Elasticsearch::Util::VERSION = '0.75';
+  $Elasticsearch::Util::VERSION = '0.76';
 }
 
 use Moo;
@@ -96,7 +96,7 @@ Elasticsearch::Util - A utility class for internal use by Elasticsearch
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 AUTHOR
 

@@ -1,6 +1,6 @@
 package Elasticsearch::Error;
 {
-  $Elasticsearch::Error::VERSION = '0.75';
+  $Elasticsearch::Error::VERSION = '0.76';
 }
 
 use Moo;
@@ -159,12 +159,12 @@ Elasticsearch::Error - Errors thrown by Elasticsearch
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 DESCRIPTION
 
 Errors thrown by Elasticsearch are error objects, which can include
-a strack trace and information to help debug problems. An error object
+a stack trace and information to help debug problems. An error object
 consists of the following:
 
     {

@@ -1,7 +1,7 @@
 #===================================
 package Elasticsearch::Client::Direct::Indices;
 {
-  $Elasticsearch::Client::Direct::Indices::VERSION = '0.75';
+  $Elasticsearch::Client::Direct::Indices::VERSION = '0.76';
 }
 #===================================
 use Moo;
@@ -19,7 +19,7 @@ Elasticsearch::Client::Direct::Indices - A client for running index-level reques
 
 =head1 VERSION
 
-version 0.75
+version 0.76
 
 =head1 DESCRIPTION
 
@@ -43,7 +43,7 @@ It does L<Elasticsearch::Role::Client::Direct>.
         }
     );
 
-The C<create()> method is used to creat an index. Optionally, index
+The C<create()> method is used to create an index. Optionally, index
 settings, type mappings and index warmers can be added at the same time.
 
 Query string parameters:
@@ -252,6 +252,22 @@ all types in one, more or all indices.
 See the L<get_mapping docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-get-mapping.html>
 for more information.
 
+=head2 C<get_field_mapping()>
+
+    $result = $e->indices->get_field_mapping(
+        index => 'index' | \@indices    # optional,
+        type  => 'type'  | \@types      # optional,
+        field => 'field' | \@fields     # required
+
+        include_defaults => 0 | 1
+    );
+
+The C<get_field_mapping()> method returns the field definitions for one, more or
+all fields in one, more or all types and indices.
+
+See the L<get_mapping docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html>
+for more information.
+
 =head2 C<exists_type()>
 
     $bool = $e->indices->exists_type(
@@ -359,7 +375,7 @@ for more information.
         name    => 'alias' | \@aliases      # required
     );
 
-The C<get_alias()> method returns the aliase defintions for the specified
+The C<get_alias()> method returns the alias definitions for the specified
 aliases in the specified indices.
 
 Query string parameters:
@@ -391,7 +407,7 @@ for more information.
         name    => 'alias'                  # required
     );
 
-The C<delete_alias()> method deletes a single alias in a a single index.
+The C<delete_alias()> method deletes a single alias in a single index.
 
 Query string parameters:
     C<master_timeout>,
