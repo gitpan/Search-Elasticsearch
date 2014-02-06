@@ -1,8 +1,5 @@
 package Elasticsearch::Role::CxnPool;
-{
-  $Elasticsearch::Role::CxnPool::VERSION = '0.76';
-}
-
+$Elasticsearch::Role::CxnPool::VERSION = '1.00';
 use Moo::Role;
 use Elasticsearch::Util qw(parse_params);
 use List::Util qw(shuffle);
@@ -129,13 +126,15 @@ sub _max_retries  {2}
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Role::CxnPool - Provides common functionality to the CxnPool implementations
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -163,7 +162,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

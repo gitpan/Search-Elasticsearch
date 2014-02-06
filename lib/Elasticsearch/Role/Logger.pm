@@ -1,12 +1,10 @@
 package Elasticsearch::Role::Logger;
-{
-  $Elasticsearch::Role::Logger::VERSION = '0.76';
-}
-
+$Elasticsearch::Role::Logger::VERSION = '1.00';
 use Moo::Role;
 
 use URI();
 use Try::Tiny;
+use Elasticsearch::Util qw(new_error);
 use namespace::clean;
 
 has 'serializer' => ( is => 'ro', required => 1 );
@@ -35,7 +33,7 @@ has 'log_handle' => (
 sub throw_error {
 #===================================
     my ( $self, $type, $msg, $vars ) = @_;
-    my $error = Elasticsearch::Error->new( $type, $msg, $vars, 1 );
+    my $error = new_error( $type, $msg, $vars );
     $self->error($error);
     die $error;
 }
@@ -44,7 +42,7 @@ sub throw_error {
 sub throw_critical {
 #===================================
     my ( $self, $type, $msg, $vars ) = @_;
-    my $error = Elasticsearch::Error->new( $type, $msg, $vars, 1 );
+    my $error = new_error( $type, $msg, $vars );
     $self->critical($error);
     die $error;
 }
@@ -133,13 +131,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Role::Logger - Provides common functionality to Logger implementations
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -223,7 +223,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

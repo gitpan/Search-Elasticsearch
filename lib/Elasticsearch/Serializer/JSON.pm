@@ -1,8 +1,5 @@
 package Elasticsearch::Serializer::JSON;
-{
-  $Elasticsearch::Serializer::JSON::VERSION = '0.76';
-}
-
+$Elasticsearch::Serializer::JSON::VERSION = '1.00';
 use Moo;
 
 use Elasticsearch::Util qw(throw);
@@ -100,13 +97,15 @@ sub _set_canonical {
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Serializer::JSON - A Serializer for JSON
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -157,7 +156,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

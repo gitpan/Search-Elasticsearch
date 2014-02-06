@@ -1,8 +1,5 @@
 package Elasticsearch::Role::Client;
-{
-  $Elasticsearch::Role::Client::VERSION = '0.76';
-}
-
+$Elasticsearch::Role::Client::VERSION = '1.00';
 use Moo::Role;
 use namespace::clean;
 
@@ -23,13 +20,15 @@ sub perform_request {
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Role::Client - Provides common functionality for Client implementations
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -51,7 +50,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

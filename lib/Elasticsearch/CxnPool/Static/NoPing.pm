@@ -1,27 +1,10 @@
 package Elasticsearch::CxnPool::Static::NoPing;
-{
-  $Elasticsearch::CxnPool::Static::NoPing::VERSION = '0.76';
-}
-
+$Elasticsearch::CxnPool::Static::NoPing::VERSION = '1.00';
 use Moo;
-with 'Elasticsearch::Role::CxnPool';
+with 'Elasticsearch::Role::CxnPool::Static::NoPing',
+    'Elasticsearch::Role::Is_Sync';
 use Elasticsearch::Util qw(throw);
 use namespace::clean;
-
-has 'max_retries' => ( is => 'lazy' );
-has '_dead_cxns' => ( is => 'ro', default => sub { [] } );
-
-#===================================
-sub _build_max_retries { @{ shift->cxns } - 1 }
-sub _max_retries       { shift->max_retries + 1 }
-#===================================
-
-#===================================
-sub BUILD {
-#===================================
-    my $self = shift;
-    $self->set_cxns( @{ $self->seed_nodes } );
-}
 
 #===================================
 sub next_cxn {
@@ -47,28 +30,11 @@ sub next_cxn {
     throw( "NoNodes", "No nodes are available: [" . $self->cxns_str . ']' );
 }
 
-#===================================
-sub should_mark_dead {
-#===================================
-    my ( $self, $error ) = @_;
-    return $error->is( 'Cxn', 'Timeout' );
-}
-
-#===================================
-after 'reset_retries' => sub {
-#===================================
-    my $self = shift;
-    @{ $self->_dead_cxns } = ();
-
-};
-
-#===================================
-sub schedule_check { }
-#===================================
-
 1;
 
 =pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -76,7 +42,7 @@ Elasticsearch::CxnPool::Static::NoPing - A CxnPool for connecting to a remote cl
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 SYNOPSIS
 
@@ -91,7 +57,7 @@ version 0.76
 =head1 DESCRIPTION
 
 The L<Static::NoPing|Elasticsearch::CxnPool::Static::NoPing> connection
-pool (like the L<Static|ElasticSearch::CxnPool::Static> pool) should be used
+pool (like the L<Static|Elasticsearch::CxnPool::Static> pool) should be used
 when your access to the cluster is limited.  However, the C<Static> pool needs
 to be able to ping nodes in the cluster, with a C<HEAD /> request.  If you
 can't ping your nodes, then you should use the C<Static::NoPing>
@@ -108,7 +74,8 @@ itself times out (see L<Elasticsearch::Cxn/request_timeout>).
 
 Failed nodes will be retried regularly to check if they have recovered.
 
-This class does L<Elasticsearch::Role::CxnPool>.
+This class does L<Elasticsearch::Role::CxnPool::Static::NoPing> and
+L<Elasticsearch::Role::Is_Sync>.
 
 =head1 CONFIGURATION
 
@@ -154,7 +121,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

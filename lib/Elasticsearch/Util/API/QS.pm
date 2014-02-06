@@ -1,8 +1,5 @@
 package Elasticsearch::Util::API::QS;
-{
-  $Elasticsearch::Util::API::QS::VERSION = '0.76';
-}
-
+$Elasticsearch::Util::API::QS::VERSION = '1.00';
 use strict;
 use warnings;
 
@@ -23,12 +20,14 @@ our %Handler = (
 );
 
 our %Params = (
-    all               => { type => 'bool' },
-    analyze_wildcard  => { type => 'bool' },
-    analyzer          => { type => 'string' },
-    boost_terms       => { type => 'number' },
-    clear             => { type => 'bool' },
-    completion        => { type => 'bool' },
+    all              => { type => 'bool' },
+    allow_no_indices => { type => 'bool' },
+    analyze_wildcard => { type => 'bool' },
+    analyzer         => { type => 'string' },
+    boost_terms      => { type => 'number' },
+    bytes            => { type => 'enum', options => [ 'b', 'k', 'm', 'g' ] },
+    clear            => { type => 'bool' },
+    completion       => { type => 'bool' },
     completion_fields => { type => 'list' },
     consistency       => {
         options => [ 'one', 'quorum', 'all' ],
@@ -39,19 +38,21 @@ our %Params = (
         options => [ 'AND', 'OR' ],
         type    => 'enum'
     },
-    delay                  => { type => 'duration' },
-    df                     => { type => 'string' },
-    docs                   => { type => 'bool' },
-    dry_run                => { type => 'bool' },
-    exit                   => { type => 'bool' },
-    explain                => { type => 'bool' },
-    field                  => { type => 'string' },
-    fielddata              => { type => 'bool' },
-    fielddata_fields       => { type => 'list' },
-    fields                 => { type => 'list' },
-    filter                 => { type => 'bool' },
-    filter_blocks          => { type => 'bool' },
-    filter_cache           => { type => 'bool' },
+    delay            => { type => 'duration' },
+    df               => { type => 'string' },
+    docs             => { type => 'bool' },
+    dry_run          => { type => 'bool' },
+    exit             => { type => 'bool' },
+    expand_wildcards => { type => 'enum', options => [ 'open', 'closed' ] },
+    explain          => { type => 'bool' },
+    field            => { type => 'string' },
+    field_statistics => { type => 'bool' },
+    fielddata        => { type => 'bool' },
+    fielddata_fields => { type => 'list' },
+    fields           => { type => 'list' },
+    filter           => { type => 'bool' },
+    filter_blocks    => { type => 'bool' },
+    filter_cache     => { type => 'bool' },
     filter_index_templates => { type => 'bool' },
     filter_indices         => { type => 'list' },
     filter_keys            => { type => 'bool' },
@@ -59,6 +60,7 @@ our %Params = (
     filter_nodes           => { type => 'bool' },
     filter_routing_table   => { type => 'bool' },
     filters                => { type => 'list' },
+    flat_settings          => { type => 'bool' },
     flush                  => { type => 'bool' },
     force                  => { type => 'bool' },
     format                 => {
@@ -72,27 +74,32 @@ our %Params = (
     get              => { type => 'bool' },
     groups           => { type => 'list' },
     http             => { type => 'bool' },
+    h                => { type => 'list' },
+    help             => { type => 'bool' },
+    human            => { type => 'bool' },
     id               => { type => 'string' },
     id_cache         => { type => 'bool' },
+    ids              => { type => 'list' },
     ignore_conflicts => { type => 'bool' },
     ignore_indices   => {
         default => 'none',
         options => [ 'none', 'missing' ],
         type    => 'enum'
     },
-    ignore           => { type => 'list', },
-    include_defaults => { type => 'bool' },
-    index            => { type => 'list' },
-    indexing         => { type => 'bool' },
-    indices          => { type => 'bool' },
-    indices_boost    => { type => 'list' },
-    interval         => { type => 'duration' },
-    jvm              => { type => 'bool' },
-    lang             => { type => 'string' },
-    lenient          => { type => 'bool' },
-    level            => {
-        default => 'cluster',
-        options => [ 'cluster', 'indices', 'shards' ],
+    ignore             => { type => 'list', },
+    ignore_unavailable => { type => 'bool' },
+    include_defaults   => { type => 'bool' },
+    index              => { type => 'list' },
+    index_templates    => { type => 'list' },
+    indexing           => { type => 'bool' },
+    indices            => { type => 'bool' },
+    indices_boost      => { type => 'list' },
+    interval           => { type => 'duration' },
+    jvm                => { type => 'bool' },
+    lang               => { type => 'string' },
+    lenient            => { type => 'bool' },
+    level              => {
+        options => [ 'cluster', 'node', 'indices', 'shards' ],
         type    => 'enum'
     },
     local                    => { type => 'bool' },
@@ -101,15 +108,18 @@ our %Params = (
     max_doc_freq             => { type => 'number' },
     max_num_segments         => { type => 'number' },
     max_query_terms          => { type => 'number' },
-    max_word_len             => { type => 'number' },
+    max_word_len             => { type => 'number' },     # depr 0.90
+    max_word_length          => { type => 'number' },
     merge                    => { type => 'bool' },
     min_doc_freq             => { type => 'number' },
     min_score                => { type => 'number' },
     min_term_freq            => { type => 'number' },
-    min_word_len             => { type => 'number' },
+    min_word_len             => { type => 'number' },     # depr 0.90
+    min_word_length          => { type => 'number' },
     mlt_fields               => { type => 'list' },
     name                     => { type => 'list' },
     network                  => { type => 'bool' },
+    offsets                  => { type => 'bool' },
     only_expunge_deletes     => { type => 'bool' },
     op_type                  => {
         default => 'index',
@@ -119,11 +129,16 @@ our %Params = (
     order                  => { type => 'number' },
     os                     => { type => 'bool' },
     parent                 => { type => 'string' },
+    payloads               => { type => 'bool' },
     percent_terms_to_match => { type => 'number' },
     percolate              => { type => 'string' },
+    percolate_index        => { type => 'string' },
+    percolate_type         => { type => 'string' },
     plugin                 => { type => 'bool' },
+    positions              => { type => 'bool' },
     prefer_local           => { type => 'bool' },
     preference             => { type => 'string' },
+    pri                    => { type => 'bool' },
     process                => { type => 'bool' },
     q                      => { type => 'string' },
     realtime               => { type => 'bool' },
@@ -174,23 +189,28 @@ our %Params = (
         options => [ 'missing', 'popular', 'always' ],
         type    => 'enum'
     },
-    suggest_size => { type => 'number' },
-    suggest_text => { type => 'string' },
-    text         => { type => 'string' },
-    thread_pool  => { type => 'bool' },
-    threads      => { type => 'number' },
-    timeout      => { type => 'duration' },
-    timestamp    => { type => 'datetime' },
-    tokenizer    => { type => 'string' },
-    transport    => { type => 'bool' },
-    ttl          => { type => 'duration' },
-    type         => { type => 'string' },
-    version      => { type => 'number' },
-    version_type => {
+    suggest_size    => { type => 'number' },
+    suggest_text    => { type => 'string' },
+    term_statistics => { type => 'bool' },
+    text            => { type => 'string' },
+    thread_pool     => { type => 'bool' },
+    threads         => { type => 'number' },
+    timeout         => { type => 'duration' },
+    timestamp       => { type => 'datetime' },
+    tokenizer       => { type => 'string' },
+    transport       => { type => 'bool' },
+    ts              => { type => 'bool' },
+    ttl             => { type => 'duration' },
+    type            => { type => 'string' },
+    types           => { type => 'list' },
+    v               => { type => 'bool' },
+    version         => { type => 'number' },
+    version_type    => {
         type    => 'enum',
         options => [ 'internal', 'external' ]
     },
     wait_for_active_shards     => { type => 'number' },
+    wait_for_completion        => { type => 'bool' },
     wait_for_merge             => { type => 'bool' },
     wait_for_nodes             => { type => 'string' },
     wait_for_relocating_shards => { type => 'number' },
@@ -220,13 +240,15 @@ sub qs_init {
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Util::API::QS - A utility class for query string parameters in the API
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -262,7 +284,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

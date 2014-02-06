@@ -1,8 +1,5 @@
 package Elasticsearch::Util;
-{
-  $Elasticsearch::Util::VERSION = '0.76';
-}
-
+$Elasticsearch::Util::VERSION = '1.00';
 use Moo;
 use Elasticsearch::Error();
 use Scalar::Util qw(blessed);
@@ -12,8 +9,10 @@ use Sub::Exporter -setup => {
             parse_params
             to_list
             load_plugin
+            new_error
             throw
             upgrade_error
+            is_compat
             )
     ]
 };
@@ -47,7 +46,6 @@ sub parse_params {
 sub load_plugin {
 #===================================
     my ( $base, $spec ) = @_;
-    $base = 'Elasticsearch::' . $base;
     $spec ||= "+$base";
     return $spec if blessed $spec;
 
@@ -74,12 +72,33 @@ sub throw {
 }
 
 #===================================
+sub new_error {
+#===================================
+    my ( $type, $msg, $vars ) = @_;
+    return Elasticsearch::Error->new( $type, $msg, $vars, 1 );
+}
+
+#===================================
 sub upgrade_error {
 #===================================
     my ( $error, $vars ) = @_;
     return ref($error) && $error->isa('Elasticsearch::Error')
         ? $error
         : Elasticsearch::Error->new( "Internal", $error, $vars || {}, 1 );
+}
+
+#===================================
+sub is_compat {
+#===================================
+    my ( $attr, $one, $two ) = @_;
+    my $role
+        = $one->does('Elasticsearch::Role::Is_Sync')
+        ? 'Elasticsearch::Role::Is_Sync'
+        : 'Elasticsearch::Role::Is_Async';
+
+    return if eval { $two->does($role); };
+    my $class = ref($two) || $two;
+    die "$attr ($class) does not do $role";
 }
 
 1;
@@ -90,13 +109,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Util - A utility class for internal use by Elasticsearch
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 AUTHOR
 
@@ -104,7 +125,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

@@ -5,15 +5,15 @@ use Moo 1.003;
 use Elasticsearch::Util qw(parse_params load_plugin);
 use namespace::clean;
 
-our $VERSION = '0.76';
+our $VERSION = '1.00';
 
 my %Default_Plugins = (
-    client      => [ 'Client',       'Direct' ],
-    cxn_factory => [ 'Cxn::Factory', '' ],
-    cxn_pool    => [ 'CxnPool',      'Static' ],
-    logger      => [ 'Logger',       'LogAny' ],
-    serializer  => [ 'Serializer',   'JSON' ],
-    transport   => [ 'Transport',    '' ],
+    client      => [ 'Elasticsearch::Client',       'Direct' ],
+    cxn_factory => [ 'Elasticsearch::Cxn::Factory', '' ],
+    cxn_pool    => [ 'Elasticsearch::CxnPool',      'Static' ],
+    logger      => [ 'Elasticsearch::Logger',       'LogAny' ],
+    serializer  => [ 'Elasticsearch::Serializer',   'JSON' ],
+    transport   => [ 'Elasticsearch::Transport',    '' ],
 );
 
 my @Load_Order = qw(
@@ -67,23 +67,25 @@ DEPRECATION
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch - The official client for Elasticsearch
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 SYNOPSIS
 
     use Elasticsearch;
 
-Connect to C<localhost:9200>:
+    # Connect to localhost:9200:
 
     my $e = Elasticsearch->new();
 
-Round-robin between two nodes:
+    # Round-robin between two nodes:
 
     my $e = Elasticsearch->new(
         nodes => [
@@ -92,15 +94,14 @@ Round-robin between two nodes:
         ]
     );
 
-Connect to cluster at C<search1:9200>, sniff all nodes and
-round-robin between them:
+    # Connect to cluster at search1:9200, sniff all nodes and round-robin between them:
 
     my $e = Elasticsearch->new(
         nodes    => 'search1:9200',
         cxn_pool => 'Sniff'
     );
 
-Index a document:
+    # Index a document:
 
     $e->index(
         index   => 'my_app',
@@ -113,7 +114,7 @@ Index a document:
         }
     );
 
-Get the document:
+    # Get the document:
 
     my $doc = $e->get(
         index   => 'my_app',
@@ -121,7 +122,7 @@ Get the document:
         id      => 1
     );
 
-Search:
+    # Search:
 
     my $results = $e->search(
         index => 'my_app',
@@ -132,13 +133,13 @@ Search:
         }
     );
 
-Cluster requests:
+    # Cluster requests:
 
     $info        = $e->cluster->info;
     $health      = $e->cluster->health;
     $node_stats  = $e->cluster->node_stats
 
-Index requests:
+    # Index requests:
 
     $e->indices->create(index=>'my_index');
     $e->indices->delete(index=>'my_index');
@@ -150,6 +151,18 @@ by L<elasticsearch.com|http://www.elasticsearch.com>.  Elasticsearch
 itself is a flexible and powerful open source, distributed real-time
 search and analytics engine for the cloud.  You can read more about it
 on L<elasticsearch.org|http://www.elasticsearch.org>.
+
+=head1 BACKWARDS COMPATIBILITY AND ELASTICSEARCH 0.90.x
+
+This version of the client supports the Elasticsearch 1.0 branch by
+default, which is not backwards compatible with the 0.90 branch.
+
+If you need to talk to a version of Elasticsearch before 1.0.0,
+please use L<Elasticsearch::Client::0_90::Direct> as follows:
+
+    $es = Elasticsearch->new(
+        client => '0_90::Direct'
+    );
 
 =head2 Motivation
 
@@ -404,7 +417,9 @@ See :
 
 =over
 
-=item * L<Elasticsearch::Client::Direct> (default)
+=item * L<Elasticsearch::Client::Direct> (default, for 1.0 branch)
+
+= item * L<Elasticsearch::Client::0_90::Direct> (for 0.90 branch)
 
 =item * L<Elasticsearch::Client::Compat> (for migration from the old
 L<ElasticSearch> module)
@@ -492,7 +507,7 @@ bodies.  See:
 See L<Elasticsearch::Compat>, which allows you to run your old
 L<ElasticSearch> code with the new L<Elasticsearch> module.
 
-The L<Elasticseach> API is pretty similar to the old L<ElasticSearch> API,
+The L<Elasticsearch> API is pretty similar to the old L<ElasticSearch> API,
 but there are a few differences.  The most notable are:
 
 =head2 C<hosts> vs C<servers>
@@ -652,7 +667,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

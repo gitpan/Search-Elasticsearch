@@ -1,14 +1,19 @@
 package Elasticsearch::Cxn::LWP;
-{
-  $Elasticsearch::Cxn::LWP::VERSION = '0.76';
-}
-
+$Elasticsearch::Cxn::LWP::VERSION = '1.00';
 use Moo;
-with 'Elasticsearch::Role::Cxn::HTTP';
+with 'Elasticsearch::Role::Cxn::HTTP',
+    'Elasticsearch::Role::Cxn',
+    'Elasticsearch::Role::Is_Sync';
 
 use LWP::UserAgent();
 use HTTP::Headers();
 use HTTP::Request();
+
+my $Cxn_Error = qr/
+            Can't.connect
+          | Server.closed.connection
+          | Connection.refused
+            /x;
 
 use namespace::clean;
 
@@ -36,11 +41,11 @@ sub perform_request {
     my $response = $ua->request($request);
 
     return $self->process_response(
-        $params,                                 # request
-        $response->code,                         # code
-        $response->message,                      # msg
-        $response->content,                      # body
-        $response->header('content-encoding')    # encoding,
+        $params,               # request
+        $response->code,       # code
+        $response->message,    # msg
+        $response->content,    # body
+        $response->headers     # headers
     );
 }
 
@@ -52,7 +57,7 @@ sub error_from_text {
     return
           /read timeout/                           ? 'Timeout'
         : /write failed: Connection reset by peer/ ? 'ContentLength'
-        : /Can't connect|Server closed connection/ ? 'Cxn'
+        : /$Cxn_Error/                             ? 'Cxn'
         :                                            'Request';
 }
 
@@ -78,13 +83,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Cxn::LWP - A Cxn implementation which uses LWP
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -92,7 +99,8 @@ Provides the default HTTP Cxn class and is based on L<LWP>.
 The LWP backend uses pure Perl and persistent connections.
 
 This class does L<Elasticsearch::Role::Cxn::HTTP>, whose documentation
-provides more information.
+provides more information, L<Elasticsearch::Role::Cxn> and
+L<Elasticsearch::Role::Is_Sync>.
 
 =head1 SEE ALSO
 
@@ -112,7 +120,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

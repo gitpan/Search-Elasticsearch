@@ -1,8 +1,5 @@
 package Elasticsearch::Role::Cxn;
-{
-  $Elasticsearch::Role::Cxn::VERSION = '0.76';
-}
-
+$Elasticsearch::Role::Cxn::VERSION = '1.00';
 use Moo::Role;
 use Elasticsearch::Util qw(throw);
 use List::Util qw(min);
@@ -33,7 +30,6 @@ my %Code_To_Error = (
     403 => 'ClusterBlocked',
     404 => 'Missing',
     409 => 'Conflict',
-    500 => 'Request',
     503 => 'Unavailable'
 );
 
@@ -124,12 +120,16 @@ sub sniff {
 #===================================
 sub process_response {
 #===================================
-    my ( $self, $params, $code, $msg, $body ) = @_;
-    $code ||= 500;
+    my ( $self, $params, $code, $msg, $body, $mime_type ) = @_;
+
+    my $is_encoded = $mime_type && $mime_type ne 'text/plain';
 
     if ( $code >= 200 and $code <= 209 ) {
-        return ( $code, $self->serializer->decode($body) )
-            if defined $body and length $body;
+        if ( defined $body and length $body ) {
+            $body = $self->serializer->decode($body)
+                if $is_encoded;
+            return $code, $body;
+        }
         return ( $code, 1 ) if $params->{method} eq 'HEAD';
         return ( $code, '' );
     }
@@ -177,13 +177,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Role::Cxn - Provides common functionality to Cxn implementations
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -401,7 +403,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

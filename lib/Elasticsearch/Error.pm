@@ -1,8 +1,5 @@
 package Elasticsearch::Error;
-{
-  $Elasticsearch::Error::VERSION = '0.76';
-}
-
+$Elasticsearch::Error::VERSION = '1.00';
 use Moo;
 
 our $DEBUG = 0;
@@ -153,13 +150,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Error - Errors thrown by Elasticsearch
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -258,7 +257,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

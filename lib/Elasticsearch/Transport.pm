@@ -1,20 +1,14 @@
 package Elasticsearch::Transport;
-{
-  $Elasticsearch::Transport::VERSION = '0.76';
-}
-
+$Elasticsearch::Transport::VERSION = '1.00';
 use Moo;
 
 use URI();
 use Time::HiRes qw(time);
 use Try::Tiny;
-use Elasticsearch::Util qw(parse_params upgrade_error);
+use Elasticsearch::Util qw(upgrade_error);
 use namespace::clean;
 
-has 'serializer'       => ( is => 'ro', required => 1 );
-has 'logger'           => ( is => 'ro', required => 1 );
-has 'cxn_pool'         => ( is => 'ro', required => 1 );
-has 'send_get_body_as' => ( is => 'ro', default  => 'GET' );
+with 'Elasticsearch::Role::Is_Sync', 'Elasticsearch::Role::Transport';
 
 #===================================
 sub perform_request {
@@ -62,56 +56,32 @@ sub perform_request {
     return $response;
 }
 
-#===================================
-sub tidy_request {
-#===================================
-    my ( $self, $params ) = parse_params(@_);
-    $params->{method} ||= 'GET';
-    $params->{path}   ||= '/';
-    $params->{qs}     ||= {};
-    $params->{ignore} ||= [];
-    my $body = $params->{body};
-    return $params unless defined $body;
-
-    $params->{serialize} ||= 'std';
-    $params->{data}
-        = $params->{serialize} eq 'std'
-        ? $self->serializer->encode($body)
-        : $self->serializer->encode_bulk($body);
-
-    if ( $params->{method} eq 'GET' ) {
-        my $send_as = $self->send_get_body_as;
-        if ( $send_as eq 'POST' ) {
-            $params->{method} = 'POST';
-        }
-        elsif ( $send_as eq 'source' ) {
-            $params->{qs}{source} = delete $params->{data};
-            delete $params->{body};
-        }
-    }
-
-    $params->{mime_type} ||= $self->serializer->mime_type;
-    return $params;
-
-}
-
 1;
+
+#ABSTRACT: Provides interface between the client class and the Elasticsearch cluster
+
+__END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
-Elasticsearch::Transport - Interface between the client class the Elasticsearch cluster
+Elasticsearch::Transport - Provides interface between the client class and the Elasticsearch cluster
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
 The Transport class manages the request cycle. It receives parsed requests
 from the (user-facing) client class, and tries to execute the request on a
 node in the cluster, retrying a request if necessary.
+
+This class does L<Elasticsearch::Role::Transport> and
+L<Elasticsearch::Role::Is_Sync>.
 
 =head1 CONFIGURATION
 
@@ -194,15 +164,10 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 
   The Apache License, Version 2.0, January 2004
 
 =cut
-
-__END__
-
-#ABSTRACT: Interface between the client class the Elasticsearch cluster
-

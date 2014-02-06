@@ -1,10 +1,8 @@
 package Elasticsearch::Role::Client::Direct;
-{
-  $Elasticsearch::Role::Client::Direct::VERSION = '0.76';
-}
-
+$Elasticsearch::Role::Client::Direct::VERSION = '1.00';
 use Moo::Role;
 with 'Elasticsearch::Role::Client';
+use Elasticsearch::Util::API::Path qw(path_handler);
 use Try::Tiny;
 use namespace::clean;
 
@@ -21,9 +19,9 @@ sub parse_request {
             ignore    => delete $params->{ignore} || [],
             method    => $defn->{method}          || 'GET',
             serialize => $defn->{serialize}       || 'std',
-            path => $self->_parse_path( $defn->{path_handler}, $params ),
-            body => $self->_parse_body( $defn->{body},         $params ),
-            qs   => $self->_parse_qs( $defn->{qs_handlers},    $params ),
+            path => $self->_parse_path( $defn,              $params ),
+            body => $self->_parse_body( $defn->{body},      $params ),
+            qs   => $self->_parse_qs( $defn->{qs_handlers}, $params ),
         };
     }
     catch {
@@ -41,11 +39,10 @@ sub parse_request {
 #===================================
 sub _parse_path {
 #===================================
-    my ( $self, $handler, $params ) = @_;
-    die "No (path_handler) defined\n" unless $handler;
+    my ( $self, $defn, $params ) = @_;
     return delete $params->{path}
         if $params->{path};
-    $handler->($params);
+    path_handler( $defn, $params );
 }
 
 #===================================
@@ -114,13 +111,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Role::Client::Direct - Request parsing for Direct clients
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -171,7 +170,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

@@ -1,13 +1,9 @@
 package Elasticsearch::Role::API;
-{
-  $Elasticsearch::Role::API::VERSION = '0.76';
-}
-
+$Elasticsearch::Role::API::VERSION = '1.00';
 use Moo::Role;
 
 use Elasticsearch::Util qw(throw);
 use Elasticsearch::Util::API::QS qw(qs_init);
-use Elasticsearch::Util::API::Path qw(path_init);
 use namespace::clean;
 
 our %API;
@@ -23,621 +19,1294 @@ sub api {
 #===================================
 %API = (
 #===================================
+
+#=== AUTOGEN - START ===
+
     'bulk' => {
-        body => {
-            desc => 'The operation definition and data (action-data pairs), '
-                . 'separated by newlines'
-        },
-        doc       => 'docs-bulk',
-        method    => 'POST',
-        path      => '{index-when-type}/{type|blank}/_bulk',
-        serialize => 'bulk',
-        qs => [ 'consistency', 'refresh', 'replication', 'timeout', 'type' ],
+        body            => { required => 1 },
+        doc             => "docs-bulk",
+        index_when_type => 1,
+        method          => "POST",
+        parts => { index => {}, type => {} },
+        paths => [
+            [ { index => 0, type => 1 }, "{index}", "{type}", "_bulk" ],
+            [ { index => 0 }, "{index}", "_bulk" ],
+            [ {}, "_bulk" ],
+        ],
+        qs =>
+            [ "consistency", "refresh", "replication", "routing", "timeout" ],
+        serialize => "bulk",
     },
 
     'clear_scroll' => {
-        method => 'DELETE',
-        doc    => 'search-request-search-type',
-        path   => '_search/scroll/{scroll_ids}'
+        doc    => "search-request-scroll",
+        method => "DELETE",
+        parts  => { scroll_id => { multi => 1, required => 1 } },
+        paths =>
+            [ [ { scroll_id => 2 }, "_search", "scroll", "{scroll_id}" ] ],
+        qs => [],
     },
 
     'count' => {
-        body => { desc => 'A query to restrict the results (optional)' },
-        doc  => 'search-count',
-        path => '{indices|all-type}/{types}/_count',
-        qs   => [
-            'ignore_indices', 'min_score', 'preference', 'routing',
-            'source'
+        body   => {},
+        doc    => "search-count",
+        method => "POST",
+        parts  => { index => { multi => 1 }, type => { multi => 1 } },
+        paths  => [
+            [ { index => 0, type => 1 }, "{index}", "{type}", "_count" ],
+            [ { type => 1 }, "_all", "{type}", "_count" ],
+            [ { index => 0 }, "{index}", "_count" ],
+            [ {}, "_count" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "min_score",
+            "preference",         "routing",
+            "source",
+        ],
+    },
+
+    'count_percolate' => {
+        body  => {},
+        doc   => "search-percolate",
+        parts => {
+            id    => {},
+            index => { required => 1 },
+            type  => { required => 1 }
+        },
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}",     "{id}",
+                "_percolate", "count",
+            ],
+            [   { index => 0, type => 1 }, "{index}",
+                "{type}", "_percolate",
+                "count",
+            ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "percolate_index",
+            "percolate_type",     "preference",
+            "routing",            "version",
+            "version_type",
         ],
     },
 
     'delete' => {
-        doc    => 'docs-delete',
-        method => 'DELETE',
-        path   => '{index}/{type}/{id}',
-        qs     => [
-            'consistency', 'parent',  'replication', 'refresh',
-            'routing',     'timeout', 'version',     'version_type'
+        doc    => "docs-delete",
+        method => "DELETE",
+        parts  => {
+            id    => { required => 1 },
+            index => { required => 1 },
+            type  => { required => 1 },
+        },
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}", "{id}"
+            ],
+        ],
+        qs => [
+            "consistency", "parent",  "refresh", "replication",
+            "routing",     "timeout", "version", "version_type",
         ],
     },
 
     'delete_by_query' => {
-        body =>
-            { desc => 'A query to restrict the operation', required => 1 },
-        doc    => 'docs-delete-by-query',
-        method => 'DELETE',
-        path   => '{indices|all-type}/{types}/_query',
-        qs     => [
-            'analyzer',         'consistency',
-            'default_operator', 'df',
-            'ignore_indices',   'q',
-            'replication',      'routing',
-            'source',           'timeout'
+        body   => {},
+        doc    => "docs-delete-by-query",
+        method => "DELETE",
+        parts  => {
+            index => { multi => 1, required => 1 },
+            type  => { multi => 1 }
+        },
+        paths => [
+            [ { index => 0, type => 1 }, "{index}", "{type}", "_query" ],
+            [ { index => 0 }, "{index}", "_query" ],
+        ],
+        qs => [
+            "allow_no_indices",   "analyzer",
+            "consistency",        "default_operator",
+            "df",                 "expand_wildcards",
+            "ignore_unavailable", "q",
+            "replication",        "routing",
+            "source",             "timeout",
         ],
     },
 
     'exists' => {
-        doc    => 'docs-get',
-        method => 'HEAD',
-        path   => '{index}/{type|all}/{id}',
-        qs => [ 'parent', 'preference', 'realtime', 'refresh', 'routing' ],
+        doc    => "docs-get",
+        method => "HEAD",
+        parts  => {
+            id    => { required => 1 },
+            index => { required => 1 },
+            type  => { required => 1 },
+        },
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}", "{id}"
+            ],
+        ],
+        qs => [ "parent", "preference", "realtime", "refresh", "routing" ],
     },
 
     'explain' => {
-        body => {
-            desc     => 'The query definition using the Query DSL',
-            required => 1
+        body  => {},
+        doc   => "search-explain",
+        parts => {
+            id    => { required => 1 },
+            index => { required => 1 },
+            type  => { required => 1 },
         },
-        doc  => 'search-explain',
-        path => '{index}/{type}/{id}/_explain',
-        qs   => [
-            'analyze_wildcard',         'analyzer',
-            'default_operator',         'df',
-            'fields',                   'lenient',
-            'lowercase_expanded_terms', 'parent',
-            'preference',               'q',
-            'routing',                  'source',
-            '_source',                  '_source_include',
-            '_source_exclude'
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}", "{id}",
+                "_explain",
+            ],
+        ],
+        qs => [
+            "_source",         "_source_exclude",
+            "_source_include", "analyze_wildcard",
+            "analyzer",        "default_operator",
+            "df",              "fields",
+            "lenient",         "lowercase_expanded_terms",
+            "parent",          "preference",
+            "q",               "routing",
+            "source",
         ],
     },
 
     'get' => {
-        doc  => 'docs-get',
-        path => '{index}/{type|all}/{id}',
-        qs   => [
-            'fields',     'parent',
-            'preference', 'realtime',
-            'refresh',    'routing',
-            '_source',    '_source_include',
-            '_source_exclude'
+        doc   => "docs-get",
+        parts => {
+            id    => { required => 1 },
+            index => { required => 1 },
+            type  => { required => 1 },
+        },
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}", "{id}"
+            ],
+        ],
+        qs => [
+            "_source",         "_source_exclude",
+            "_source_include", "fields",
+            "parent",          "preference",
+            "realtime",        "refresh",
+            "routing",         "version",
+            "version_type",
         ],
     },
 
     'get_source' => {
-        doc  => 'docs-get',
-        path => '{index}/{type|all}/{id}/_source',
-        qs   => [
-            'parent',   'preference',
-            'realtime', 'refresh',
-            'routing',  '_source_include',
-            '_source_exclude'
+        doc   => "docs-get",
+        parts => {
+            id    => { required => 1 },
+            index => { required => 1 },
+            type  => { required => 1 },
+        },
+        paths => [
+            [   { id => 2, index => 0, type => 1 },
+                "{index}", "{type}", "{id}", "_source",
+            ],
+        ],
+        qs => [
+            "_source",         "_source_exclude",
+            "_source_include", "parent",
+            "preference",      "realtime",
+            "refresh",         "routing",
+            "version",         "version_type",
         ],
     },
 
     'index' => {
-        body => {
-            desc     => 'The document',
-            required => 1
+        body   => { required => 1 },
+        doc    => "docs-index_",
+        method => "POST",
+        parts  => {
+            id    => {},
+            index => { required => 1 },
+            type  => { required => 1 }
         },
-        doc    => 'docs-index_',
-        method => 'PUT',
-        path   => '{index}/{type}/{id|blank}',
-        qs     => [
-            'consistency', 'op_type',     'parent',  'percolate',
-            'refresh',     'replication', 'routing', 'timeout',
-            'timestamp',   'ttl',         'version', 'version_type'
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}", "{id}"
+            ],
+            [ { index => 0, type => 1 }, "{index}", "{type}" ],
+        ],
+        qs => [
+            "consistency", "op_type", "parent",  "refresh",
+            "replication", "routing", "timeout", "timestamp",
+            "ttl",         "version", "version_type",
         ],
     },
 
-    'info' => {
-        doc  => 'index',
-        path => '',
-    },
+    'info' => { doc => "", parts => {}, paths => [ [ {} ] ], qs => [] },
 
     'mget' => {
-        body => {
-            required => 1,
-            desc     => 'Document identifiers; can be either'
-                . ' `docs` (containing full document information) or '
-                . '`ids` (when index and type is provided in the URL.'
-        },
-        doc  => 'docs-multi-get',
-        path => '{index-when-type}/{type|blank}/_mget',
-        qs   => [
-            'fields',   'preference',
-            'realtime', 'refresh',
-            '_source',  '_source_include',
-            '_source_exclude'
+        body            => { required => 1 },
+        doc             => "docs-multi-get",
+        index_when_type => 1,
+        parts => { index => {}, type => {} },
+        paths => [
+            [ { index => 0, type => 1 }, "{index}", "{type}", "_mget" ],
+            [ { index => 0 }, "{index}", "_mget" ],
+            [ {}, "_mget" ],
+        ],
+        qs => [
+            "_source",         "_source_exclude",
+            "_source_include", "fields",
+            "preference",      "realtime",
+            "refresh",
         ],
     },
 
     'mlt' => {
-        body => { desc => 'A specific search request definition' },
-        doc  => 'search-more-like-this',
-        path => '{index}/{type|all}/{id}/_mlt',
-        qs   => [
-            'boost_terms',            'max_doc_freq',
-            'max_query_terms',        'max_word_len',
-            'min_doc_freq',           'min_term_freq',
-            'min_word_len',           'mlt_fields',
-            'percent_terms_to_match', 'routing',
-            'search_from',            'search_indices',
-            'search_query_hint',      'search_scroll',
-            'search_size',            'search_source',
-            'search_type',            'search_types',
-            'stop_words'
+        body  => {},
+        doc   => "search-more-like-this",
+        parts => {
+            id    => { required => 1 },
+            index => { required => 1 },
+            type  => { required => 1 },
+        },
+        paths => [
+            [   { id => 2, index => 0, type => 1 },
+                "{index}", "{type}", "{id}", "_mlt",
+            ],
+        ],
+        qs => [
+            "boost_terms",            "max_doc_freq",
+            "max_query_terms",        "max_word_length",
+            "min_doc_freq",           "min_term_freq",
+            "min_word_length",        "mlt_fields",
+            "percent_terms_to_match", "routing",
+            "search_from",            "search_indices",
+            "search_query_hint",      "search_scroll",
+            "search_size",            "search_source",
+            "search_type",            "search_types",
+            "stop_words",
         ],
     },
 
+    'mpercolate' => {
+        body            => { required => 1 },
+        doc             => "search-percolate",
+        index_when_type => 1,
+        parts => { index => {}, type => {} },
+        paths => [
+            [ { index => 0, type => 1 }, "{index}", "{type}", "_mpercolate" ],
+            [ { index => 0 }, "{index}", "_mpercolate" ],
+            [ {}, "_mpercolate" ],
+        ],
+        qs =>
+            [ "allow_no_indices", "expand_wildcards", "ignore_unavailable" ],
+        serialize => "bulk",
+    },
+
     'msearch' => {
-        body => {
-            required => 1,
-            desc     => 'The request definitions (metadata-search '
-                . 'request definition pairs), separated by newlines'
-        },
-        doc       => 'search-multi-search',
-        path      => '{indices|all-type}/{types}/_msearch',
-        serialize => 'bulk',
-        qs        => ['search_type'],
+        body => { required => 1 },
+        doc  => "search-multi-search",
+        parts => { index => { multi => 1 }, type => { multi => 1 } },
+        paths => [
+            [ { index => 0, type => 1 }, "{index}", "{type}", "_msearch" ],
+            [ { type => 1 }, "_all", "{type}", "_msearch" ],
+            [ { index => 0 }, "{index}", "_msearch" ],
+            [ {}, "_msearch" ],
+        ],
+        qs        => ["search_type"],
+        serialize => "bulk",
+    },
+
+    'mtermvectors' => {
+        body            => {},
+        doc             => "docs-multi-termvectors",
+        index_when_type => 1,
+        parts           => { id => {}, index => {}, type => {} },
+        paths           => [
+            [   { index => 0, type => 1 }, "{index}",
+                "{type}", "_mtermvectors"
+            ],
+            [ { index => 0 }, "{index}", "_mtermvectors" ],
+            [ {}, "_mtermvectors" ],
+        ],
+        qs => [
+            "field_statistics", "fields",
+            "ids",              "offsets",
+            "parent",           "payloads",
+            "positions",        "preference",
+            "routing",          "term_statistics",
+        ],
     },
 
     'percolate' => {
-        body => {
-            required => 1,
-            desc     => 'The document (`doc`) to percolate against '
-                . 'registered queries; optionally also a '
-                . '`query` to limit the percolation to '
-                . 'specific registered queries'
+        body  => {},
+        doc   => "search-percolate",
+        parts => {
+            id    => {},
+            index => { required => 1 },
+            type  => { required => 1 }
         },
-        doc  => 'search-percolate',
-        path => '{index}/{type}/_percolate',
-        qs   => ['prefer_local'],
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}", "{id}",
+                "_percolate",
+            ],
+            [ { index => 0, type => 1 }, "{index}", "{type}", "_percolate" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "percolate_index",
+            "percolate_type",     "preference",
+            "routing",            "version",
+            "version_type",
+        ],
     },
 
     'ping' => {
-        doc    => 'index',
-        method => 'HEAD',
-        path   => '',
+        doc    => "",
+        method => "HEAD",
+        parts  => {},
+        paths  => [ [ {} ] ],
+        qs     => []
     },
 
     'scroll' => {
-        body => {
-            desc => 'The scroll ID if not passed by URL or query parameter.'
-        },
-        doc  => 'search-request-scroll',
-        path => '_search/scroll',
-        qs   => [ 'scroll', 'scroll_id' ],
+        body  => {},
+        doc   => "search-request-scroll",
+        parts => { scroll_id => {} },
+        paths => [
+            [ { scroll_id => 2 }, "_search", "scroll", "{scroll_id}" ],
+            [ {}, "_search", "scroll" ],
+        ],
+        qs => ["scroll"],
     },
 
     'search' => {
-        body => { desc => 'The search definition using the Query DSL' },
-        doc  => 'search-search',
-        path => '{indices|all-type}/{types}/_search',
-        qs   => [
-            'analyze_wildcard', 'analyzer',
-            'default_operator', 'df',
-            'explain',          'fields',
-            'from',             'ignore_indices',
-            'lenient',          'lowercase_expanded_terms',
-            'preference',       'q',
-            'routing',          'scroll',
-            'search_type',      'size',
-            'sort',             'source',
-            '_source',          '_source_include',
-            '_source_exclude',  'stats',
-            'suggest_field',    'suggest_mode',
-            'suggest_size',     'suggest_text',
-            'timeout',          'version'
+        body  => {},
+        doc   => "search-search",
+        parts => { index => { multi => 1 }, type => { multi => 1 } },
+        paths => [
+            [ { index => 0, type => 1 }, "{index}", "{type}", "_search" ],
+            [ { type => 1 }, "_all", "{type}", "_search" ],
+            [ { index => 0 }, "{index}", "_search" ],
+            [ {}, "_search" ],
+        ],
+        qs => [
+            "_source",            "_source_exclude",
+            "_source_include",    "allow_no_indices",
+            "analyze_wildcard",   "analyzer",
+            "default_operator",   "df",
+            "expand_wildcards",   "explain",
+            "fields",             "from",
+            "ignore_unavailable", "indices_boost",
+            "lenient",            "lowercase_expanded_terms",
+            "preference",         "q",
+            "routing",            "scroll",
+            "search_type",        "size",
+            "sort",               "source",
+            "stats",              "suggest_field",
+            "suggest_mode",       "suggest_size",
+            "suggest_text",       "timeout",
+            "version",
         ],
     },
 
     'suggest' => {
-        body => { desc => 'The request definition' },
-        doc  => 'search-suggesters',
-        path => '{indices|all-type}/{types}/_suggest',
-        qs   => [ 'ignore_indices', 'preference', 'routing', 'source' ],
+        body   => { required => 1 },
+        doc    => "search-search",
+        method => "POST",
+        parts => { index => { multi => 1 } },
+        paths =>
+            [ [ { index => 0 }, "{index}", "_suggest" ], [ {}, "_suggest" ] ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "preference",
+            "routing",            "source",
+        ],
+    },
+
+    'termvector' => {
+        body  => {},
+        doc   => "docs-termvectors",
+        parts => {
+            id    => { required => 1 },
+            index => { required => 1 },
+            type  => { required => 1 },
+        },
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}", "{id}",
+                "_termvector",
+            ],
+        ],
+        qs => [
+            "field_statistics", "fields",
+            "offsets",          "parent",
+            "payloads",         "positions",
+            "preference",       "routing",
+            "term_statistics",
+        ],
     },
 
     'update' => {
-        body => {
-            desc => 'The request definition using either '
-                . '`script` or partial `doc`'
+        body   => {},
+        doc    => "docs-update",
+        method => "POST",
+        parts  => {
+            id    => { required => 1 },
+            index => { required => 1 },
+            type  => { required => 1 },
         },
-        doc    => 'docs-update',
-        method => 'POST',
-        path   => '{index}/{type}/{id}/_update',
-        qs     => [
-            'consistency',       'fields',
-            'lang',              'parent',
-            'percolate',         'realtime',
-            'refresh',           'replication',
-            'retry_on_conflict', 'routing',
-            'script',            'timeout',
-            'timestamp',         'ttl',
-            'version',           'version_type'
+        paths => [
+            [   { id => 2, index => 0, type => 1 },
+                "{index}", "{type}", "{id}", "_update",
+            ],
         ],
+        qs => [
+            "consistency",       "fields",
+            "lang",              "parent",
+            "refresh",           "replication",
+            "retry_on_conflict", "routing",
+            "script",            "timeout",
+            "timestamp",         "ttl",
+            "version",           "version_type",
+        ],
+    },
+
+    'cat.aliases' => {
+        doc   => "cat-aliases",
+        parts => { name => { multi => 1 } },
+        paths => [
+            [ { name => 2 }, "_cat", "aliases", "{name}" ],
+            [ {}, "_cat", "aliases" ],
+        ],
+        qs => [ "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.allocation' => {
+        doc   => "cat-allocation",
+        parts => { node_id => { multi => 1 } },
+        paths => [
+            [ { node_id => 2 }, "_cat", "allocation", "{node_id}" ],
+            [ {}, "_cat", "allocation" ],
+        ],
+        qs => [ "bytes", "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.count' => {
+        doc   => "cat-count",
+        parts => { index => { multi => 1 } },
+        paths => [
+            [ { index => 2 }, "_cat", "count", "{index}" ],
+            [ {}, "_cat", "count" ],
+        ],
+        qs => [ "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.health' => {
+        doc   => "cat-health",
+        parts => {},
+        paths => [ [ {}, "_cat", "health" ] ],
+        qs    => [ "h", "help", "local", "master_timeout", "ts", "v" ],
+    },
+
+    'cat.help' => {
+        doc   => "cat",
+        parts => {},
+        paths => [ [ {}, "_cat" ] ],
+        qs    => ["help"]
+    },
+
+    'cat.indices' => {
+        doc   => "cat-indices",
+        parts => { index => { multi => 1 } },
+        paths => [
+            [ { index => 2 }, "_cat", "indices", "{index}" ],
+            [ {}, "_cat", "indices" ],
+        ],
+        qs => [ "bytes", "h", "help", "local", "master_timeout", "pri", "v" ],
+    },
+
+    'cat.master' => {
+        doc   => "cat-master",
+        parts => {},
+        paths => [ [ {}, "_cat", "master" ] ],
+        qs    => [ "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.nodes' => {
+        doc   => "cat-nodes",
+        parts => {},
+        paths => [ [ {}, "_cat", "nodes" ] ],
+        qs    => [ "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.pending_tasks' => {
+        doc   => "cat-pending-tasks",
+        parts => {},
+        paths => [ [ {}, "_cat", "pending_tasks" ] ],
+        qs    => [ "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.recovery' => {
+        doc   => "cat-recovery",
+        parts => { index => { multi => 1 } },
+        paths => [
+            [ { index => 2 }, "_cat", "recovery", "{index}" ],
+            [ {}, "_cat", "recovery" ],
+        ],
+        qs => [ "bytes", "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.shards' => {
+        doc   => "cat-shards",
+        parts => { index => { multi => 1 } },
+        paths => [
+            [ { index => 2 }, "_cat", "shards", "{index}" ],
+            [ {}, "_cat", "shards" ],
+        ],
+        qs => [ "h", "help", "local", "master_timeout", "v" ],
     },
 
     'cluster.get_settings' => {
-        doc  => 'cluster-update-settings',
-        path => '_cluster/settings',
+        doc   => "cluster-update-settings",
+        parts => {},
+        paths => [ [ {}, "_cluster", "settings" ] ],
+        qs => [ "flat_settings", "master_timeout", "timeout" ],
     },
 
     'cluster.health' => {
-        doc  => 'cluster-health',
-        path => '_cluster/health',
-        qs   => [
-            'level',                      'local',
-            'master_timeout',             'timeout',
-            'wait_for_active_shards',     'wait_for_nodes',
-            'wait_for_relocating_shards', 'wait_for_status'
+        doc   => "cluster-health",
+        parts => { index => {} },
+        paths => [
+            [ { index => 2 }, "_cluster", "health", "{index}" ],
+            [ {}, "_cluster", "health" ],
+        ],
+        qs => [
+            "level",                      "local",
+            "master_timeout",             "timeout",
+            "wait_for_active_shards",     "wait_for_nodes",
+            "wait_for_relocating_shards", "wait_for_status",
         ],
     },
 
-    'cluster.hot_threads' => {
-        doc  => 'cluster-nodes-hot-threads',
-        path => '_nodes/{nodes|blank}/hot_threads',
-        qs   => [ 'interval', 'snapshots', 'threads', 'type' ],
-    },
-
-    'cluster.node_info' => {
-        doc  => 'cluster-nodes-info',
-        path => '_nodes/{nodes|blank}',
-        qs   => [
-            'all',      'clear',   'http',        'jvm',
-            'network',  'os',      'plugin',      'process',
-            'settings', 'timeout', 'thread_pool', 'transport'
-        ],
-    },
-
-    'cluster.shutdown' => {
-        doc    => 'cluster-nodes-shutdown',
-        method => 'POST',
-        path   => '_cluster/nodes/{nodes|blank}/_shutdown',
-        qs     => [ 'delay', 'exit' ],
-    },
-
-    'cluster.node_stats' => {
-        doc  => 'cluster-nodes-stats',
-        path => '_nodes/{nodes|blank}/stats/{metric|blank}',
-        qs   => [
-            'all',  'clear',   'fields',      'fs',
-            'http', 'indices', 'jvm',         'network',
-            'os',   'process', 'thread_pool', 'transport'
-        ],
+    'cluster.pending_tasks' => {
+        doc   => "cluster-pending",
+        parts => {},
+        paths => [ [ {}, "_cluster", "pending_tasks" ] ],
+        qs => [ "local", "master_timeout" ],
     },
 
     'cluster.put_settings' => {
-        body => {
-            desc => 'The settings to be updated. Can be either '
-                . '`transient` or `persistent`.'
-        },
-        doc    => 'cluster-update-settings',
-        method => 'PUT',
-        path   => '_cluster/settings',
+        body   => {},
+        doc    => "cluster-update-settings",
+        method => "PUT",
+        parts  => {},
+        paths  => [ [ {}, "_cluster", "settings" ] ],
+        qs     => ["flat_settings"],
     },
 
     'cluster.reroute' => {
-        body => {
-            desc => 'The definition of `commands` to perform '
-                . '(`move`, `cancel`, `allocate`)'
-        },
-        doc    => 'cluster-reroute',
-        method => 'POST',
-        path   => '_cluster/reroute',
-        qs     => [ 'dry_run', 'filter_metadata' ],
+        body   => {},
+        doc    => "cluster-reroute",
+        method => "POST",
+        parts  => {},
+        paths  => [ [ {}, "_cluster", "reroute" ] ],
+        qs => [ "dry_run", "filter_metadata", "master_timeout", "timeout" ],
     },
 
     'cluster.state' => {
-        doc  => 'cluster-state',
-        path => '_cluster/state',
-        qs   => [
-            'filter_blocks',  'filter_index_templates',
-            'filter_indices', 'filter_metadata',
-            'filter_nodes',   'filter_routing_table',
-            'local',          'master_timeout'
+        doc   => "cluster-state",
+        parts => { index => { multi => 1 }, metric => { multi => 1 } },
+        paths => [
+            [   { index => 3, metric => 2 }, "_cluster",
+                "state", "{metric}",
+                "{index}",
+            ],
+            [ { index => 3 }, "_cluster", "state", "_all", "{index}" ],
+            [ { metric => 2 }, "_cluster", "state", "{metric}" ],
+            [ {}, "_cluster", "state" ],
         ],
+        qs =>
+            [ "flat_settings", "index_templates", "local", "master_timeout" ],
+    },
+
+    'cluster.stats' => {
+        doc   => "cluster-stats",
+        parts => { node_id => { multi => 1 } },
+        paths => [
+            [ { node_id => 3 }, "_cluster", "stats", "nodes", "{node_id}" ],
+            [ {}, "_cluster", "stats" ],
+        ],
+        qs => [ "flat_settings", "human" ],
     },
 
     'indices.analyze' => {
-        body =>
-            { desc => 'The text on which the analysis should be performed' },
-        doc    => 'indices-analyze',
-        method => 'POST',
-        path   => '{index|blank}/_analyze',
-        qs     => [
-            'analyzer', 'field',        'filters', 'format',
-            'index',    'prefer_local', 'text',    'tokenizer'
+        body  => {},
+        doc   => "indices-analyze",
+        parts => { index => {} },
+        paths =>
+            [ [ { index => 0 }, "{index}", "_analyze" ], [ {}, "_analyze" ] ],
+        qs => [
+            "analyzer",     "field", "filters", "format",
+            "prefer_local", "text",  "tokenizer",
         ],
     },
 
     'indices.clear_cache' => {
-        doc    => 'indices-clearcache',
-        method => 'POST',
-        path   => '{indices}/_cache/clear',
-        qs     => [
-            'fielddata',      'fields',
-            'filter',         'filter_cache',
-            'filter_keys',    'id',
-            'ignore_indices', 'index',
-            'recycler'
+        doc    => "indices-clearcache",
+        method => "POST",
+        parts  => { index => { multi => 1 } },
+        paths  => [
+            [ { index => 0 }, "{index}", "_cache", "clear" ],
+            [ {}, "_cache", "clear" ],
+        ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "fielddata",        "fields",
+            "filter",           "filter_cache",
+            "filter_keys",      "id",
+            "id_cache",         "ignore_unavailable",
+            "recycler",
         ],
     },
 
     'indices.close' => {
-        doc    => 'indices-open-close',
-        method => 'POST',
-        path   => '{req_indices}/_close',
-        qs     => [ 'timeout', 'master_timeout' ],
+        doc    => "indices-open-close",
+        method => "POST",
+        parts  => { index => { required => 1 } },
+        paths  => [ [ { index => 0 }, "{index}", "_close" ] ],
+        qs     => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "master_timeout",
+            "timeout",
+        ],
     },
 
     'indices.create' => {
-        body => {
-            desc => 'The configuration for the index '
-                . '(`settings` and `mappings`)'
-        },
-        doc    => 'indices-create-index',
-        method => 'PUT',
-        path   => '{index}',
-        qs     => [ 'timeout', 'master_timeout' ],
+        body   => {},
+        doc    => "indices-create-index",
+        method => "PUT",
+        parts  => { index => { required => 1 } },
+        paths  => [ [ { index => 0 }, "{index}" ] ],
+        qs => [ "master_timeout", "timeout" ],
     },
 
     'indices.delete' => {
-        doc    => 'indices-delete-index',
-        method => 'DELETE',
-        path   => '{req_indices}',
-        qs     => [ 'timeout', 'master_timeout' ],
+        doc    => "indices-delete-index",
+        method => "DELETE",
+        parts  => { index => { multi => 1 } },
+        paths  => [ [ { index => 0 }, "{index}" ] ],
+        qs => [ "master_timeout", "timeout" ],
     },
 
     'indices.delete_alias' => {
-        doc    => 'indices-aliases',
-        method => 'DELETE',
-        path   => '{index}/_alias/{name}',
-        qs     => [ 'timeout', 'master_timeout' ],
+        doc    => "indices-aliases",
+        method => "DELETE",
+        parts  => {
+            index => { multi => 1, required => 1 },
+            name  => { multi => 1, required => 1 },
+        },
+        paths =>
+            [ [ { index => 0, name => 2 }, "{index}", "_alias", "{name}" ] ],
+        qs => [ "master_timeout", "timeout" ],
     },
 
     'indices.delete_mapping' => {
-        doc    => 'indices-delete-mapping',
-        method => 'DELETE',
-        path   => '{req_indices}/{type}',
-        qs     => ['master_timeout'],
+        doc    => "indices-delete-mapping",
+        method => "DELETE",
+        parts  => {
+            index => { multi => 1, required => 1 },
+            type  => { multi => 1, required => 1 },
+        },
+        paths => [
+            [ { index => 0, type => 2 }, "{index}", "_mapping", "{type}" ]
+        ],
+        qs => ["master_timeout"],
     },
 
     'indices.delete_template' => {
-        doc    => 'indices-templates',
-        method => 'DELETE',
-        path   => '_template/{name}',
-        qs     => [ 'timeout', 'master_timeout' ],
+        doc    => "indices-templates",
+        method => "DELETE",
+        parts  => { name => { required => 1 } },
+        paths  => [ [ { name => 1 }, "_template", "{name}" ] ],
+        qs => [ "master_timeout", "timeout" ],
     },
 
     'indices.delete_warmer' => {
-        doc    => 'indices-warmers',
-        method => 'DELETE',
-        path   => '{req_indices}/_warmer/{names}',
-        qs     => ['master_timeout'],
+        doc    => "indices-warmers",
+        method => "DELETE",
+        parts  => {
+            index => { multi => 1, required => 1 },
+            name  => { multi => 1, required => 1 },
+        },
+        paths =>
+            [ [ { index => 0, name => 2 }, "{index}", "_warmer", "{name}" ] ],
+        qs => ["master_timeout"],
     },
 
     'indices.exists' => {
-        doc    => 'indices-exists',
-        method => 'HEAD',
-        path   => '{req_indices}',
+        doc    => "indices-get-settings",
+        method => "HEAD",
+        parts  => { index => { multi => 1, required => 1 } },
+        paths => [ [ { index => 0 }, "{index}" ] ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "local",
+        ],
     },
 
     'indices.exists_alias' => {
-        doc    => 'indices-aliases',
-        method => 'HEAD',
-        path   => '{indices}/_alias/{names}',
-        qs     => ['ignore_indices'],
+        doc    => "indices-aliases",
+        method => "HEAD",
+        parts  => { index => { multi => 1 }, name => { multi => 1 } },
+        paths  => [
+            [ { index => 0, name => 2 }, "{index}", "_alias", "{name}" ],
+            [ { name  => 1 }, "_alias",  "{name}" ],
+            [ { index => 0 }, "{index}", "_alias" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "local",
+        ],
+    },
+
+    'indices.exists_template' => {
+        doc    => "indices-templates",
+        method => "HEAD",
+        parts  => { name => { required => 1 } },
+        paths  => [ [ { name => 1 }, "_template", "{name}" ] ],
+        qs     => ["local"],
     },
 
     'indices.exists_type' => {
-        doc    => 'indices-types-exists',
-        method => 'HEAD',
-        path   => '{indices|all}/{req_types}',
-        qs     => ['ignore_indices'],
+        doc    => "indices-types-exists",
+        method => "HEAD",
+        parts  => {
+            index => { multi => 1, required => 1 },
+            type  => { multi => 1, required => 1 },
+        },
+        paths => [ [ { index => 0, type => 1 }, "{index}", "{type}" ] ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "local",
+        ],
     },
 
     'indices.flush' => {
-        doc    => 'indices-flush',
-        method => 'POST',
-        path   => '{indices}/_flush',
-        qs     => [ 'force', 'full', 'ignore_indices', 'refresh' ],
+        doc    => "indices-flush",
+        method => "POST",
+        parts  => { index => { multi => 1 } },
+        paths =>
+            [ [ { index => 0 }, "{index}", "_flush" ], [ {}, "_flush" ] ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "force",            "full",
+            "ignore_unavailable",
+        ],
     },
 
     'indices.get_alias' => {
-        doc  => 'indices-aliases',
-        path => '{indices}/_alias/{names}',
-        qs   => ['ignore_indices'],
+        doc   => "indices-aliases",
+        parts => { index => { multi => 1 }, name => { multi => 1 } },
+        paths => [
+            [ { index => 0, name => 2 }, "{index}", "_alias", "{name}" ],
+            [ { name  => 1 }, "_alias",  "{name}" ],
+            [ { index => 0 }, "{index}", "_alias" ],
+            [ {}, "_alias" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "local",
+        ],
     },
 
     'indices.get_aliases' => {
-        doc  => 'indices-aliases',
-        path => '{indices}/_aliases',
-        qs   => ['timeout'],
+        doc   => "indices-aliases",
+        parts => { index => { multi => 1 }, name => { multi => 1 } },
+        paths => [
+            [ { index => 0, name => 2 }, "{index}", "_aliases", "{name}" ],
+            [ { name  => 1 }, "_aliases", "{name}" ],
+            [ { index => 0 }, "{index}",  "_aliases" ],
+            [ {}, "_aliases" ],
+        ],
+        qs => [ "local", "timeout" ],
     },
 
     'indices.get_field_mapping' => {
-        doc  => 'indices-get-field-mapping',
-        path => '{indices|all-type}/{types}/_mapping/field/{field}',
-        qs   => ['include_defaults'],
+        doc   => "indices-get-field-mapping",
+        parts => {
+            field => { multi => 1, required => 1 },
+            index => { multi => 1 },
+            type  => { multi => 1 },
+        },
+        paths => [
+            [   { field => 4, index => 0, type => 2 }, "{index}",
+                "_mapping", "{type}",
+                "field",    "{field}",
+            ],
+            [   { field => 3, index => 0 }, "{index}",
+                "_mapping", "field",
+                "{field}",
+            ],
+            [   { field => 3, type => 1 }, "_mapping",
+                "{type}", "field",
+                "{field}",
+            ],
+            [ { field => 2 }, "_mapping", "field", "{field}" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "include_defaults",
+            "local",
+        ],
     },
 
     'indices.get_mapping' => {
-        doc  => 'indices-get-mapping',
-        path => '{indices|all-type}/{types}/_mapping',
+        doc   => "indices-get-mapping",
+        parts => { index => { multi => 1 }, type => { multi => 1 } },
+        paths => [
+            [ { index => 0, type => 2 }, "{index}", "_mapping", "{type}" ],
+            [ { type  => 1 }, "_mapping", "{type}" ],
+            [ { index => 0 }, "{index}",  "_mapping" ],
+            [ {}, "_mapping" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "local",
+        ],
     },
 
     'indices.get_settings' => {
-        doc  => 'indices-get-settings',
-        path => '{indices}/_settings',
+        doc   => "indices-get-mapping",
+        parts => { index => { multi => 1 }, name => { multi => 1 } },
+        paths => [
+            [ { index => 0, name => 2 }, "{index}", "_settings", "{name}" ],
+            [ { name  => 1 }, "_settings", "{name}" ],
+            [ { index => 0 }, "{index}",   "_settings" ],
+            [ {}, "_settings" ],
+        ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "flat_settings",    "ignore_unavailable",
+            "local",
+        ],
     },
 
     'indices.get_template' => {
-        doc  => 'indices-templates',
-        path => '_template/{name|blank}',
+        doc   => "indices-templates",
+        parts => { name => {} },
+        paths =>
+            [ [ { name => 1 }, "_template", "{name}" ], [ {}, "_template" ] ],
+        qs => [ "flat_settings", "local" ],
     },
 
     'indices.get_warmer' => {
-        doc  => 'indices-warmers',
-        path => '{indices|all}/_warmer/{names}',
+        doc   => "indices-warmers",
+        parts => {
+            index => { multi => 1 },
+            name  => { multi => 1 },
+            type  => { multi => 1 }
+        },
+        paths => [
+            [   { index => 0, name => 3, type => 1 },
+                "{index}", "{type}", "_warmer", "{name}",
+            ],
+            [   { name => 3, type => 1 }, "_all",
+                "{type}", "_warmer",
+                "{name}"
+            ],
+            [ { index => 0, name => 2 }, "{index}", "_warmer", "{name}" ],
+            [ { name  => 1 }, "_warmer", "{name}" ],
+            [ { index => 0 }, "{index}", "_warmer" ],
+            [ {}, "_warmer" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "local",
+        ],
     },
 
     'indices.open' => {
-        doc    => 'indices-open-close',
-        method => 'POST',
-        path   => '{indices|all}/_open',
-        qs     => [ 'timeout', 'master_timeout' ],
+        doc    => "indices-open-close",
+        method => "POST",
+        parts  => { index => { required => 1 } },
+        paths  => [ [ { index => 0 }, "{index}", "_open" ] ],
+        qs     => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "master_timeout",
+            "timeout",
+        ],
     },
 
     'indices.optimize' => {
-        doc    => 'indices-optimize',
-        method => 'POST',
-        path   => '{indices}/_optimize',
-        qs     => [
-            'flush',            'ignore_indices',
-            'max_num_segments', 'only_expunge_deletes',
-            'refresh',          'wait_for_merge'
+        doc    => "indices-optimize",
+        method => "POST",
+        parts  => { index => { multi => 1 } },
+        paths  => [
+            [ { index => 0 }, "{index}", "_optimize" ],
+            [ {}, "_optimize" ]
+        ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "flush",            "ignore_unavailable",
+            "max_num_segments", "only_expunge_deletes",
+            "wait_for_merge",
         ],
     },
 
     'indices.put_alias' => {
-        body => {
-            desc => 'The settings for the alias, '
-                . 'such as `routing` or `filter`',
-        },
-        doc    => 'indices-aliases',
-        method => 'PUT',
-        path   => '{index}/_alias/{name}',
-        qs     => [ 'timeout', 'master_timeout' ],
+        body   => {},
+        doc    => "indices-aliases",
+        method => "PUT",
+        parts  => { index => { multi => 1 }, name => { required => 1 } },
+        paths  => [
+            [ { index => 0, name => 2 }, "{index}", "_alias", "{name}" ],
+            [ { name => 1 }, "_alias", "{name}" ],
+        ],
+        qs => [ "master_timeout", "timeout" ],
     },
 
     'indices.put_mapping' => {
-        body => {
-            desc     => 'The mapping definition',
-            required => 1
-        },
-        doc    => 'indices-put-mapping',
-        method => 'PUT',
-        path   => '{indices|all}/{type}/_mapping',
-        qs     => [ 'ignore_conflicts', 'timeout', 'master_timeout' ],
+        body   => { required => 1 },
+        doc    => "indices-put-mapping",
+        method => "PUT",
+        parts => { index => { multi => 1 }, type => { required => 1 } },
+        paths => [
+            [ { index => 0, type => 2 }, "{index}", "_mapping", "{type}" ],
+            [ { type => 1 }, "_mapping", "{type}" ],
+        ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "ignore_conflicts", "ignore_unavailable",
+            "master_timeout",   "timeout",
+        ],
     },
 
     'indices.put_settings' => {
-        body => {
-            desc     => 'The index settings to be updated',
-            required => 1
-        },
-        doc    => 'indices-update-settings',
-        method => 'PUT',
-        path   => '{indices}/_settings',
-        qs     => ['master_timeout'],
+        body   => { required => 1 },
+        doc    => "indices-update-settings",
+        method => "PUT",
+        parts => { index => { multi => 1 } },
+        paths => [
+            [ { index => 0 }, "{index}", "_settings" ],
+            [ {}, "_settings" ]
+        ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "flat_settings",    "ignore_unavailable",
+            "master_timeout",
+        ],
     },
 
     'indices.put_template' => {
-        body => {
-            desc     => 'The template definition',
-            required => 1
-        },
-        doc    => 'indices-templates',
-        method => 'PUT',
-        path   => '_template/{name}',
-        qs     => [ 'order', 'timeout', 'master_timeout' ],
+        body   => { required => 1 },
+        doc    => "indices-templates",
+        method => "PUT",
+        parts => { name => { required => 1 } },
+        paths => [ [ { name => 1 }, "_template", "{name}" ] ],
+        qs => [ "flat_settings", "master_timeout", "order", "timeout" ],
     },
 
     'indices.put_warmer' => {
-        body => {
-            desc => 'The search request definition for'
-                . ' the warmer (query, filters, facets, sorting, etc)',
-            required => 1
+        body   => { required => 1 },
+        doc    => "indices-warmers",
+        method => "PUT",
+        parts  => {
+            index => { multi    => 1 },
+            name  => { required => 1 },
+            type  => { multi    => 1 },
         },
-        doc    => 'indices-warmers',
-        method => 'PUT',
-        path   => '{indices|all}/_warmer/{name}',
-        qs     => ['master_timeout'],
+        paths => [
+            [   { index => 0, name => 3, type => 1 },
+                "{index}", "{type}", "_warmer", "{name}",
+            ],
+            [   { name => 3, type => 1 }, "_all",
+                "{type}", "_warmer",
+                "{name}"
+            ],
+            [ { index => 0, name => 2 }, "{index}", "_warmer", "{name}" ],
+            [ { name => 1 }, "_warmer", "{name}" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "master_timeout",
+        ],
     },
 
     'indices.refresh' => {
-        doc    => 'indices-refresh',
-        method => 'POST',
-        path   => '{indices}/_refresh',
-        qs     => ['ignore_indices'],
+        doc    => "indices-refresh",
+        method => "POST",
+        parts  => { index => { multi => 1 } },
+        paths =>
+            [ [ { index => 0 }, "{index}", "_refresh" ], [ {}, "_refresh" ] ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "force",            "ignore_unavailable",
+        ],
     },
 
     'indices.segments' => {
-        doc  => 'indices-segments',
-        path => '{indices}/_segments',
-        qs   => [ 'ignore_indices', ],
+        doc   => "indices-segments",
+        parts => { index => { multi => 1 } },
+        paths => [
+            [ { index => 0 }, "{index}", "_segments" ],
+            [ {}, "_segments" ]
+        ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "human",            "ignore_unavailable",
+        ],
     },
 
     'indices.snapshot_index' => {
-        docs   => 'indices-gateway-snapshot',
-        method => 'POST',
-        path   => '{indices}/_gateway/snapshot',
-        params => ['ignore_indices']
+        doc    => "indices-gateway-snapshot",
+        method => "POST",
+        parts  => { index => { multi => 1 } },
+        paths  => [
+            [ { index => 0 }, "{index}", "_gateway", "snapshot" ],
+            [ {}, "_gateway", "snapshot" ],
+        ],
+        qs =>
+            [ "allow_no_indices", "expand_wildcards", "ignore_unavailable" ],
     },
 
     'indices.stats' => {
-        doc  => 'indices-stats',
-        path => '{indices}/_stats',
-        qs   => [
-            'all',              'clear',
-            'completion',       'completion_fields',
-            'docs',             'fielddata',
-            'fielddata_fields', 'fields',
-            'filter_cache',     'flush',
-            'get',              'groups',
-            'id_cache',         'ignore_indices',
-            'indexing',         'merge',
-            'refresh',          'search',
-            'store',            'warmer'
+        doc   => "indices-stats",
+        parts => { index => { multi => 1 }, metric => { multi => 1 } },
+        paths => [
+            [ { index => 0, metric => 2 }, "{index}", "_stats", "{metric}" ],
+            [ { metric => 1 }, "_stats",  "{metric}" ],
+            [ { index  => 0 }, "{index}", "_stats" ],
+            [ {}, "_stats" ],
+        ],
+        qs => [
+            "completion_fields", "fielddata_fields",
+            "fields",            "groups",
+            "human",             "level",
+            "types",
         ],
     },
 
     'indices.status' => {
-        doc  => 'indices-status',
-        path => '{indices}/_status',
-        qs   => [ 'ignore_indices', 'recovery', 'snapshot' ],
+        doc   => "indices-status",
+        parts => { index => { multi => 1 } },
+        paths =>
+            [ [ { index => 0 }, "{index}", "_status" ], [ {}, "_status" ] ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "human",            "ignore_unavailable",
+            "recovery",         "snapshot",
+        ],
     },
 
     'indices.update_aliases' => {
-        body => {
-            required => 1,
-            desc     => 'The definition of `actions` to perform'
-        },
-        doc    => 'indices-aliases',
-        method => 'POST',
-        path   => '_aliases',
-        qs     => [ 'timeout', 'master_timeout' ],
+        body   => { required => 1 },
+        doc    => "indices-aliases",
+        method => "POST",
+        parts  => {},
+        paths => [ [ {}, "_aliases" ] ],
+        qs => [ "master_timeout", "timeout" ],
     },
 
     'indices.validate_query' => {
-        body => { desc => 'The query definition' },
-        doc  => 'search-validate',
-        path => '{indices|all-type}/{types}/_validate/query',
-        qs   => [ 'explain', 'ignore_indices', 'q', 'source' ],
+        body  => {},
+        doc   => "search-validate",
+        parts => { index => { multi => 1 }, type => { multi => 1 } },
+        paths => [
+            [   { index => 0, type => 1 }, "{index}",
+                "{type}", "_validate",
+                "query",
+            ],
+            [ { type => 1 }, "_all", "{type}", "_validate", "query" ],
+            [ { index => 0 }, "{index}", "_validate", "query" ],
+            [ {}, "_validate", "query" ],
+        ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "explain",          "ignore_unavailable",
+            "q",                "source",
+        ],
     },
+
+    'nodes.hot_threads' => {
+        doc   => "cluster-nodes-hot-threads",
+        parts => { node_id => { multi => 1 } },
+        paths => [
+            [ { node_id => 1 }, "_nodes", "{node_id}", "hot_threads" ],
+            [ {}, "_nodes", "hot_threads" ],
+        ],
+        qs => [ "interval", "snapshots", "threads", "type" ],
+    },
+
+    'nodes.info' => {
+        doc   => "cluster-nodes-info",
+        parts => { metric => { multi => 1 }, node_id => { multi => 1 } },
+        paths => [
+            [   { metric => 2, node_id => 1 }, "_nodes",
+                "{node_id}", "{metric}",
+            ],
+            [ { metric => 2 }, "_nodes", "_all", "{metric}" ],
+            [ { node_id => 1 }, "_nodes", "{node_id}" ],
+            [ {}, "_nodes" ],
+        ],
+        qs => [ "flat_settings", "human" ],
+    },
+
+    'nodes.shutdown' => {
+        doc    => "cluster-nodes-shutdown",
+        method => "POST",
+        parts  => { node_id => { multi => 1 } },
+        paths  => [
+            [   { node_id => 2 }, "_cluster",
+                "nodes", "{node_id}",
+                "_shutdown"
+            ],
+            [ {}, "_shutdown" ],
+        ],
+        qs => [ "delay", "exit" ],
+    },
+
+    'nodes.stats' => {
+        doc   => "cluster-nodes-stats",
+        parts => {
+            index_metric => { multi => 1 },
+            metric       => { multi => 1 },
+            node_id      => { multi => 1 },
+        },
+        paths => [
+            [   { index_metric => 4, metric => 3, node_id => 1 },
+                "_nodes", "{node_id}", "stats", "{metric}", "{index_metric}",
+            ],
+            [   { index_metric => 4, node_id => 1 },
+                "_nodes", "{node_id}", "stats", "_all", "{index_metric}",
+            ],
+            [   { index_metric => 3, metric => 2 }, "_nodes",
+                "stats", "{metric}",
+                "{index_metric}",
+            ],
+            [   { index_metric => 3 }, "_nodes",
+                "stats", "_all",
+                "{index_metric}",
+            ],
+            [   { metric => 3, node_id => 1 }, "_nodes",
+                "{node_id}", "stats",
+                "{metric}",
+            ],
+            [ { metric  => 2 }, "_nodes", "stats",     "{metric}" ],
+            [ { node_id => 1 }, "_nodes", "{node_id}", "stats" ],
+            [ {}, "_nodes", "stats" ],
+        ],
+        qs => [
+            "completion_fields", "fielddata_fields",
+            "fields",            "groups",
+            "human",             "level",
+            "types",
+        ],
+    },
+
+    'snapshot.create' => {
+        body   => {},
+        doc    => "modules-snapshots",
+        method => "PUT",
+        parts  => {
+            repository => { required => 1 },
+            snapshot   => { required => 1 }
+        },
+        paths => [
+            [   { repository => 1, snapshot => 2 }, "_snapshot",
+                "{repository}", "{snapshot}",
+            ],
+        ],
+        qs => [ "master_timeout", "wait_for_completion" ],
+    },
+
+    'snapshot.create_repository' => {
+        body   => { required => 1 },
+        doc    => "modules-snapshots",
+        method => "PUT",
+        parts => { repository => { required => 1 } },
+        paths => [ [ { repository => 1 }, "_snapshot", "{repository}" ] ],
+        qs => [ "master_timeout", "timeout" ],
+    },
+
+    'snapshot.delete' => {
+        doc    => "modules-snapshots",
+        method => "DELETE",
+        parts  => {
+            repository => { required => 1 },
+            snapshot   => { required => 1 }
+        },
+        paths => [
+            [   { repository => 1, snapshot => 2 }, "_snapshot",
+                "{repository}", "{snapshot}",
+            ],
+        ],
+        qs => ["master_timeout"],
+    },
+
+    'snapshot.delete_repository' => {
+        doc    => "modules-snapshots",
+        method => "DELETE",
+        parts  => { repository => { multi => 1, required => 1 } },
+        paths  => [ [ { repository => 1 }, "_snapshot", "{repository}" ] ],
+        qs => [ "master_timeout", "timeout" ],
+    },
+
+    'snapshot.get' => {
+        doc   => "modules-snapshots",
+        parts => {
+            repository => { required => 1 },
+            snapshot   => { multi    => 1, required => 1 },
+        },
+        paths => [
+            [   { repository => 1, snapshot => 2 }, "_snapshot",
+                "{repository}", "{snapshot}",
+            ],
+        ],
+        qs => ["master_timeout"],
+    },
+
+    'snapshot.get_repository' => {
+        doc   => "modules-snapshots",
+        parts => { repository => { multi => 1 } },
+        paths => [
+            [ { repository => 1 }, "_snapshot", "{repository}" ],
+            [ {}, "_snapshot" ],
+        ],
+        qs => [ "local", "master_timeout" ],
+    },
+
+    'snapshot.restore' => {
+        body   => {},
+        doc    => "modules-snapshots",
+        method => "POST",
+        parts  => {
+            repository => { required => 1 },
+            snapshot   => { required => 1 }
+        },
+        paths => [
+            [   { repository => 1, snapshot => 2 }, "_snapshot",
+                "{repository}", "{snapshot}",
+                "_restore",
+            ],
+        ],
+        qs => [ "master_timeout", "wait_for_completion" ],
+    },
+
+#=== AUTOGEN - END ===
 
 );
 
 for ( values %API ) {
-    $_->{qs_handlers}  = qs_init( @{ $_->{qs} } );
-    $_->{path_handler} = path_init( $_->{path} );
+    $_->{qs_handlers} = qs_init( @{ $_->{qs} } );
 }
 
 1;
 
 =pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -645,7 +1314,7 @@ Elasticsearch::Role::API - This class contains the spec for the Elasticsearch AP
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -657,6 +1326,7 @@ is the definition for the L<Elasticsearch::Client::Direct/index()> method:
             desc     => 'The document',
             required => 1
         },
+
         doc    => '/api/index_/',
         method => 'PUT',
         path   => '{index}/{type}/{id|blank}',
@@ -707,7 +1377,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

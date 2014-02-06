@@ -4,7 +4,7 @@
       "Clinton Gormley <drtech@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300039, CPAN::Meta::Converter version 2.130880",
+   "generated_by" : "Dist::Zilla version 5.012, CPAN::Meta::Converter version 2.130880",
    "license" : [
       "apache_2_0"
    ],
@@ -71,13 +71,10 @@
       },
       "test" : {
          "requires" : {
-            "Exporter" : "0",
-            "File::Basename" : "0",
             "Log::Any::Adapter::Callback" : "0",
             "Test::Deep" : "0",
             "Test::Exception" : "0",
-            "Test::More" : "0",
-            "YAML" : "0",
+            "Test::More" : "0.98",
             "lib" : "0"
          }
       }
@@ -93,6 +90,6 @@
          "web" : "https://github.com/elasticsearch/elasticsearch-perl"
       }
    },
-   "version" : "0.76"
+   "version" : "1.00"
 }
 

@@ -1,17 +1,27 @@
-#===================================
 package Elasticsearch::Client::Direct::Cluster;
-{
-  $Elasticsearch::Client::Direct::Cluster::VERSION = '0.76';
-}
-#===================================
+$Elasticsearch::Client::Direct::Cluster::VERSION = '1.00';
 use Moo;
 with 'Elasticsearch::Role::API';
 with 'Elasticsearch::Role::Client::Direct';
 __PACKAGE__->_install_api('cluster');
 
+sub node_info     { _deprecated( 'node_info',     'info' ) }
+sub node_stats    { _deprecated( 'node_stats',    'stats' ) }
+sub hot_threads   { _deprecated( 'hot_threads',   'hot_threads' ) }
+sub node_shutdown { _deprecated( 'node_shutdown', 'shutdown' ) }
+
+#===================================
+sub _deprecated {
+#===================================
+    my ( $old, $new ) = @_;
+    die "The method \$es->cluster->$old() has moved to \$es->nodes->$new()";
+}
+
 1;
 
 =pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -19,7 +29,7 @@ Elasticsearch::Client::Direct::Cluster - A client for running cluster-level requ
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -33,7 +43,9 @@ It does L<Elasticsearch::Role::Client::Direct>.
 
 =head2 C<health()>
 
-    $response = $e->cluster->health( %qs_params )
+    $response = $e->cluster->health(
+        index   => 'index' | \@indices  # optional
+    );
 
 The C<health()> method is used to retrieve information about the cluster
 health, returning C<red>, C<yellow> or C<green> to indicate the state
@@ -52,88 +64,19 @@ Query string parameters:
 See the L<cluster health docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-health.html>
 for more information.
 
-=head2 C<node_info()>
+=head2 C<stats()>
 
-    $response = $e->cluster->node_info(
-        node_id => $node_id | \@node_ids       # optional
+    $response = $e->cluster->stats(
+        node_id => 'node' | \@nodes     # optional
     );
 
-The C<node_info()> method returns static information about the nodes in the
-cluster, such as the configured maximum number of file handles, the maximum
-configured heap size or the threadpool settings.
+Returns high-level cluster stats, optionally limited to the listed nodes.
 
 Query string parameters:
-    C<all>,
-    C<clear>,
-    C<http>,
-    C<jvm>,
-    C<network>,
-    C<os>,
-    C<plugin>,
-    C<process>,
-    C<settings>,
-    C<thread_pool>,
-    C<timeout>,
-    C<transport>
+    C<flat_settings>,
+    C<human>
 
-See the L<node_info docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-nodes-info.html>
-for more information.
-
-=head2 C<node_stats()>
-
-    $response = $e->cluster->node_stats(
-        node_id => $node_id | \@node_ids       # optional
-    );
-
-The C<node_stats()> method returns statistics about the nodes in the
-cluster, such as the number of currently open file handles, the current
-heap memory usage or the current number of threads in use.
-
-Stats can be returned for all nodes, or limited to particular nodes
-with the C<node_id> parameter.
-The L<indices_stats|Elasticsearch::Client::Direct::Indices/indices_stats()>
-information can also be retrieved on a per-node basis with the C<node_stats()>
-method:
-
-    $response = $e->cluster->node_stats(
-        node_id => 'node_1',
-        indices => 1,
-        metric  => 'docs'
-    );
-
-Query string parameters:
-    C<all>,
-    C<clear>,
-    C<fields>,
-    C<fs>,
-    C<http>,
-    C<indices>,
-    C<jvm>,
-    C<network>,
-    C<os>,
-    C<process>,
-    C<thread_pool>,
-    C<transport>
-
-See the L<node_stats docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-nodes-stats.html>
-for more information.
-
-=head2 C<hot_threads()>
-
-    $response = $e->cluster->hot_threads(
-        node_id => $node_id | \@node_ids       # optional
-    )
-
-The C<hot_threads()> method is a useful tool for diagnosing busy nodes. It
-takes a snapshot of which threads are consuming the most CPU.
-
-Query string parameters:
-    C<interval>,
-    C<snapshots>,
-    C<threads>,
-    C<type>
-
-See the L<hot_threads docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-nodes-hot-threads.html>
+See the L<cluster stats docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-stats.html>
 for more information.
 
 =head2 C<get_settings()>
@@ -142,6 +85,11 @@ for more information.
 
 The C<get_settings()> method is used to retrieve cluster-wide settings that
 have been set with the L</put_settings()> method.
+
+Query string parameters:
+    C<flat_settings>,
+    C<master_timeout>,
+    C<timeout>
 
 See the L<cluster settings docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-update-settings.html>
 for more information.
@@ -162,33 +110,59 @@ For instance:
         }
     );
 
+Query string parameters:
+    C<flat_settings>
+
 See the L<cluster settings docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-update-settings.html>
  for more information.
 
 =head2 C<state()>
 
-    $response = $e->cluster->state();
+    $response = $e->cluster->state(
+        metric => $metric | \@metrics   # optional
+        index  => $index  | \@indices   # optional
+    );
 
 The C<state()> method returns the current cluster state from the master node,
 or from the responding node if C<local> is set to C<true>.
 
+It returns all metrics by default, but these can be limited to any of:
+    C<_all>,
+    C<blocks>,
+    C<index_templates>,
+    C<metadata>,
+    C<nodes>,
+    C<routing_table>
+
+Metrics for indices can be limited to particular indices with the C<index>
+parameter.
+
 Query string parameters:
-    C<filter_blocks>,
-    C<filter_index_templates>,
-    C<filter_indices>,
-    C<filter_metadata>,
-    C<filter_nodes>,
-    C<filter_routing_table>,
+    C<flat_settings>,
+    <index_templates>,
     C<local>,
     C<master_timeout>
 
 See the L<cluster state docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-state.html>
 for more information.
 
+=head2 C<pending_tasks()>
+
+    $response = $e->cluster->pending_tasks();
+
+Returns a list of cluster-level tasks still pending on the master node.
+
+Query string parameters:
+    C<local>,
+    C<master_timeout>
+
+See the L<pending tasks docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-pending.html>
+for more information.
+
 =head2 C<reroute()>
 
     $e->cluster->reroute(
-        body => { commands }    # required
+        body => { commands }
     );
 
 The C<reroute()> method is used to manually reallocate shards from one
@@ -215,25 +189,11 @@ which changes should be made. For instance:
 
 Query string parameters:
     C<dry_run>,
-    C<filter_metadata>
+    C<filter_metadata>,
+    C<master_timeout>,
+    C<timeout>
 
 See the L<reroute docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-reroute.html>
-for more information.
-
-=head2 C<shutdown()>
-
-    $e->cluster->shutdown(
-        node_id => $node_id | \@node_ids    # optional
-    );
-
-The C<shutdown()> method is used to shutdown one or more nodes, or the whole
-cluster.
-
-Query string parameters:
-    C<delay>,
-    C<exit>
-
-See the L<shutdown docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-nodes-shutdown.html>
 for more information.
 
 =head1 AUTHOR
@@ -242,7 +202,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

@@ -1,20 +1,9 @@
 package Elasticsearch::CxnPool::Static;
-{
-  $Elasticsearch::CxnPool::Static::VERSION = '0.76';
-}
-
+$Elasticsearch::CxnPool::Static::VERSION = '1.00';
 use Moo;
-with 'Elasticsearch::Role::CxnPool';
+with 'Elasticsearch::Role::CxnPool::Static', 'Elasticsearch::Role::Is_Sync';
 use Elasticsearch::Util qw(throw);
 use namespace::clean;
-
-#===================================
-sub BUILD {
-#===================================
-    my $self = shift;
-    $self->set_cxns( @{ $self->seed_nodes } );
-    $self->schedule_check;
-}
 
 #===================================
 sub next_cxn {
@@ -48,22 +37,11 @@ sub next_cxn {
     throw( "NoNodes", "No nodes are available: [" . $self->cxns_str . ']' );
 }
 
-#===================================
-sub schedule_check {
-#===================================
-    my ($self) = @_;
-    $self->logger->info("Forcing ping before next use on all live cxns");
-    for my $cxn ( @{ $self->cxns } ) {
-        next if $cxn->is_dead;
-        $self->logger->infof( "Ping [%s] before next request",
-            $cxn->stringify );
-        $cxn->force_ping;
-    }
-}
-
 1;
 
 =pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -71,7 +49,7 @@ Elasticsearch::CxnPool::Static - A CxnPool for connecting to a remote cluster wi
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 SYNOPSIS
 
@@ -95,7 +73,8 @@ If any node fails, then all nodes are pinged before the next request to
 ensure that they are still alive and responding.  Failed nodes will be
 pinged regularly to check if they have recovered.
 
-This class does L<Elasticsearch::Role::CxnPool>.
+This class does L<Elasticsearch::Role::CxnPool::Static> and
+L<Elasticsearch::Role::Is_Sync>.
 
 =head1 CONFIGURATION
 
@@ -150,7 +129,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

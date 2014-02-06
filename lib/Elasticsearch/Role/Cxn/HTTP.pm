@@ -1,10 +1,7 @@
 package Elasticsearch::Role::Cxn::HTTP;
-{
-  $Elasticsearch::Role::Cxn::HTTP::VERSION = '0.76';
-}
-
+$Elasticsearch::Role::Cxn::HTTP::VERSION = '1.00';
 use Moo::Role;
-with 'Elasticsearch::Role::Cxn';
+
 use URI();
 use Elasticsearch::Util qw(parse_params throw);
 use namespace::clean;
@@ -114,12 +111,15 @@ before 'perform_request' => sub {
 #===================================
 around 'process_response' => sub {
 #===================================
-    my ( $orig, $self, $params, $code, $msg, $body, $encoding ) = @_;
+    my ( $orig, $self, $params, $code, $msg, $body, $headers ) = @_;
 
-    $body = $self->inflate($body)
-        if $encoding && $encoding eq 'deflate';
+    if ( my $encoding = $headers->{'content-encoding'} ) {
+        $body = $self->inflate($body)
+            if $encoding eq 'deflate';
+    }
 
-    $orig->( $self, $params, $code, $msg, $body );
+    my ($mime_type) = split /\s*;\s*/, ( $headers->{'content-type'} || '' );
+    $orig->( $self, $params, $code, $msg, $body, $mime_type );
 };
 
 #===================================
@@ -147,13 +147,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Role::Cxn::HTTP - Provides common functionality to HTTP Cxn implementations
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -291,7 +293,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

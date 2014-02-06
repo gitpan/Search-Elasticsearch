@@ -1,10 +1,9 @@
 package Elasticsearch::Cxn::HTTPTiny;
-{
-  $Elasticsearch::Cxn::HTTPTiny::VERSION = '0.76';
-}
-
+$Elasticsearch::Cxn::HTTPTiny::VERSION = '1.00';
 use Moo;
-with 'Elasticsearch::Role::Cxn::HTTP';
+with 'Elasticsearch::Role::Cxn::HTTP',
+    'Elasticsearch::Role::Cxn',
+    'Elasticsearch::Role::Is_Sync';
 
 use HTTP::Tiny 0.036 ();
 use namespace::clean;
@@ -35,11 +34,11 @@ sub perform_request {
     my $response = $handle->request( $method, "$uri", \%args );
 
     return $self->process_response(
-        $params,                                    # request
-        $response->{status},                        # code
-        $response->{reason},                        # msg
-        $response->{content},                       # body
-        $response->{headers}{'content-encoding'}    # encoding,
+        $params,                 # request
+        $response->{status},     # code
+        $response->{reason},     # msg
+        $response->{content},    # body
+        $response->{headers}     # headers
     );
 }
 
@@ -76,13 +75,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Cxn::HTTPTiny - A Cxn implementation which uses HTTP::Tiny
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -93,7 +94,8 @@ have a high open filehandle limit (C<ulimit -l>) so that your system
 doesn't run out of sockets.
 
 This class does L<Elasticsearch::Role::Cxn::HTTP>, whose documentation
-provides more information.
+provides more information, L<Elasticsearch::Role::Cxn> and
+L<Elasticsearch::Role::Is_Sync>.
 
 =head1 SEE ALSO
 
@@ -113,7 +115,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

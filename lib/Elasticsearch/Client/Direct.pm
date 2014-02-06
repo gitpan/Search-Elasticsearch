@@ -1,17 +1,21 @@
 package Elasticsearch::Client::Direct;
-{
-  $Elasticsearch::Client::Direct::VERSION = '0.76';
-}
-
+$Elasticsearch::Client::Direct::VERSION = '1.00';
 use Moo;
 with 'Elasticsearch::Role::API';
 with 'Elasticsearch::Role::Client::Direct';
 
-use Elasticsearch::Util qw(parse_params);
+use Elasticsearch::Util qw(parse_params load_plugin is_compat);
 use namespace::clean;
 
-has 'cluster' => ( is => 'lazy' );
-has 'indices' => ( is => 'lazy' );
+has 'cluster'             => ( is => 'lazy', init_arg => undef );
+has 'nodes'               => ( is => 'lazy', init_arg => undef );
+has 'indices'             => ( is => 'lazy', init_arg => undef );
+has 'snapshot'            => ( is => 'lazy', init_arg => undef );
+has 'cat'                 => ( is => 'lazy', init_arg => undef );
+has 'bulk_helper_class'   => ( is => 'ro',   default  => 'Bulk' );
+has 'scroll_helper_class' => ( is => 'ro',   default  => 'Scroll' );
+has '_bulk_class'         => ( is => 'lazy' );
+has '_scroll_class'       => ( is => 'lazy' );
 
 __PACKAGE__->_install_api('');
 
@@ -42,23 +46,58 @@ sub _index {
 }
 
 #===================================
-sub _build_cluster {
+sub _build__bulk_class {
 #===================================
-    my ( $self, $name ) = @_;
-    require Elasticsearch::Client::Direct::Cluster;
-    Elasticsearch::Client::Direct::Cluster->new(
-        {   transport => $self->transport,
-            logger    => $self->logger
-        }
-    );
+    my $self = shift;
+    $self->_build_helper( 'bulk', $self->bulk_helper_class );
 }
 
 #===================================
-sub _build_indices {
+sub _build__scroll_class {
 #===================================
-    my ( $self, $name ) = @_;
-    require Elasticsearch::Client::Direct::Indices;
-    Elasticsearch::Client::Direct::Indices->new(
+    my $self = shift;
+    $self->_build_helper( 'scroll', $self->scroll_helper_class );
+}
+
+#===================================
+sub _build_helper {
+#===================================
+    my ( $self, $name, $sub_class ) = @_;
+    my $class = load_plugin( 'Elasticsearch', $sub_class );
+    is_compat( $name . '_helper_class', $self->transport, $class );
+    return $class;
+}
+
+#===================================
+sub bulk_helper {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+    $params->{es} ||= $self;
+    $self->_bulk_class->new($params);
+}
+
+#===================================
+sub scroll_helper {
+#===================================
+    my ( $self, $params ) = parse_params(@_);
+    $params->{es} ||= $self;
+    $self->_scroll_class->new($params);
+}
+
+#===================================
+sub _build_cluster  { shift->_build_namespace('Cluster') }
+sub _build_nodes    { shift->_build_namespace('Nodes') }
+sub _build_indices  { shift->_build_namespace('Indices') }
+sub _build_snapshot { shift->_build_namespace('Snapshot') }
+sub _build_cat      { shift->_build_namespace('Cat') }
+#===================================
+
+#===================================
+sub _build_namespace {
+#===================================
+    my ( $self, $ns ) = @_;
+    my $class = load_plugin( __PACKAGE__, [$ns] );
+    return $class->new(
         {   transport => $self->transport,
             logger    => $self->logger
         }
@@ -69,13 +108,15 @@ sub _build_indices {
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Client::Direct - Thin client with full support for Elasticsearch APIs
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 SYNOPSIS
 
@@ -127,8 +168,32 @@ Index-level requests:
 
 Cluster-level requests:
 
-    $state = $e->cluster->state;
-    $stats = $e->cluster->node_stats;
+    $health = $e->cluster->health;
+
+Node-level requests:
+
+    $info  = $e->nodes->info;
+    $stats = $e->nodes->stats;
+
+Snapshot and restore:
+
+    $e->snapshot->create_repository(
+        repository => 'my_backups',
+        type       => 'fs',
+        settings   => {
+            location => '/mnt/backups'
+        }
+    );
+
+    $e->snapshot->create(
+        repository => 'my_backups',
+        snapshot   => 'backup_2014'
+    );
+
+`cat` debugging:
+
+    say $e->cat->allocation;
+    say $e->cat->health;
 
 =head1 DESCRIPTION
 
@@ -146,6 +211,18 @@ This class provides the methods for L<document CRUD|/DOCUMENT CRUD METHODS>,
 L<bulk document CRUD|/BULK DOCUMENT CRUD METHODS> and L<search|/SEARCH METHODS>.
 It also provides access to clients for managing L<indices|/indices()>
 and the L<cluster|/cluster()>.
+
+=head1 BACKWARDS COMPATIBILITY AND ELASTICSEARCH 0.90.x
+
+This version of the client supports the Elasticsearch 1.0 branch by
+default, which is not backwards compatible with the 0.90 branch.
+
+If you need to talk to a version of Elasticsearch before 1.0.0,
+please use L<Elasticsearch::Client::0_90::Direct> as follows:
+
+    $es = Elasticsearch->new(
+        client => '0_90::Direct'
+    );
 
 =head1 CONVENTIONS
 
@@ -222,6 +299,18 @@ Multiple error codes can be specified with an array:
         ignore => [404,409]
     );
 
+=head1 CONFIGURATION
+
+=head2 C<bulk_helper_class>
+
+The class to use for the L</bulk_helper()> method. Defaults to
+L<Elasticsearch::Bulk>.
+
+=head2 C<scroll_helper_class>
+
+The class to use for the L</scroll_helper()> method. Defaults to
+L<Elasticsearch::Scroll>.
+
 =head1 GENERAL METHODS
 
 =head2 C<info()>
@@ -251,8 +340,30 @@ index settings etc.
     $cluster_client = $e->cluster;
 
 Returns an L<Elasticsearch::Client::Direct::Cluster> object which can be used
-for managing the cluster, eg cluster-wide settings, cluster health,
-node information and stats.
+for managing the cluster, eg cluster-wide settings and cluster health.
+
+=head2 C<nodes()>
+
+    $node_client = $e->nodes;
+
+Returns an L<Elasticsearch::Client::Direct::Nodes> object which can be used
+to retrieve node info and stats.
+
+=head2 C<snapshot()>
+
+    $snapshot_client = $e->snapshot;
+
+Returns an L<Elasticsearch::Client::Direct::Snapshot> object which
+is used for managing backup repositories and creating and restoring
+snapshots.
+
+=head2 C<cat()>
+
+    $cat_client = $e->cat;
+
+Returns an L<Elasticsearch::Client::Direct::Cat> object which can be used
+to retrieve simple to read text info for debugging and monitoring an
+Elasticsearch cluster.
 
 =head1 DOCUMENT CRUD METHODS
 
@@ -276,7 +387,6 @@ Query string parameters:
     C<consistency>,
     C<op_type>,
     C<parent>,
-    C<percolate>,
     C<refresh>,
     C<replication>,
     C<routing>,
@@ -307,7 +417,6 @@ Query string parameters:
     C<consistency>,
     C<op_type>,
     C<parent>,
-    C<percolate>,
     C<refresh>,
     C<replication>,
     C<routing>,
@@ -340,7 +449,9 @@ Query string parameters:
     C<preference>,
     C<realtime>,
     C<refresh>,
-    C<routing>
+    C<routing>,
+    C<version>,
+    C<version_type>
 
 See the L<get docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-get.html>
 for more information.
@@ -359,13 +470,16 @@ in the L</index()> method) instead of returning the C<_source> field
 plus the document metadata, ie the C<_index>, C<_type> etc.
 
 Query string parameters:
+    C<_source>,
     C<_source_exclude>,
     C<_source_include>,
     C<parent>,
     C<preference>,
     C<realtime>,
     C<refresh>,
-    C<routing>
+    C<routing>,
+    C<version>,
+    C<version_type>
 
 See the L<get_source docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-get.html>
 for more information.
@@ -456,7 +570,6 @@ Query string parameters:
     C<fields>,
     C<lang>,
     C<parent>,
-    C<percolate>,
     C<realtime>,
     C<refresh>,
     C<replication>,
@@ -470,6 +583,34 @@ Query string parameters:
     C<version_type>
 
 See the L<update docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-update.html>
+for more information.
+
+=head2 C<termvector()>
+
+    $results = $e->termvector(
+        index   => $index,          # required
+        type    => $type,           # required
+        id      => $id,             # required
+
+        body    => {...}            # optional
+    )
+
+The C<termvector()> method retrieves term and field statistics, positions,
+offsets and payloads for the specified document, assuming that termvectors
+have been enabled.
+
+Query string parameters:
+    C<field_statistics>,
+    C<fields>,
+    C<offsets>,
+    C<parent>,
+    C<payloads>,
+    C<positions>,
+    C<preference>,
+    C<routing>,
+    C<term_statistics>
+
+See the L<termvector docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-termvectors.html>
 for more information.
 
 =head1 BULK DOCUMENT CRUD METHODS
@@ -487,7 +628,7 @@ that need to be made, bulk requests greatly improve performance.
         body    => [ actions ]          # required
     );
 
-See L<Elasticsearch::Bulk> for a helper module that makes
+See L<Elasticsearch::Bulk> and L</bulk_helper()> for a helper module that makes
 bulk indexing simpler to use.
 
 The C<bulk()> method can perform multiple L</index()>, L</create()>,
@@ -552,11 +693,17 @@ Query string parameters:
     C<consistency>,
     C<refresh>,
     C<replication>,
-    C<timeout>,
-    C<type>
+    C<timeout>
 
 See the L<bulk docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-bulk.html>
 for more information.
+
+=head2 C<bulk_helper()>
+
+    $bulk_helper = $e->bulk_helper( @args );
+
+Returns a new instance of the class specified in the L</bulk_helper_class>,
+which defaults to L<Elasticsearch::Bulk>.
 
 =head2 C<mget()>
 
@@ -610,7 +757,7 @@ for more information.
 =head2 C<delete_by_query()>
 
     $result = $e->delete_by_query(
-        index => 'index' | \@indices,   # optional
+        index => 'index' | \@indices,   # required
         type  => 'type'  | \@types,     # optional
 
         body  => { query }              # required
@@ -622,21 +769,25 @@ query.  For instance, to delete all documents from 2012:
 
     $result = $e->delete_by_query(
         body  => {
-            range => {
-                date => {
-                    gte => '2012-01-01',
-                    lt  => '2013-01-01'
+            query => {
+                range => {
+                    date => {
+                        gte => '2012-01-01',
+                        lt  => '2013-01-01'
+                    }
                 }
             }
         }
     );
 
 Query string parameters:
+    C<allow_no_indices>,
     C<analyzer>,
     C<consistency>,
     C<default_operator>,
     C<df>,
-    C<ignore_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
     C<q>,
     C<replication>,
     C<routing>,
@@ -644,6 +795,42 @@ Query string parameters:
     C<timeout>
 
 See the L<delete_by_query docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-delete-by-query.html>
+for more information.
+
+=head2 C<mtermvectors()>
+
+    $results = $e->mtermvectors(
+        index   => $index,          # required if type specified
+        type    => $type,           # optional
+
+        body    => { }              # optional
+    )
+
+Runs multiple L</termvector()> requests in a single request, eg:
+
+    $results = $e->mtermvectors(
+        index   => 'test',
+        body    => {
+            docs => [
+                { _type => 'test', _id => 1, fields => ['text'] },
+                { _type => 'test', _id => 2, payloads => 1 },
+            ]
+        }
+    );
+
+Query string parameters:
+    C<field_statistics>,
+    C<fields>,
+    C<ids>,
+    C<offsets>,
+    C<parent>,
+    C<payloads>,
+    C<positions>,
+    C<preference>,
+    C<routing>,
+    C<term_statistics>
+
+See the L<mtermvectors docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-multi-termvectors.html>
 for more information.
 
 =head1 SEARCH METHODS
@@ -663,8 +850,7 @@ and of one, more or all types:
 The C<search()> method searches for matching documents in one or more
 indices.  It is just as easy to search a single index as it is to search
 all the indices in your cluster.  It can also return
-L<facets|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-facets.thml>
-(aggregations on particular fields),
+L<aggregations|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-aggregations.html>
 L<highlighted snippets|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-highlighting.html>
 and L<did-you-mean|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-suggesters-phrase.html>
 or L<search-as-you-type|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-suggesters-completion.html>
@@ -693,14 +879,16 @@ Query string parameters:
     C<_source>,
     C<_source_exclude>,
     C<_source_include>,
+    C<allow_no_indices>,
     C<analyze_wildcard>,
     C<analyzer>,
     C<default_operator>,
     C<df>,
+    C<expand_wildcards>,
     C<explain>,
     C<fields>,
     C<from>,
-    C<ignore_indices>,
+    C<ignore_unavailable>,
     C<indices_boost>,
     C<lenient>,
     C<lowercase_expanded_terms>,
@@ -738,11 +926,17 @@ The C<count()> method returns the total count of all documents matching the
 query:
 
     $results = $e->count(
-        body => { match => { title => 'Elasticsearch clients' }}
+        body => {
+            query => {
+                match => { title => 'Elasticsearch clients' }
+            }
+        }
     );
 
 Query string parameters:
-    C<ignore_indices>,
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
     C<min_score>,
     C<preference>,
     C<routing>,
@@ -767,8 +961,8 @@ B<NOTE:> you will almost always want to set the
 C<search_type> to C<scan> in your
 original C<search()> request.
 
-See L<Elasticsearch::Scroll> for a helper utility which makes
-managing scroll requests much easier.
+See L</scroll_helper()> and L<Elasticsearch::Scroll> for a helper utility
+which makes managing scroll requests much easier.
 
 Query string parameters:
     C<scroll>,
@@ -786,6 +980,13 @@ for more information.
 
 The C<clear_scroll()> method can clear unfinished scroll requests, freeing
 up resources on the server.
+
+=head2 C<scroll_helper()>
+
+    $scroll_helper = $e->scroll_helper( @args );
+
+Returns a new instance of the class specified in the L</scroll_helper_class>,
+which defaults to L<Elasticsearch::Scroll>.
 
 =head2 C<msearch()>
 
@@ -895,16 +1096,101 @@ C<_source> field of the document under the C<doc> key:
     );
 
 Query string parameters:
-    C<prefer_local>
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<percolate_index>,
+    C<percolate_type>,
+    C<preference>,
+    C<routing>,
+    C<version>,
+    C<version_type>
 
 See the L<percolate docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-percolate.html>
+for more information.
+
+=head2 C<count_percolate()>
+
+    $results = $e->count_percolate(
+        index   => 'my_index',      # required
+        type    => 'my_type',       # required
+
+        body    => { percolation }  # required
+    );
+
+The L</count_percolate()> request works just like the L</percolate()>
+request except that it returns a count of all matching queries, instead
+of the queries themselves.
+
+    $results = $e->count_percolate(
+        index   => 'my_index',
+        type    => 'my_type',
+        body    => {
+            doc => {
+                title => 'Elasticsearch rocks'
+            }
+        }
+    );
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<percolate_index>,
+    C<percolate_type>,
+    C<preference>,
+    C<routing>,
+    C<version>,
+    C<version_type>
+
+See the L<percolate docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-percolate.html>
+for more information.
+
+=head2 C<mpercolate()>
+
+    $results = $e->mpercolate(
+        index   => 'my_index',               # required if type
+        type    => 'my_type',                # optional
+
+        body    => [ percolation requests ]  # required
+    );
+
+Multi-percolation allows multiple L</percolate()> requests to be run
+in a single request.
+
+    $results = $e->mpercolate(
+        index   => 'my_index',
+        type    => 'my_type',
+        body    => [
+            # first request
+            { percolate => {
+                index => 'twitter',
+                type  => 'tweet'
+            }},
+            { doc => {message => 'some_text' }},
+
+            # second request
+            { percolate => {
+                index => 'twitter',
+                type  => 'tweet',
+                id    => 1
+            }},
+            {},
+        ]
+    );
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>
+
+See the L<mpercolate docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-percolate.html>
 for more information.
 
 =head2 C<suggest()>
 
     $results = $e->suggest(
         index   => 'index' | \@indices,     # optional
-        type    => 'type'  | \@types,       # optional
 
         body    => { suggest request }      # required
     );
@@ -916,7 +1202,6 @@ suggestion requests, which can also be run as part of a L</search()> request.
 
     $results = $e->suggest(
         index   => 'my_index',
-        type    => 'my_type',
         body    => {
             my_suggestions => {
                 phrase  => {
@@ -928,7 +1213,9 @@ suggestion requests, which can also be run as part of a L</search()> request.
     );
 
 Query string parameters:
-    C<ignore_indices>,
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
     C<preference>,
     C<routing>,
     C<source>
@@ -951,10 +1238,10 @@ Query string parameters:
     C<boost_terms>,
     C<max_doc_freq>,
     C<max_query_terms>,
-    C<max_word_len>,
+    C<max_word_length>,
     C<min_doc_freq>,
     C<min_term_freq>,
-    C<min_word_len>,
+    C<min_word_length>,
     C<mlt_fields>,
     C<percent_terms_to_match>,
     C<routing>,
@@ -977,7 +1264,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

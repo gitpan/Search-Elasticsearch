@@ -1,28 +1,10 @@
 package Elasticsearch::CxnPool::Sniff;
-{
-  $Elasticsearch::CxnPool::Sniff::VERSION = '0.76';
-}
-
+$Elasticsearch::CxnPool::Sniff::VERSION = '1.00';
 use Moo;
-with 'Elasticsearch::Role::CxnPool';
+with 'Elasticsearch::Role::CxnPool::Sniff', 'Elasticsearch::Role::Is_Sync';
+
+use Elasticsearch::Util qw(throw);
 use namespace::clean;
-
-use Elasticsearch::Util qw(parse_params throw);
-use List::Util qw(min);
-use Try::Tiny;
-
-has 'sniff_interval' => ( is => 'ro', default => 300 );
-has 'next_sniff'     => ( is => 'rw', default => 0 );
-has 'sniff_max_content_length' => ( is => 'ro' );
-
-#===================================
-sub BUILDARGS {
-#===================================
-    my ( $class, $params ) = parse_params(@_);
-    $params->{sniff_max_content_length} = !$params->{max_content_length}
-        unless defined $params->{sniff_max_content_length};
-    return $params;
-}
 
 #===================================
 sub next_cxn {
@@ -41,14 +23,6 @@ sub next_cxn {
 
     throw( "NoNodes",
         "No nodes are available: [" . $self->cxns_seeds_str . ']' );
-}
-
-#===================================
-sub schedule_check {
-#===================================
-    my $self = shift;
-    $self->logger->info("Require sniff before next request");
-    $self->next_sniff(-1);
 }
 
 #===================================
@@ -86,49 +60,9 @@ sub sniff {
 #===================================
 sub sniff_cxn {
 #===================================
-    my $self = shift;
-    my $cxn  = shift;
-
-    my $nodes = $cxn->sniff or return;
-    my $protocol = $cxn->protocol;
-    my @live_nodes;
-    my $max       = 0;
-    my $sniff_max = $self->sniff_max_content_length;
-
-    for my $node_id ( keys %$nodes ) {
-        my $data = $nodes->{$node_id};
-
-        my $host = $data->{ $protocol . "_address" } or next;
-        $host =~ s{^inet\[[^/]*/([^\]]+)\]}{$1} or next;
-
-        $host = $self->should_accept_node( $host, $node_id, $data )
-            or next;
-
-        push @live_nodes, $host;
-        next unless $sniff_max and $data->{$protocol};
-
-        my $node_max = $data->{$protocol}{max_content_length_in_bytes} || 0;
-        $max
-            = $node_max == 0 ? $max
-            : $max == 0      ? $node_max
-            :                  min( $node_max, $max );
-    }
-
-    return unless @live_nodes;
-
-    $self->cxn_factory->max_content_length($max)
-        if $sniff_max and $max;
-
-    $self->set_cxns(@live_nodes);
-    my $next = $self->next_sniff( time() + $self->sniff_interval );
-    $self->logger->infof( "Next sniff at: %s", scalar localtime($next) );
-
-    return 1;
+    my ( $self, $cxn ) = @_;
+    return $self->parse_sniff( $cxn->protocol, $cxn->sniff );
 }
-
-#===================================
-sub should_accept_node { return $_[1] }
-#===================================
 
 1;
 
@@ -138,13 +72,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::CxnPool::Sniff - A CxnPool for connecting to a local cluster with a dynamic node list
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 SYNOPSIS
 
@@ -176,7 +112,8 @@ For L<HTTP Cxn classes|Elasticsearch::Role::Cxn::HTTP>, this module
 will also dynamically detect the C<max_content_length> which the nodes
 in the cluster will accept.
 
-This class does L<Elasticsearch::Role::CxnPool>.
+This class does L<Elasticsearch::Role::CxnPool::Sniff> and
+L<Elasticsearch::Role::Is_Sync>.
 
 =head1 CONFIGURATION
 
@@ -285,7 +222,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 

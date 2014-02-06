@@ -1,9 +1,5 @@
-#===================================
 package Elasticsearch::Client::Direct::Indices;
-{
-  $Elasticsearch::Client::Direct::Indices::VERSION = '0.76';
-}
-#===================================
+$Elasticsearch::Client::Direct::Indices::VERSION = '1.00';
 use Moo;
 with 'Elasticsearch::Role::API';
 with 'Elasticsearch::Role::Client::Direct';
@@ -13,13 +9,15 @@ __PACKAGE__->_install_api('indices');
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 Elasticsearch::Client::Direct::Indices - A client for running index-level requests
 
 =head1 VERSION
 
-version 0.76
+version 1.00
 
 =head1 DESCRIPTION
 
@@ -62,6 +60,12 @@ for more information.
 The C<exists()> method returns C<1> or the empty string to indicate
 whether the specified index or indices exist.
 
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<local>
+
 See the L<index exists docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-indices-exists.html>
 for more information.
 
@@ -74,6 +78,9 @@ for more information.
 The C<delete()> method deletes the specified indices.
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
     C<master_timeout>,
     C<timeout>
 
@@ -90,6 +97,9 @@ The C<close()> method closes the specified indices, reducing resource usage
 but allowing them to be reopened later.
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>
     C<master_timeout>,
     C<timeout>
 
@@ -99,12 +109,15 @@ for more information.
 =head2 C<open()>
 
     $response = $e->indices->open(
-        index => 'index' | \@indices    # optional
+        index => 'index' | \@indices    # required
     );
 
 The C<open()> method opens closed indices.
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>
     C<master_timeout>,
     C<timeout>
 
@@ -121,14 +134,16 @@ The C<clear_cache()> method is used to clear the in-memory filter, fielddata,
 or id cache for the specified indices.
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
     C<fielddata>,
     C<fields>,
     C<filter>,
     C<filter_cache>,
     C<filter_keys>,
     C<id>,
-    C<ignore_indices>,
-    C<index>,
+    C<id_cache>,
+    C<ignore_unavailable>,
     C<recycler>
 
 See the L<clear_cache docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-clearcache.html>
@@ -145,7 +160,10 @@ allowing recent changes to become visible to search. This process normally
 happens automatically once every second by default.
 
 Query string parameters:
-    C<ignore_indices>
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<force>,
+    C<ignore_unavailable>
 
 See the L<refresh index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-refresh.html>
 for more information.
@@ -161,10 +179,11 @@ written to disk with an C<fsync>, and clears out the transaction log.
 This process normally happens automatically.
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
     C<force>,
     C<full>,
-    C<ignore_indices>,
-    C<refresh>
+    C<ignore_unavailable>
 
 See the L<flush index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-flush.html>
 for more information.
@@ -180,11 +199,12 @@ C<max_num_segments>.  This is a very heavy operation and should only be run
 with care, and only on indices that are no longer being updated.
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
     C<flush>,
-    C<ignore_indices>,
+    C<ignore_unavailable>,
     C<max_num_segments>,
     C<only_expunge_deletes>,
-    C<refresh>,
     C<wait_for_merge>
 
 See the L<optimize index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-optimize.html>
@@ -197,6 +217,11 @@ for more information.
     );
 
 Deprecated.
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>
 
 See the L<snapshot_index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/>
 for more information.
@@ -232,6 +257,9 @@ For instance:
     );
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
     C<ignore_conflicts>,
     C<master_timeout>,
     C<timeout>
@@ -249,6 +277,12 @@ for more information.
 The C<get_mapping()> method returns the type definitions for one, more or
 all types in one, more or all indices.
 
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<local>
+
 See the L<get_mapping docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-get-mapping.html>
 for more information.
 
@@ -265,13 +299,20 @@ for more information.
 The C<get_field_mapping()> method returns the field definitions for one, more or
 all fields in one, more or all types and indices.
 
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<include_defaults>,
+    C<local>
+
 See the L<get_mapping docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html>
 for more information.
 
 =head2 C<exists_type()>
 
     $bool = $e->indices->exists_type(
-        index => 'index' | \@indices    # optional,
+        index => 'index' | \@indices    # required,
         type  => 'type'  | \@types      # required
     );
 
@@ -279,16 +320,19 @@ The C<exists_type()> method checks for the existence of all specified types
 in all specified indices, and returns C<1> or the empty string.
 
 Query string parameters:
-    C<ignore_indices>
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<local>
 
 See the L<exists_type docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-types-exists.html>
 for more information.
 
 =head2 C<delete_mapping()>
 
-    $response = $e->indices->delete(
+    $response = $e->indices->delete_mapping(
         index => 'index' | \@indices    # required,
-        type  => 'type'                 # required
+        type  => 'type'  | \@types      # required
     );
 
 The C<delete_mapping()> method deletes the type mappings (and all documents of
@@ -331,12 +375,14 @@ for more information.
 
     $result = $e->indices->get_aliases(
         index   => 'index' | \@indices      # optional
+        alias   => 'alias' | \@aliases      # optional
     );
 
 The C<get_aliases()> method returns a list of aliases per index for all
 the specified indices.
 
 Query string parameters:
+    C<local>,
     C<timeout>
 
 See the L<get_aliases docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-aliases.html>
@@ -345,13 +391,13 @@ for more information.
 =head2 C<put_alias()>
 
     $response = $e->indices->put_alias(
-        index => 'index',                   # required
+        index => 'index' | \@indices        # optional,
         name  => 'alias',                   # required
 
         body  => { alias defn }             # optional
     );
 
-The C<put_alias()> method creates a single index alias. For instance:
+The C<put_alias()> method creates an index alias. For instance:
 
     $response = $e->indices->put_alias(
         index => 'my_index',
@@ -372,14 +418,17 @@ for more information.
 
     $result = $e->indices->get_alias(
         index   => 'index' | \@indices,     # optional
-        name    => 'alias' | \@aliases      # required
+        name    => 'alias' | \@aliases      # optional
     );
 
 The C<get_alias()> method returns the alias definitions for the specified
 aliases in the specified indices.
 
 Query string parameters:
-    C<ignore_indices>
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<local>
 
 See the L<get_alias docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-aliases.html>
 for more information.
@@ -388,14 +437,17 @@ for more information.
 
     $bool = $e->indices->exists_alias(
         index   => 'index' | \@indices,     # optional
-        name    => 'alias' | \@aliases      # required
+        name    => 'alias' | \@aliases      # optional
     );
 
 The C<exists_alias()> method returns C<1> or the empty string depending on
 whether the specified aliases exist in the specified indices.
 
 Query string parameters:
-    C<ignore_indices>
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<local>
 
 See the L<exists_alias docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-aliases.html>
 for more information.
@@ -403,11 +455,12 @@ for more information.
 =head2 C<delete_alias()>
 
     $response = $e->indices->delete_alias(
-        index   => 'index',                 # required
-        name    => 'alias'                  # required
+        index   => 'index' | \@indices        # required,
+        name    => 'alias' | \@aliases        # required
     );
 
-The C<delete_alias()> method deletes a single alias in a single index.
+The C<delete_alias()> method deletes one or more aliases from one or more
+indices.
 
 Query string parameters:
     C<master_timeout>,
@@ -420,7 +473,7 @@ for more information.
 
 =head2 C<put_settings()>
 
-    $response = $e->indices->get_settings(
+    $response = $e->indices->put_settings(
         index   => 'index' | \@indices      # optional
 
         body    => { settings }
@@ -436,6 +489,10 @@ indices or all indices. For instance:
     );
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<flat_settings>,
+    C<ignore_unavailable>,
     C<master_timeout>
 
 See the L<put_settings docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-update-settings.html>
@@ -445,10 +502,18 @@ for more information.
 
     $result = $e->indices->get_settings(
         index   => 'index' | \@indices      # optional
+        name    => 'name'  | \@names        # optional
     );
 
 The C<get_settings()> method retrieves the index settings for the specified
 indices or all indices.
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<flat_settings>,
+    C<ignore_unavailable>,
+    C<local>
 
 See the L<get_settings docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-get-settings.html>
 for more information.
@@ -465,6 +530,7 @@ for more information.
 The C<put_template()> method is used to create or update index templates.
 
 Query string parameters:
+    C<flat_settings>,
     C<master_timeout>,
     C<order>,
     C<timeout>
@@ -475,10 +541,28 @@ for more information.
 =head2 C<get_template()>
 
     $result = $e->indices->get_template(
-        name  => 'template'                 # required
+        name  => 'template'                 # optional
     );
 
 The C<get_template()> method is used to retrieve a named template.
+
+Query string parameters:
+    C<flat_settings>,
+    C<local>
+
+See the L<get_template docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-templates.html>
+for more information.
+
+=head2 C<exists_template()>
+
+    $result = $e->indices->exists_template(
+        name  => 'template'                 # required
+    );
+
+The C<exists_template()> method is used to check whether the named template exists.
+
+Query string parameters:
+    C<local>
 
 See the L<get_template docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-templates.html>
 for more information.
@@ -504,6 +588,7 @@ for more information.
 
     $response = $e->indices->put_warmer(
         index   => 'index' | \@indices,     # optional
+        type    => 'type'  | \@types,       # optional
         name    => 'warmer',                # required
 
         body    => { warmer defn }          # required
@@ -522,6 +607,9 @@ to user searches.  For instance:
     );
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
     C<master_timeout>
 
 See the L<put_warmer docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-warmers.html>
@@ -531,10 +619,17 @@ for more information.
 
     $response = $e->indices->get_warmer(
         index   => 'index'  | \@indices,    # optional
+        type    => 'type'   | \@types,      # optional
         name    => 'warmer' | \@warmers,    # optional
     );
 
 The C<get_warmer()> method is used to retrieve warmers by name.
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<local>
 
 See the L<get_warmer docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-warmers.html>
 for more information.
@@ -543,7 +638,7 @@ for more information.
 
     $response = $e->indices->get_warmer(
         index   => 'index'  | \@indices,    # required
-        name    => 'warmer' | \@warmers,    # optional
+        name    => 'warmer' | \@warmers,    # required
     );
 
 The C<delete_warmer()> method is used to delete warmers by name.
@@ -559,34 +654,40 @@ for more information.
 =head2 C<stats()>
 
     $result = $e->indices->stats(
-        index   => 'index' | \@indices      # optional
+        index   => 'index'  | \@indices      # optional
+        metric  => 'metric' | \@metrics      # optional
     );
 
 The C<stats()> method returns statistical information about one, more or all
-indices.  Use the query string parameters to specify what information you
-want returned.
+indices. By default it returns all metrics, but you can limit which metrics
+are returned by specifying the C<metric>.
 
-Query string parameters:
-    C<all>,
-    C<clear>,
-    C<completion>,
-    C<completion_fields>,
+Allowed metrics are:
+    C<_all>,
+    C<completion>
     C<docs>,
     C<fielddata>,
-    C<fielddata_fields>,
-    C<fields>,
     C<filter_cache>,
     C<flush>,
     C<get>,
-    C<groups>,
     C<id_cache>,
-    C<ignore_indices>,
     C<indexing>,
     C<merge>,
+    C<percolate>,
     C<refresh>,
     C<search>,
+    C<segments>,
     C<store>,
     C<warmer>
+
+Query string parameters:
+    C<completion_fields>,
+    C<fielddata_fields>,
+    C<fields>,
+    C<groups>,
+    C<human>,
+    C<level>,
+    C<types>
 
 See the L<stats docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-stats.html>
 for more information.
@@ -600,7 +701,10 @@ for more information.
 Deprecated.
 
 Query string parameters:
-    C<ignore_indices>,
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<human>,
+    C<ignore_unavailable>,
     C<recovery>,
     C<snapshot>
 
@@ -617,7 +721,10 @@ The C<segments()> method is used to return information about the segments
 that an index contains.
 
 Query string parameters:
-    C<ignore_indices>
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<human>,
+    C<ignore_unavailable>
 
 See the L<segments docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-segments.html>
 for more information.
@@ -641,7 +748,6 @@ Query string parameters:
     C<field>,
     C<filters>,
     C<format>,
-    C<index>,
     C<prefer_local>,
     C<text>,
     C<tokenizer>
@@ -653,6 +759,8 @@ for more information.
 
     $result = $e->indices->validate_query(
         index   => 'index' | \@indices,     # optional
+        type    => 'type'  | \@types,       # optional
+
         body    => { query }
     );
 
@@ -661,8 +769,10 @@ whether the query is valid or not.  Most useful when C<explain> is set
 to C<true>, in which case it includes an execution plan in the output.
 
 Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
     C<explain>,
-    C<ignore_indices>,
+    C<ignore_unavailable>,
     C<q>,
     C<source>
 
@@ -675,7 +785,7 @@ Clinton Gormley <drtech@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Elasticsearch BV.
+This software is Copyright (c) 2014 by Elasticsearch BV.
 
 This is free software, licensed under:
 
