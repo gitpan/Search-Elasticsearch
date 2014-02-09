@@ -1,5 +1,5 @@
 package Elasticsearch::Client::Direct::Cat;
-$Elasticsearch::Client::Direct::Cat::VERSION = '1.00';
+$Elasticsearch::Client::Direct::Cat::VERSION = '1.01';
 use Moo;
 with 'Elasticsearch::Role::API';
 with 'Elasticsearch::Role::Client::Direct';
@@ -28,7 +28,7 @@ Elasticsearch::Client::Direct::Cat - A client for running cat debugging requests
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 DESCRIPTION
 

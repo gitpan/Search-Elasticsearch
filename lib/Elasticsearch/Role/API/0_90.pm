@@ -1,5 +1,5 @@
 package Elasticsearch::Role::API::0_90;
-$Elasticsearch::Role::API::0_90::VERSION = '1.00';
+$Elasticsearch::Role::API::0_90::VERSION = '1.01';
 use Moo::Role;
 
 use Elasticsearch::Util qw(throw);
@@ -946,7 +946,7 @@ Elasticsearch::Role::API::0_90 - This class contains the spec for the Elasticsea
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 DESCRIPTION
 

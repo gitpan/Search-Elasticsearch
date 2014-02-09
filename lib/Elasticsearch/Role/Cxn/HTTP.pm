@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Cxn::HTTP;
-$Elasticsearch::Role::Cxn::HTTP::VERSION = '1.00';
+$Elasticsearch::Role::Cxn::HTTP::VERSION = '1.01';
 use Moo::Role;
 
 use URI();
@@ -155,7 +155,7 @@ Elasticsearch::Role::Cxn::HTTP - Provides common functionality to HTTP Cxn imple
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 DESCRIPTION
 

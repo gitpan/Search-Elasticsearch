@@ -1,5 +1,5 @@
 package Elasticsearch::CxnPool::Static::NoPing;
-$Elasticsearch::CxnPool::Static::NoPing::VERSION = '1.00';
+$Elasticsearch::CxnPool::Static::NoPing::VERSION = '1.01';
 use Moo;
 with 'Elasticsearch::Role::CxnPool::Static::NoPing',
     'Elasticsearch::Role::Is_Sync';
@@ -42,7 +42,7 @@ Elasticsearch::CxnPool::Static::NoPing - A CxnPool for connecting to a remote cl
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,5 @@
 package Elasticsearch::Util;
-$Elasticsearch::Util::VERSION = '1.00';
+$Elasticsearch::Util::VERSION = '1.01';
 use Moo;
 use Elasticsearch::Error();
 use Scalar::Util qw(blessed);
@@ -60,8 +60,8 @@ sub load_plugin {
     unless ( $class =~ s/\A\+// ) {
         $class = compose_module_name( $base, $class );
     }
-    use_module( $class, $version );
-    return $class;
+
+    $version ? use_module( $class, $version ) : use_module($class);
 }
 
 #===================================
@@ -117,7 +117,7 @@ Elasticsearch::Util - A utility class for internal use by Elasticsearch
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 AUTHOR
 

@@ -1,5 +1,5 @@
 package Elasticsearch::Role::CxnPool::Static;
-$Elasticsearch::Role::CxnPool::Static::VERSION = '1.00';
+$Elasticsearch::Role::CxnPool::Static::VERSION = '1.01';
 use Moo::Role;
 with 'Elasticsearch::Role::CxnPool';
 requires 'next_cxn';
@@ -39,7 +39,7 @@ Elasticsearch::Role::CxnPool::Static - A CxnPool role for connecting to a remote
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 AUTHOR
 

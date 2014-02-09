@@ -1,5 +1,5 @@
 package Elasticsearch::Cxn::HTTPTiny;
-$Elasticsearch::Cxn::HTTPTiny::VERSION = '1.00';
+$Elasticsearch::Cxn::HTTPTiny::VERSION = '1.01';
 use Moo;
 with 'Elasticsearch::Role::Cxn::HTTP',
     'Elasticsearch::Role::Cxn',
@@ -83,7 +83,7 @@ Elasticsearch::Cxn::HTTPTiny - A Cxn implementation which uses HTTP::Tiny
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 DESCRIPTION
 

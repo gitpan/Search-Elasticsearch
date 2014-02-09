@@ -1,5 +1,5 @@
 package Elasticsearch::Cxn::Factory;
-$Elasticsearch::Cxn::Factory::VERSION = '1.00';
+$Elasticsearch::Cxn::Factory::VERSION = '1.01';
 use Moo;
 use Elasticsearch::Util qw(parse_params load_plugin);
 use namespace::clean;
@@ -47,7 +47,7 @@ Elasticsearch::Cxn::Factory - Used by CxnPools to create new Cxn instances.
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 DESCRIPTION
 

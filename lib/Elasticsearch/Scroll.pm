@@ -1,5 +1,5 @@
 package Elasticsearch::Scroll;
-$Elasticsearch::Scroll::VERSION = '1.00';
+$Elasticsearch::Scroll::VERSION = '1.01';
 use Moo;
 use Elasticsearch::Util qw(parse_params);
 use namespace::clean;
@@ -109,7 +109,7 @@ Elasticsearch::Scroll - A helper module for scrolled searches
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 SYNOPSIS
 

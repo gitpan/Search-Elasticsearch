@@ -1,5 +1,5 @@
 package Elasticsearch::Bulk;
-$Elasticsearch::Bulk::VERSION = '1.00';
+$Elasticsearch::Bulk::VERSION = '1.01';
 use Moo;
 with 'Elasticsearch::Role::Bulk', 'Elasticsearch::Role::Is_Sync';
 use Elasticsearch::Util qw(parse_params throw);
@@ -106,7 +106,7 @@ Elasticsearch::Bulk - A helper module for the Bulk API and for reindexing
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 SYNOPSIS
 

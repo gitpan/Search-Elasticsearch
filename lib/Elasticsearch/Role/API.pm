@@ -1,5 +1,5 @@
 package Elasticsearch::Role::API;
-$Elasticsearch::Role::API::VERSION = '1.00';
+$Elasticsearch::Role::API::VERSION = '1.01';
 use Moo::Role;
 
 use Elasticsearch::Util qw(throw);
@@ -1314,7 +1314,7 @@ Elasticsearch::Role::API - This class contains the spec for the Elasticsearch AP
 
 =head1 VERSION
 
-version 1.00
+version 1.01
 
 =head1 DESCRIPTION
 
