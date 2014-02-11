@@ -1,5 +1,5 @@
 package Elasticsearch::CxnPool::Sniff;
-$Elasticsearch::CxnPool::Sniff::VERSION = '1.01';
+$Elasticsearch::CxnPool::Sniff::VERSION = '1.02';
 use Moo;
 with 'Elasticsearch::Role::CxnPool::Sniff', 'Elasticsearch::Role::Is_Sync';
 
@@ -80,7 +80,7 @@ Elasticsearch::CxnPool::Sniff - A CxnPool for connecting to a local cluster with
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 SYNOPSIS
 

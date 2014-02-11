@@ -1,5 +1,5 @@
 package Elasticsearch::Role::CxnPool::Static::NoPing;
-$Elasticsearch::Role::CxnPool::Static::NoPing::VERSION = '1.01';
+$Elasticsearch::Role::CxnPool::Static::NoPing::VERSION = '1.02';
 use Moo::Role;
 with 'Elasticsearch::Role::CxnPool';
 requires 'next_cxn';
@@ -55,7 +55,7 @@ Elasticsearch::Role::CxnPool::Static::NoPing - A CxnPool for connecting to a rem
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 AUTHOR
 

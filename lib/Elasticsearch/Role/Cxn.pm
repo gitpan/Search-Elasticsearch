@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Cxn;
-$Elasticsearch::Role::Cxn::VERSION = '1.01';
+$Elasticsearch::Role::Cxn::VERSION = '1.02';
 use Moo::Role;
 use Elasticsearch::Util qw(throw);
 use List::Util qw(min);
@@ -185,7 +185,7 @@ Elasticsearch::Role::Cxn - Provides common functionality to Cxn implementations
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 DESCRIPTION
 

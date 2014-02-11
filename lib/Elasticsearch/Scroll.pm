@@ -1,5 +1,5 @@
 package Elasticsearch::Scroll;
-$Elasticsearch::Scroll::VERSION = '1.01';
+$Elasticsearch::Scroll::VERSION = '1.02';
 use Moo;
 use Elasticsearch::Util qw(parse_params);
 use namespace::clean;
@@ -44,7 +44,7 @@ sub next {
     }
     my @return = splice( @{ $self->_buffer }, 0, $n );
     $self->finish if @return < $n;
-    return @return;
+    return wantarray ? @return : $return[-1];
 }
 
 #===================================
@@ -109,7 +109,7 @@ Elasticsearch::Scroll - A helper module for scrolled searches
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 SYNOPSIS
 
@@ -316,7 +316,7 @@ the buffer.
 
     $scroll->finish;
 
-The C<finish()> method clears out the buffer, sets L</eof()> to C<true>
+The C<finish()> method clears out the buffer, sets L</is_finished()> to C<true>
 and tries to clear the C<scroll_id> on Elasticsearch.  This API is only
 supported since v0.90.5, but the call to C<clear_scroll> is wrapped in an
 C<eval> so the C<finish()> method can be safely called with any version

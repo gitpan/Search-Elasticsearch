@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Transport;
-$Elasticsearch::Role::Transport::VERSION = '1.01';
+$Elasticsearch::Role::Transport::VERSION = '1.02';
 use Moo::Role;
 
 requires qw(perform_request);
@@ -72,7 +72,7 @@ Elasticsearch::Role::Transport - Transport role providing interface between the 
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 AUTHOR
 

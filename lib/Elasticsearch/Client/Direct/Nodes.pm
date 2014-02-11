@@ -1,5 +1,5 @@
 package Elasticsearch::Client::Direct::Nodes;
-$Elasticsearch::Client::Direct::Nodes::VERSION = '1.01';
+$Elasticsearch::Client::Direct::Nodes::VERSION = '1.02';
 use Moo;
 with 'Elasticsearch::Role::API';
 with 'Elasticsearch::Role::Client::Direct';
@@ -17,7 +17,7 @@ Elasticsearch::Client::Direct::Nodes - A client for running node-level requests
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 DESCRIPTION
 

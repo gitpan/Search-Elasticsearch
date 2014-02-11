@@ -1,5 +1,5 @@
 package Elasticsearch::Util;
-$Elasticsearch::Util::VERSION = '1.01';
+$Elasticsearch::Util::VERSION = '1.02';
 use Moo;
 use Elasticsearch::Error();
 use Scalar::Util qw(blessed);
@@ -117,7 +117,7 @@ Elasticsearch::Util - A utility class for internal use by Elasticsearch
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 AUTHOR
 

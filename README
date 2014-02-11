@@ -2,7 +2,7 @@ NAME
     Elasticsearch - The official client for Elasticsearch
 
 VERSION
-    version 1.01
+    version 1.02
 
 SYNOPSIS
         use Elasticsearch;

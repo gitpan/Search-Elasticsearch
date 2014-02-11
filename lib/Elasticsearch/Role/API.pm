@@ -1,5 +1,5 @@
 package Elasticsearch::Role::API;
-$Elasticsearch::Role::API::VERSION = '1.01';
+$Elasticsearch::Role::API::VERSION = '1.02';
 use Moo::Role;
 
 use Elasticsearch::Util qw(throw);
@@ -566,6 +566,13 @@ sub api {
             [ {}, "_cat", "shards" ],
         ],
         qs => [ "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.thread_pool' => {
+        doc   => "cat-thread-pool",
+        parts => {},
+        paths => [ [ {}, "_cat", "thread_pool" ] ],
+        qs    => [ "full_id", "h", "help", "local", "master_timeout", "v" ],
     },
 
     'cluster.get_settings' => {
@@ -1314,7 +1321,7 @@ Elasticsearch::Role::API - This class contains the spec for the Elasticsearch AP
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 DESCRIPTION
 

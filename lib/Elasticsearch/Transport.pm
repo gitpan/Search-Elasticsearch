@@ -1,5 +1,5 @@
 package Elasticsearch::Transport;
-$Elasticsearch::Transport::VERSION = '1.01';
+$Elasticsearch::Transport::VERSION = '1.02';
 use Moo;
 
 use URI();
@@ -72,7 +72,7 @@ Elasticsearch::Transport - Provides interface between the client class and the E
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 DESCRIPTION
 

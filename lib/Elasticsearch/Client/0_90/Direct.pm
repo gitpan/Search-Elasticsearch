@@ -1,5 +1,5 @@
 package Elasticsearch::Client::0_90::Direct;
-$Elasticsearch::Client::0_90::Direct::VERSION = '1.01';
+$Elasticsearch::Client::0_90::Direct::VERSION = '1.02';
 use Moo;
 with 'Elasticsearch::Role::API::0_90';
 with 'Elasticsearch::Role::Client::Direct';
@@ -110,7 +110,7 @@ Elasticsearch::Client::0_90::Direct - Thin client with full support for Elastics
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 SYNOPSIS
 

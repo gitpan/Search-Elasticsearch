@@ -1,5 +1,5 @@
 package Elasticsearch::Util::API::QS;
-$Elasticsearch::Util::API::QS::VERSION = '1.01';
+$Elasticsearch::Util::API::QS::VERSION = '1.02';
 use strict;
 use warnings;
 
@@ -71,6 +71,7 @@ our %Params = (
     from             => { type => 'number' },
     fs               => { type => 'bool' },
     full             => { type => 'bool' },
+    full_id          => { type => 'bool' },
     get              => { type => 'bool' },
     groups           => { type => 'list' },
     http             => { type => 'bool' },
@@ -248,7 +249,7 @@ Elasticsearch::Util::API::QS - A utility class for query string parameters in th
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 DESCRIPTION
 

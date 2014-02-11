@@ -1,5 +1,5 @@
 package Elasticsearch::Client::0_90::Direct::Indices;
-$Elasticsearch::Client::0_90::Direct::Indices::VERSION = '1.01';
+$Elasticsearch::Client::0_90::Direct::Indices::VERSION = '1.02';
 use Moo;
 with 'Elasticsearch::Role::API::0_90';
 with 'Elasticsearch::Role::Client::Direct';
@@ -17,7 +17,7 @@ Elasticsearch::Client::0_90::Direct::Indices - A client for running index-level 
 
 =head1 VERSION
 
-version 1.01
+version 1.02
 
 =head1 DESCRIPTION
 
