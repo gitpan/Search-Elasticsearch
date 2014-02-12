@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Client::Direct;
-$Elasticsearch::Role::Client::Direct::VERSION = '1.02';
+$Elasticsearch::Role::Client::Direct::VERSION = '1.03';
 use Moo::Role;
 with 'Elasticsearch::Role::Client';
 use Elasticsearch::Util::API::Path qw(path_handler);
@@ -119,7 +119,7 @@ Elasticsearch::Role::Client::Direct - Request parsing for Direct clients
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 DESCRIPTION
 

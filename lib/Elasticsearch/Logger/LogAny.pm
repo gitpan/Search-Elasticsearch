@@ -1,5 +1,5 @@
 package Elasticsearch::Logger::LogAny;
-$Elasticsearch::Logger::LogAny::VERSION = '1.02';
+$Elasticsearch::Logger::LogAny::VERSION = '1.03';
 use Moo;
 with 'Elasticsearch::Role::Logger';
 use Elasticsearch::Util qw(parse_params to_list);
@@ -44,7 +44,7 @@ Elasticsearch::Logger::LogAny - A Log::Any-based Logger implementation
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,5 @@
 package Elasticsearch::Util::API::Path;
-$Elasticsearch::Util::API::Path::VERSION = '1.02';
+$Elasticsearch::Util::API::Path::VERSION = '1.03';
 use strict;
 use warnings;
 use Any::URI::Escape qw(uri_escape);
@@ -66,7 +66,7 @@ Elasticsearch::Util::API::Path - A utility class for converting path templates i
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 DESCRIPTION
 

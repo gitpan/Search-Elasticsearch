@@ -1,5 +1,5 @@
 package Elasticsearch::Role::CxnPool::Sniff;
-$Elasticsearch::Role::CxnPool::Sniff::VERSION = '1.02';
+$Elasticsearch::Role::CxnPool::Sniff::VERSION = '1.03';
 use Moo::Role;
 with 'Elasticsearch::Role::CxnPool';
 requires 'next_cxn', 'sniff', 'sniff_cxn';
@@ -92,7 +92,7 @@ Elasticsearch::Role::CxnPool::Sniff - A CxnPool role for connecting to a local c
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 AUTHOR
 

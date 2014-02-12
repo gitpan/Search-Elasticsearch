@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Is_Sync;
-$Elasticsearch::Role::Is_Sync::VERSION = '1.02';
+$Elasticsearch::Role::Is_Sync::VERSION = '1.03';
 use Moo::Role;
 use namespace::clean;
 
@@ -19,7 +19,7 @@ Elasticsearch::Role::Is_Sync - A role to mark classes which should be used with 
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 AUTHOR
 

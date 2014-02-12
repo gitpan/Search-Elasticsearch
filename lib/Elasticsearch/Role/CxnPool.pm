@@ -1,5 +1,5 @@
 package Elasticsearch::Role::CxnPool;
-$Elasticsearch::Role::CxnPool::VERSION = '1.02';
+$Elasticsearch::Role::CxnPool::VERSION = '1.03';
 use Moo::Role;
 use Elasticsearch::Util qw(parse_params);
 use List::Util qw(shuffle);
@@ -134,7 +134,7 @@ Elasticsearch::Role::CxnPool - Provides common functionality to the CxnPool impl
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 DESCRIPTION
 

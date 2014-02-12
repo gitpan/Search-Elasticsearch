@@ -1,5 +1,5 @@
 package Elasticsearch::Client::Direct::Cluster;
-$Elasticsearch::Client::Direct::Cluster::VERSION = '1.02';
+$Elasticsearch::Client::Direct::Cluster::VERSION = '1.03';
 use Moo;
 with 'Elasticsearch::Role::API';
 with 'Elasticsearch::Role::Client::Direct';
@@ -29,7 +29,7 @@ Elasticsearch::Client::Direct::Cluster - A client for running cluster-level requ
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 DESCRIPTION
 

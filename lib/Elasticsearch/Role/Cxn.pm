@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Cxn;
-$Elasticsearch::Role::Cxn::VERSION = '1.02';
+$Elasticsearch::Role::Cxn::VERSION = '1.03';
 use Moo::Role;
 use Elasticsearch::Util qw(throw);
 use List::Util qw(min);
@@ -101,12 +101,9 @@ sub sniff {
     $self->logger->infof( 'Sniffing [%s]', $self->stringify );
     return try {
         $self->perform_request(
-            {   method => 'GET',
-                path   => '/_cluster/nodes',
-                qs     => {
-                    timeout   => 1000 * $self->sniff_timeout,
-                    $protocol => 1
-                },
+            {   method  => 'GET',
+                path    => '/_nodes/' . $protocol,
+                qs      => { timeout => 1000 * $self->sniff_timeout },
                 timeout => $self->sniff_request_timeout,
             }
         )->{nodes};
@@ -185,7 +182,7 @@ Elasticsearch::Role::Cxn - Provides common functionality to Cxn implementations
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 DESCRIPTION
 
