@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Scroll;
-$Elasticsearch::Role::Scroll::VERSION = '1.03';
+$Elasticsearch::Role::Scroll::VERSION = '1.04';
 use Moo::Role;
 requires 'finish';
 use Elasticsearch::Util qw(parse_params throw);
@@ -53,7 +53,7 @@ Elasticsearch::Role::Scroll - Provides common functionality to L<Elasticseach::S
 
 =head1 VERSION
 
-version 1.03
+version 1.04
 
 =head1 AUTHOR
 

@@ -2,7 +2,7 @@ NAME
     Elasticsearch - The official client for Elasticsearch
 
 VERSION
-    version 1.03
+    version 1.04
 
 SYNOPSIS
         use Elasticsearch;
@@ -317,9 +317,9 @@ MODULES
   "cxn"
     The class which handles raw requests to Elasticsearch nodes. See:
 
-    *   Elasticsearch::Cxn::LWP (default)
+    *   Elasticsearch::Cxn::HTTPTiny (default)
 
-    *   Elasticsearch::Cxn::HTTPTiny
+    *   Elasticsearch::Cxn::LWP
 
     *   Elasticsearch::Cxn::NetCurl
 

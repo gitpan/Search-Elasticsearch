@@ -1,5 +1,5 @@
 package Elasticsearch::Client::Direct::Snapshot;
-$Elasticsearch::Client::Direct::Snapshot::VERSION = '1.03';
+$Elasticsearch::Client::Direct::Snapshot::VERSION = '1.04';
 use Moo;
 with 'Elasticsearch::Role::API';
 with 'Elasticsearch::Role::Client::Direct';
@@ -17,7 +17,7 @@ Elasticsearch::Client::Direct::Snapshot - A client for managing snapshot/restore
 
 =head1 VERSION
 
-version 1.03
+version 1.04
 
 =head1 DESCRIPTION
 

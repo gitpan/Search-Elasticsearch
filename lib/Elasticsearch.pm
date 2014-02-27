@@ -5,7 +5,7 @@ use Moo 1.003;
 use Elasticsearch::Util qw(parse_params load_plugin);
 use namespace::clean;
 
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 
 my %Default_Plugins = (
     client      => [ 'Elasticsearch::Client',       'Direct' ],
@@ -30,7 +30,7 @@ sub new {
 #===================================
     my ( $class, $params ) = parse_params(@_);
 
-    $params->{cxn} ||= 'LWP';
+    $params->{cxn} ||= 'HTTPTiny';
 
     for my $name (@Load_Order) {
         my ( $base, $default ) = @{ $Default_Plugins{$name} };
@@ -75,7 +75,7 @@ Elasticsearch - The official client for Elasticsearch
 
 =head1 VERSION
 
-version 1.03
+version 1.04
 
 =head1 SYNOPSIS
 
@@ -445,9 +445,9 @@ See:
 
 =over
 
-=item * L<Elasticsearch::Cxn::LWP> (default)
+=item * L<Elasticsearch::Cxn::HTTPTiny> (default)
 
-=item * L<Elasticsearch::Cxn::HTTPTiny>
+=item * L<Elasticsearch::Cxn::LWP>
 
 =item * L<Elasticsearch::Cxn::NetCurl>
 

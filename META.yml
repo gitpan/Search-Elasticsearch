@@ -27,7 +27,7 @@ requires:
   File::Temp: '0'
   HTTP::Headers: '0'
   HTTP::Request: '0'
-  HTTP::Tiny: '0.036'
+  HTTP::Tiny: '0.043'
   IO::Select: '0'
   IO::Socket: '0'
   IO::Socket::SSL: '0'
@@ -54,4 +54,4 @@ requires:
 resources:
   bugtracker: https://github.com/elasticsearch/elasticsearch-perl/issues
   repository: git://github.com/elasticsearch/elasticsearch-perl.git
-version: '1.03'
+version: '1.04'

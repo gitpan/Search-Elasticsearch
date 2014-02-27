@@ -1,5 +1,5 @@
 package Elasticsearch::Role::API::0_90;
-$Elasticsearch::Role::API::0_90::VERSION = '1.03';
+$Elasticsearch::Role::API::0_90::VERSION = '1.04';
 use Moo::Role;
 
 use Elasticsearch::Util qw(throw);
@@ -460,6 +460,13 @@ sub api {
             "indices", "jvm",         "network", "os",
             "process", "thread_pool", "transport",
         ],
+    },
+
+    'cluster.pending_tasks' => {
+        doc   => "cluster-pending",
+        parts => {},
+        paths => [ [ {}, "_cluster", "pending_tasks" ] ],
+        qs => [ "local", "master_timeout" ],
     },
 
     'cluster.put_settings' => {
@@ -946,7 +953,7 @@ Elasticsearch::Role::API::0_90 - This class contains the spec for the Elasticsea
 
 =head1 VERSION
 
-version 1.03
+version 1.04
 
 =head1 DESCRIPTION
 

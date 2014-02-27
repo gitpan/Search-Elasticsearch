@@ -29,7 +29,7 @@ my %WriteMakefileArgs = (
     "File::Temp" => 0,
     "HTTP::Headers" => 0,
     "HTTP::Request" => 0,
-    "HTTP::Tiny" => "0.036",
+    "HTTP::Tiny" => "0.043",
     "IO::Select" => 0,
     "IO::Socket" => 0,
     "IO::Socket::SSL" => 0,
@@ -61,7 +61,7 @@ my %WriteMakefileArgs = (
     "Test::More" => "0.98",
     "lib" => 0
   },
-  "VERSION" => "1.03",
+  "VERSION" => "1.04",
   "test" => {
     "TESTS" => "t/*.t t/10_Basic/*.t t/20_Serializer/*.t t/30_Logger/*.t t/40_Transport/*.t t/50_Cxn_Pool/*.t t/60_Cxn/*.t t/70_Helper/*.t t/90_Client_Spec/*.t"
   }
@@ -75,7 +75,7 @@ my %FallbackPrereqs = (
   "File::Temp" => 0,
   "HTTP::Headers" => 0,
   "HTTP::Request" => 0,
-  "HTTP::Tiny" => "0.036",
+  "HTTP::Tiny" => "0.043",
   "IO::Select" => 0,
   "IO::Socket" => 0,
   "IO::Socket::SSL" => 0,

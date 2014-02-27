@@ -1,5 +1,5 @@
 package Elasticsearch::Cxn::LWP;
-$Elasticsearch::Cxn::LWP::VERSION = '1.03';
+$Elasticsearch::Cxn::LWP::VERSION = '1.04';
 use Moo;
 with 'Elasticsearch::Role::Cxn::HTTP',
     'Elasticsearch::Role::Cxn',
@@ -91,11 +91,11 @@ Elasticsearch::Cxn::LWP - A Cxn implementation which uses LWP
 
 =head1 VERSION
 
-version 1.03
+version 1.04
 
 =head1 DESCRIPTION
 
-Provides the default HTTP Cxn class and is based on L<LWP>.
+Provides an HTTP Cxn class and based on L<LWP>.
 The LWP backend uses pure Perl and persistent connections.
 
 This class does L<Elasticsearch::Role::Cxn::HTTP>, whose documentation

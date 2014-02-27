@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Bulk;
-$Elasticsearch::Role::Bulk::VERSION = '1.03';
+$Elasticsearch::Role::Bulk::VERSION = '1.04';
 use Moo::Role;
 requires 'add_action', 'flush';
 
@@ -255,7 +255,7 @@ Elasticsearch::Role::Bulk - Provides common functionality to L<Elasticseach::Bul
 
 =head1 VERSION
 
-version 1.03
+version 1.04
 
 =head1 AUTHOR
 

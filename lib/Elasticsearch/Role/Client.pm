@@ -1,5 +1,5 @@
 package Elasticsearch::Role::Client;
-$Elasticsearch::Role::Client::VERSION = '1.03';
+$Elasticsearch::Role::Client::VERSION = '1.04';
 use Moo::Role;
 use namespace::clean;
 
@@ -28,7 +28,7 @@ Elasticsearch::Role::Client - Provides common functionality for Client implement
 
 =head1 VERSION
 
-version 1.03
+version 1.04
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,5 @@
 package Elasticsearch::Scroll;
-$Elasticsearch::Scroll::VERSION = '1.03';
+$Elasticsearch::Scroll::VERSION = '1.04';
 use Moo;
 use Elasticsearch::Util qw(parse_params);
 use namespace::clean;
@@ -70,8 +70,8 @@ sub refill_buffer {
         || return 0 + @$buffer;
 
     my $results = $self->es->scroll(
-        scroll => $self->scroll,
-        body   => $scroll_id,
+        scroll    => $self->scroll,
+        scroll_id => $scroll_id,
     );
 
     my $hits = $results->{hits}{hits};
@@ -109,7 +109,7 @@ Elasticsearch::Scroll - A helper module for scrolled searches
 
 =head1 VERSION
 
-version 1.03
+version 1.04
 
 =head1 SYNOPSIS
 
