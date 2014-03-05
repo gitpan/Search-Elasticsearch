@@ -10,7 +10,7 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "DEPRECATED: The official client for Elasticsearch",
+  "ABSTRACT" => "The official client for Elasticsearch",
   "AUTHOR" => "Clinton Gormley <drtech\@cpan.org>",
   "BUILD_REQUIRES" => {
     "Test::More" => "0.98"
@@ -18,10 +18,10 @@ my %WriteMakefileArgs = (
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
   },
-  "DISTNAME" => "Elasticsearch",
+  "DISTNAME" => "Search-Elasticsearch",
   "EXE_FILES" => [],
   "LICENSE" => "apache",
-  "NAME" => "Elasticsearch",
+  "NAME" => "Search::Elasticsearch",
   "PREREQ_PM" => {
     "Any::URI::Escape" => 0,
     "Data::Dumper" => 0,
@@ -62,7 +62,7 @@ my %WriteMakefileArgs = (
     "Test::More" => "0.98",
     "lib" => 0
   },
-  "VERSION" => "1.05",
+  "VERSION" => "1.10",
   "test" => {
     "TESTS" => "t/*.t t/10_Basic/*.t t/20_Serializer/*.t t/30_Logger/*.t t/40_Transport/*.t t/50_Cxn_Pool/*.t t/60_Cxn/*.t t/70_Helper/*.t t/90_Client_Spec/*.t"
   }

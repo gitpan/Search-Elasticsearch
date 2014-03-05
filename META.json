@@ -1,5 +1,5 @@
 {
-   "abstract" : "DEPRECATED: The official client for Elasticsearch",
+   "abstract" : "The official client for Elasticsearch",
    "author" : [
       "Clinton Gormley <drtech@cpan.org>"
    ],
@@ -12,7 +12,7 @@
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
       "version" : "2"
    },
-   "name" : "Elasticsearch",
+   "name" : "Search-Elasticsearch",
    "prereqs" : {
       "build" : {
          "requires" : {
@@ -91,6 +91,6 @@
          "web" : "https://github.com/elasticsearch/elasticsearch-perl"
       }
    },
-   "version" : "1.05"
+   "version" : "1.10"
 }
 
