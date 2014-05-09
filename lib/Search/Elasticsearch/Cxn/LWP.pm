@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Cxn::LWP;
-$Search::Elasticsearch::Cxn::LWP::VERSION = '1.11';
+$Search::Elasticsearch::Cxn::LWP::VERSION = '1.12';
 use Moo;
 with 'Search::Elasticsearch::Role::Cxn::HTTP',
     'Search::Elasticsearch::Role::Cxn',
@@ -91,7 +91,7 @@ Search::Elasticsearch::Cxn::LWP - A Cxn implementation which uses LWP
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 DESCRIPTION
 

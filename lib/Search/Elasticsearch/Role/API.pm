@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API;
-$Search::Elasticsearch::Role::API::VERSION = '1.11';
+$Search::Elasticsearch::Role::API::VERSION = '1.12';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -448,6 +448,24 @@ sub api {
         ],
     },
 
+    'search_shards' => {
+        doc   => "search-shards",
+        parts => { index => {}, type => {} },
+        paths => [
+            [   { index => 0, type => 1 }, "{index}",
+                "{type}", "_search_shards",
+            ],
+            [ { type => 1 }, "_all", "{type}", "_search_shards" ],
+            [ { index => 0 }, "{index}", "_search_shards" ],
+            [ {}, "_search_shards" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "local",
+            "preference",         "routing",
+        ],
+    },
+
     'search_template' => {
         body  => {},
         doc   => "search-template",
@@ -703,8 +721,7 @@ sub api {
             [ { metric => 2 }, "_cluster", "state", "{metric}" ],
             [ {}, "_cluster", "state" ],
         ],
-        qs =>
-            [ "flat_settings", "index_templates", "local", "master_timeout" ],
+        qs => [ "flat_settings", "local", "master_timeout" ],
     },
 
     'cluster.stats' => {
@@ -724,8 +741,8 @@ sub api {
         paths =>
             [ [ { index => 0 }, "{index}", "_analyze" ], [ {}, "_analyze" ] ],
         qs => [
-            "analyzer",     "field", "filters", "format",
-            "prefer_local", "text",  "tokenizer",
+            "analyzer", "char_filters", "field", "filters",
+            "format",   "prefer_local", "text",  "tokenizer",
         ],
     },
 
@@ -1418,7 +1435,7 @@ Search::Elasticsearch::Role::API - This class contains the spec for the Elastics
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 DESCRIPTION
 

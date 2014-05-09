@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Error;
-$Search::Elasticsearch::Error::VERSION = '1.11';
+$Search::Elasticsearch::Error::VERSION = '1.12';
 use Moo;
 
 our $DEBUG = 0;
@@ -158,7 +158,7 @@ Search::Elasticsearch::Error - Errors thrown by Search::Elasticsearch
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Scroll;
-$Search::Elasticsearch::Role::Scroll::VERSION = '1.11';
+$Search::Elasticsearch::Role::Scroll::VERSION = '1.12';
 use Moo::Role;
 requires '_clear_scroll';
 use Search::Elasticsearch::Util qw(parse_params throw);
@@ -68,7 +68,7 @@ Search::Elasticsearch::Role::Scroll - Provides common functionality to L<Elastic
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 AUTHOR
 

@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct;
-$Search::Elasticsearch::Client::Direct::VERSION = '1.11';
+$Search::Elasticsearch::Client::Direct::VERSION = '1.12';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -116,7 +116,7 @@ Search::Elasticsearch::Client::Direct - Thin client with full support for Elasti
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 SYNOPSIS
 
@@ -1112,6 +1112,29 @@ Query string parameters:
 
 See the L<explain docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-explain.html>
 for more information.
+
+=head2 C<search_shards()>
+
+    $response = $e->search_shards(
+        index   => 'index' | \@indices,     # optional
+        type    => 'type'  | \@types,       # optional
+    )
+
+The C<search_shards()> method returns information about which shards on
+which nodes will execute a search request.
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<local>,
+    C<preference>,
+    C<routing>
+
+See the L<search-shards docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-shards.html>
+for more information.
+
+=head1 PERCOLATION METHODS
 
 =head2 C<percolate()>
 

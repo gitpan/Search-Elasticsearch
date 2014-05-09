@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Util::API::QS;
-$Search::Elasticsearch::Util::API::QS::VERSION = '1.11';
+$Search::Elasticsearch::Util::API::QS::VERSION = '1.12';
 use strict;
 use warnings;
 
@@ -27,8 +27,9 @@ our %Params = (
     analyzer         => { type => 'string' },
     boost_terms      => { type => 'number' },
     bytes            => { type => 'enum', options => [ 'b', 'k', 'm', 'g' ] },
-    clear            => { type => 'bool' },
-    completion       => { type => 'bool' },
+    char_filters      => { type => 'list' },
+    clear             => { type => 'bool' },
+    completion        => { type => 'bool' },
     completion_fields => { type => 'list' },
     consistency       => {
         options => [ 'one', 'quorum', 'all' ],
@@ -252,7 +253,7 @@ Search::Elasticsearch::Util::API::QS - A utility class for query string paramete
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 DESCRIPTION
 

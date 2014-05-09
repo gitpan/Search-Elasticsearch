@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Cxn::Hijk;
-$Search::Elasticsearch::Cxn::Hijk::VERSION = '1.11';
+$Search::Elasticsearch::Cxn::Hijk::VERSION = '1.12';
 use Moo;
 with 'Search::Elasticsearch::Role::Cxn::HTTP',
     'Search::Elasticsearch::Role::Cxn',
@@ -108,7 +108,7 @@ Search::Elasticsearch::Cxn::Hijk - A Cxn implementation which uses Hijk
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Indices;
-$Search::Elasticsearch::Client::Direct::Indices::VERSION = '1.11';
+$Search::Elasticsearch::Client::Direct::Indices::VERSION = '1.12';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -17,7 +17,7 @@ Search::Elasticsearch::Client::Direct::Indices - A client for running index-leve
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 DESCRIPTION
 
@@ -209,22 +209,6 @@ Query string parameters:
     C<wait_for_merge>
 
 See the L<optimize index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-optimize.html>
-for more information.
-
-=head2 C<snapshot_index()>
-
-    $response = $e->indices->snapshot_index(
-        index => 'index' | \@indices    # optional
-    );
-
-Deprecated.
-
-Query string parameters:
-    C<allow_no_indices>,
-    C<expand_wildcards>,
-    C<ignore_unavailable>
-
-See the L<snapshot_index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/>
 for more information.
 
 =head1 MAPPING METHODS
@@ -693,25 +677,6 @@ Query string parameters:
 See the L<stats docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-stats.html>
 for more information.
 
-=head2 C<status()>
-
-    $result = $e->indices->status(
-        index   => 'index' | \@indices      # optional
-    );
-
-Deprecated.
-
-Query string parameters:
-    C<allow_no_indices>,
-    C<expand_wildcards>,
-    C<human>,
-    C<ignore_unavailable>,
-    C<recovery>,
-    C<snapshot>
-
-See the L<status docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-status.html>
-for more information.
-
 =head2 C<recovery()>
 
     $result = $e->indices->recovery(
@@ -762,6 +727,7 @@ for debugging analyzer configurations.
 
 Query string parameters:
     C<analyzer>,
+    C<char_filters>,
     C<field>,
     C<filters>,
     C<format>,

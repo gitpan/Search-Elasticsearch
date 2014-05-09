@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Cluster;
-$Search::Elasticsearch::Client::Direct::Cluster::VERSION = '1.11';
+$Search::Elasticsearch::Client::Direct::Cluster::VERSION = '1.12';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -29,7 +29,7 @@ Search::Elasticsearch::Client::Direct::Cluster - A client for running cluster-le
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 DESCRIPTION
 
@@ -129,7 +129,6 @@ or from the responding node if C<local> is set to C<true>.
 It returns all metrics by default, but these can be limited to any of:
     C<_all>,
     C<blocks>,
-    C<index_templates>,
     C<metadata>,
     C<nodes>,
     C<routing_table>

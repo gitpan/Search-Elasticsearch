@@ -48,7 +48,7 @@
             "IO::Socket" : "0",
             "IO::Socket::SSL" : "0",
             "IO::Uncompress::Inflate" : "0",
-            "JSON::MaybeXS" : "1.002000",
+            "JSON::MaybeXS" : "1.002002",
             "JSON::PP" : "0",
             "LWP::UserAgent" : "0",
             "List::Util" : "0",
@@ -97,6 +97,6 @@
          "web" : "https://github.com/elasticsearch/elasticsearch-perl"
       }
    },
-   "version" : "1.11"
+   "version" : "1.12"
 }
 

@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Cxn;
-$Search::Elasticsearch::Role::Cxn::VERSION = '1.11';
+$Search::Elasticsearch::Role::Cxn::VERSION = '1.12';
 use Moo::Role;
 use Search::Elasticsearch::Util qw(throw);
 use List::Util qw(min);
@@ -183,7 +183,7 @@ Search::Elasticsearch::Role::Cxn - Provides common functionality to Cxn implemen
 
 =head1 VERSION
 
-version 1.11
+version 1.12
 
 =head1 DESCRIPTION
 

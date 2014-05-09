@@ -35,7 +35,7 @@ my %WriteMakefileArgs = (
     "IO::Socket" => 0,
     "IO::Socket::SSL" => 0,
     "IO::Uncompress::Inflate" => 0,
-    "JSON::MaybeXS" => "1.002000",
+    "JSON::MaybeXS" => "1.002002",
     "JSON::PP" => 0,
     "LWP::UserAgent" => 0,
     "List::Util" => 0,
@@ -63,7 +63,7 @@ my %WriteMakefileArgs = (
     "Test::More" => "0.98",
     "lib" => 0
   },
-  "VERSION" => "1.11",
+  "VERSION" => "1.12",
   "test" => {
     "TESTS" => "t/*.t t/10_Basic/*.t t/20_Serializer/*.t t/30_Logger/*.t t/40_Transport/*.t t/50_Cxn_Pool/*.t t/60_Cxn/*.t t/70_Helper/*.t t/90_Client_Spec/*.t"
   }
@@ -83,7 +83,7 @@ my %FallbackPrereqs = (
   "IO::Socket" => 0,
   "IO::Socket::SSL" => 0,
   "IO::Uncompress::Inflate" => 0,
-  "JSON::MaybeXS" => "1.002000",
+  "JSON::MaybeXS" => "1.002002",
   "JSON::PP" => 0,
   "LWP::UserAgent" => 0,
   "List::Util" => 0,
