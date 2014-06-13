@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Util;
-$Search::Elasticsearch::Util::VERSION = '1.12';
+$Search::Elasticsearch::Util::VERSION = '1.13';
 use Moo;
 use Search::Elasticsearch::Error();
 use Scalar::Util qw(blessed);
@@ -119,7 +119,7 @@ Search::Elasticsearch::Util - A utility class for internal use by Search::Elasti
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 AUTHOR
 

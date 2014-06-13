@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Indices;
-$Search::Elasticsearch::Client::Direct::Indices::VERSION = '1.12';
+$Search::Elasticsearch::Client::Direct::Indices::VERSION = '1.13';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -17,7 +17,7 @@ Search::Elasticsearch::Client::Direct::Indices - A client for running index-leve
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 
@@ -515,6 +515,7 @@ for more information.
 The C<put_template()> method is used to create or update index templates.
 
 Query string parameters:
+    C<create>,
     C<flat_settings>,
     C<master_timeout>,
     C<order>,

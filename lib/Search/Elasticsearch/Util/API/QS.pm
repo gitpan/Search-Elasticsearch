@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Util::API::QS;
-$Search::Elasticsearch::Util::API::QS::VERSION = '1.12';
+$Search::Elasticsearch::Util::API::QS::VERSION = '1.13';
 use strict;
 use warnings;
 
@@ -27,14 +27,15 @@ our %Params = (
     analyzer         => { type => 'string' },
     boost_terms      => { type => 'number' },
     bytes            => { type => 'enum', options => [ 'b', 'k', 'm', 'g' ] },
-    char_filters      => { type => 'list' },
-    clear             => { type => 'bool' },
-    completion        => { type => 'bool' },
+    char_filters     => { type => 'list' },
+    clear            => { type => 'bool' },
+    completion       => { type => 'bool' },
     completion_fields => { type => 'list' },
     consistency       => {
         options => [ 'one', 'quorum', 'all' ],
         type    => 'enum'
     },
+    create           => { type => 'bool' },
     default_operator => {
         default => 'OR',
         options => [ 'AND', 'OR' ],
@@ -97,7 +98,6 @@ our %Params = (
     index_templates    => { type => 'list' },
     indexing           => { type => 'bool' },
     indices            => { type => 'bool' },
-    indices_boost      => { type => 'list' },
     interval           => { type => 'duration' },
     jvm                => { type => 'bool' },
     lang               => { type => 'string' },
@@ -136,6 +136,7 @@ our %Params = (
     payloads               => { type => 'bool' },
     percent_terms_to_match => { type => 'number' },
     percolate              => { type => 'string' },
+    percolate_format       => { type => 'string' },
     percolate_index        => { type => 'string' },
     percolate_type         => { type => 'string' },
     plugin                 => { type => 'bool' },
@@ -202,6 +203,7 @@ our %Params = (
     timeout         => { type => 'duration' },
     timestamp       => { type => 'datetime' },
     tokenizer       => { type => 'string' },
+    track_scores    => { type => 'bool' },
     transport       => { type => 'bool' },
     ts              => { type => 'bool' },
     ttl             => { type => 'duration' },
@@ -253,7 +255,7 @@ Search::Elasticsearch::Util::API::QS - A utility class for query string paramete
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 

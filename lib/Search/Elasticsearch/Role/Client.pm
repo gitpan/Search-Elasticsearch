@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Client;
-$Search::Elasticsearch::Role::Client::VERSION = '1.12';
+$Search::Elasticsearch::Role::Client::VERSION = '1.13';
 use Moo::Role;
 use namespace::clean;
 
@@ -28,7 +28,7 @@ Search::Elasticsearch::Role::Client - Provides common functionality for Client i
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 

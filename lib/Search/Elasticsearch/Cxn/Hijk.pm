@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Cxn::Hijk;
-$Search::Elasticsearch::Cxn::Hijk::VERSION = '1.12';
+$Search::Elasticsearch::Cxn::Hijk::VERSION = '1.13';
 use Moo;
 with 'Search::Elasticsearch::Role::Cxn::HTTP',
     'Search::Elasticsearch::Role::Cxn',
@@ -10,7 +10,7 @@ use Try::Tiny;
 use namespace::clean;
 
 has 'connect_timeout' => ( is => 'ro', default => 2 );
-has '_socket_cache' => ( is => 'ro', default => sub { {} } );
+has '_socket_cache' => ( is => 'rw', default => sub { {} } );
 
 my $Cxn_Error = qr/ Connection.(?:timed.out|re(?:set|fused))
                        | connect:.timeout
@@ -74,6 +74,12 @@ sub perform_request {
 }
 
 #===================================
+sub clear_handle {
+#===================================
+    my $self = shift;
+    $self->_socket_cache( {} );
+}
+#===================================
 sub error_from_text {
 #===================================
     local $_ = $_[2];
@@ -108,7 +114,7 @@ Search::Elasticsearch::Cxn::Hijk - A Cxn implementation which uses Hijk
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 

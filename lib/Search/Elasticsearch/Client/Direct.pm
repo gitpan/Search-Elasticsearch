@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct;
-$Search::Elasticsearch::Client::Direct::VERSION = '1.12';
+$Search::Elasticsearch::Client::Direct::VERSION = '1.13';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -116,7 +116,7 @@ Search::Elasticsearch::Client::Direct - Thin client with full support for Elasti
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 SYNOPSIS
 
@@ -889,7 +889,6 @@ Query string parameters:
     C<fields>,
     C<from>,
     C<ignore_unavailable>,
-    C<indices_boost>,
     C<lenient>,
     C<lowercase_expanded_terms>,
     C<preference>,
@@ -906,6 +905,7 @@ Query string parameters:
     C<suggest_size>,
     C<suggest_text>,
     C<timeout>,
+    C<track_scores>,
     C<version>
 
 See the L<search reference|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-request-body.html>
@@ -1167,6 +1167,7 @@ Query string parameters:
     C<allow_no_indices>,
     C<expand_wildcards>,
     C<ignore_unavailable>,
+    C<percolate_format>,
     C<percolate_index>,
     C<percolate_type>,
     C<preference>,

@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Cat;
-$Search::Elasticsearch::Client::Direct::Cat::VERSION = '1.12';
+$Search::Elasticsearch::Client::Direct::Cat::VERSION = '1.13';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -28,7 +28,7 @@ Search::Elasticsearch::Client::Direct::Cat - A client for running cat debugging 
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 
@@ -131,6 +131,26 @@ Query string parameters:
     C<v>
 
 See the L<cat count docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cat-count.html>
+for more information.
+
+=head2 C<fielddata()>
+
+    say $e->cat->fielddata(
+        fields => 'field' | \@fields    # optional
+    );
+
+Shows the amount of memory used by each of the specified `fields` (or all
+fields) loaded into fielddata.
+
+Query string parameters:
+    C<bytes>,
+    C<h>,
+    C<help>,
+    C<local>,
+    C<master_timeout>,
+    C<v>
+
+See the L<cat fielddata docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cat-fielddata.html>
 for more information.
 
 =head2 C<health()>

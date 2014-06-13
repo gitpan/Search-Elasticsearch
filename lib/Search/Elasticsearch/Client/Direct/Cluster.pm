@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Cluster;
-$Search::Elasticsearch::Client::Direct::Cluster::VERSION = '1.12';
+$Search::Elasticsearch::Client::Direct::Cluster::VERSION = '1.13';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -29,7 +29,7 @@ Search::Elasticsearch::Client::Direct::Cluster - A client for running cluster-le
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 
@@ -138,7 +138,6 @@ parameter.
 
 Query string parameters:
     C<flat_settings>,
-    <index_templates>,
     C<local>,
     C<master_timeout>
 

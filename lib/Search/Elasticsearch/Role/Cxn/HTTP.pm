@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Cxn::HTTP;
-$Search::Elasticsearch::Role::Cxn::HTTP::VERSION = '1.12';
+$Search::Elasticsearch::Role::Cxn::HTTP::VERSION = '1.13';
 use Moo::Role;
 
 use URI();
@@ -11,7 +11,8 @@ has 'is_https'           => ( is => 'ro' );
 has 'userinfo'           => ( is => 'ro' );
 has 'max_content_length' => ( is => 'ro' );
 has 'default_headers'    => ( is => 'ro' );
-has 'handle'             => ( is => 'lazy' );
+has 'handle'             => ( is => 'lazy', clearer => 1 );
+has '_pid'               => ( is => 'rw', default => $$ );
 
 #===================================
 sub protocol     {'http'}
@@ -109,6 +110,16 @@ before 'perform_request' => sub {
 };
 
 #===================================
+before 'handle' => sub {
+#===================================
+    my $self = shift;
+    if ( $$ != $self->_pid ) {
+        $self->clear_handle;
+        $self->_pid($$);
+    }
+};
+
+#===================================
 around 'process_response' => sub {
 #===================================
     my ( $orig, $self, $params, $code, $msg, $body, $headers ) = @_;
@@ -155,7 +166,7 @@ Search::Elasticsearch::Role::Cxn::HTTP - Provides common functionality to HTTP C
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 

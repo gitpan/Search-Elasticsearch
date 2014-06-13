@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API;
-$Search::Elasticsearch::Role::API::VERSION = '1.12';
+$Search::Elasticsearch::Role::API::VERSION = '1.13';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -392,10 +392,10 @@ sub api {
         ],
         qs => [
             "allow_no_indices",   "expand_wildcards",
-            "ignore_unavailable", "percolate_index",
-            "percolate_type",     "preference",
-            "routing",            "version",
-            "version_type",
+            "ignore_unavailable", "percolate_format",
+            "percolate_index",    "percolate_type",
+            "preference",         "routing",
+            "version",            "version_type",
         ],
     },
 
@@ -429,21 +429,21 @@ sub api {
             [ {}, "_search" ],
         ],
         qs => [
-            "_source",            "_source_exclude",
-            "_source_include",    "allow_no_indices",
-            "analyze_wildcard",   "analyzer",
-            "default_operator",   "df",
-            "expand_wildcards",   "explain",
-            "fields",             "from",
-            "ignore_unavailable", "indices_boost",
-            "lenient",            "lowercase_expanded_terms",
-            "preference",         "q",
-            "routing",            "scroll",
-            "search_type",        "size",
-            "sort",               "source",
-            "stats",              "suggest_field",
-            "suggest_mode",       "suggest_size",
-            "suggest_text",       "timeout",
+            "_source",                  "_source_exclude",
+            "_source_include",          "allow_no_indices",
+            "analyze_wildcard",         "analyzer",
+            "default_operator",         "df",
+            "expand_wildcards",         "explain",
+            "fields",                   "from",
+            "ignore_unavailable",       "lenient",
+            "lowercase_expanded_terms", "preference",
+            "q",                        "routing",
+            "scroll",                   "search_type",
+            "size",                     "sort",
+            "source",                   "stats",
+            "suggest_field",            "suggest_mode",
+            "suggest_size",             "suggest_text",
+            "timeout",                  "track_scores",
             "version",
         ],
     },
@@ -577,6 +577,16 @@ sub api {
             [ {}, "_cat", "count" ],
         ],
         qs => [ "h", "help", "local", "master_timeout", "v" ],
+    },
+
+    'cat.fielddata' => {
+        doc   => "cat-fielddata",
+        parts => { fields => { multi => 1 } },
+        paths => [
+            [ { fields => 2 }, "_cat", "fielddata", "{fields}" ],
+            [ {}, "_cat", "fielddata" ],
+        ],
+        qs => [ "bytes", "h", "help", "local", "master_timeout", "v" ],
     },
 
     'cat.health' => {
@@ -1098,7 +1108,11 @@ sub api {
         method => "PUT",
         parts => { name => { required => 1 } },
         paths => [ [ { name => 1 }, "_template", "{name}" ] ],
-        qs => [ "flat_settings", "master_timeout", "order", "timeout" ],
+        qs => [
+            "create",         "flat_settings",
+            "master_timeout", "order",
+            "timeout"
+        ],
     },
 
     'indices.put_warmer' => {
@@ -1162,18 +1176,6 @@ sub api {
         ],
     },
 
-    'indices.snapshot_index' => {
-        doc    => "indices-gateway-snapshot",
-        method => "POST",
-        parts  => { index => { multi => 1 } },
-        paths  => [
-            [ { index => 0 }, "{index}", "_gateway", "snapshot" ],
-            [ {}, "_gateway", "snapshot" ],
-        ],
-        qs =>
-            [ "allow_no_indices", "expand_wildcards", "ignore_unavailable" ],
-    },
-
     'indices.stats' => {
         doc   => "indices-stats",
         parts => { index => { multi => 1 }, metric => { multi => 1 } },
@@ -1188,18 +1190,6 @@ sub api {
             "fields",            "groups",
             "human",             "level",
             "types",
-        ],
-    },
-
-    'indices.status' => {
-        doc   => "indices-status",
-        parts => { index => { multi => 1 } },
-        paths =>
-            [ [ { index => 0 }, "{index}", "_status" ], [ {}, "_status" ] ],
-        qs => [
-            "allow_no_indices", "expand_wildcards",
-            "human",            "ignore_unavailable",
-            "recovery",         "snapshot",
         ],
     },
 
@@ -1435,7 +1425,7 @@ Search::Elasticsearch::Role::API - This class contains the spec for the Elastics
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 

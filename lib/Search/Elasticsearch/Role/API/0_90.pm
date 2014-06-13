@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API::0_90;
-$Search::Elasticsearch::Role::API::0_90::VERSION = '1.12';
+$Search::Elasticsearch::Role::API::0_90::VERSION = '1.13';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -310,21 +310,20 @@ sub api {
             [ {}, "_search" ],
         ],
         qs => [
-            "_source",         "_source_exclude",
-            "_source_include", "analyze_wildcard",
-            "analyzer",        "default_operator",
-            "df",              "explain",
-            "fields",          "from",
-            "ignore_indices",  "indices_boost",
-            "lenient",         "lowercase_expanded_terms",
-            "preference",      "q",
-            "routing",         "scroll",
-            "search_type",     "size",
-            "sort",            "source",
-            "stats",           "suggest_field",
-            "suggest_mode",    "suggest_size",
-            "suggest_text",    "timeout",
-            "version",
+            "_source",                  "_source_exclude",
+            "_source_include",          "analyze_wildcard",
+            "analyzer",                 "default_operator",
+            "df",                       "explain",
+            "fields",                   "from",
+            "ignore_indices",           "lenient",
+            "lowercase_expanded_terms", "preference",
+            "q",                        "routing",
+            "scroll",                   "search_type",
+            "size",                     "sort",
+            "source",                   "stats",
+            "suggest_field",            "suggest_mode",
+            "suggest_size",             "suggest_text",
+            "timeout",                  "version",
         ],
     },
 
@@ -953,7 +952,7 @@ Search::Elasticsearch::Role::API::0_90 - This class contains the spec for the El
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 DESCRIPTION
 

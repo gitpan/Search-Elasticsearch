@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::0_90::Direct;
-$Search::Elasticsearch::Client::0_90::Direct::VERSION = '1.12';
+$Search::Elasticsearch::Client::0_90::Direct::VERSION = '1.13';
 use Moo;
 with 'Search::Elasticsearch::Role::API::0_90';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -41,6 +41,15 @@ sub _index {
     }
     $self->perform_request( { %$defn, name => $name }, $params );
 }
+
+#===================================
+around 'clear_scroll' => sub {
+#===================================
+    my $orig = shift;
+    my ( $self, $params ) = parse_params(@_);
+    $params->{scroll_id}||=delete $params->{body};
+    $orig->( $self, $params );
+};
 
 #===================================
 sub _build__bulk_class {
@@ -110,7 +119,7 @@ Search::Elasticsearch::Client::0_90::Direct - Thin client with full support for 
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 SYNOPSIS
 
