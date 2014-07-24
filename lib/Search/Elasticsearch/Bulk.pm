@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Bulk;
-$Search::Elasticsearch::Bulk::VERSION = '1.13';
+$Search::Elasticsearch::Bulk::VERSION = '1.14';
 use Moo;
 with 'Search::Elasticsearch::Role::Bulk',
     'Search::Elasticsearch::Role::Is_Sync';
@@ -107,7 +107,7 @@ Search::Elasticsearch::Bulk - A helper module for the Bulk API and for reindexin
 
 =head1 VERSION
 
-version 1.13
+version 1.14
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API;
-$Search::Elasticsearch::Role::API::VERSION = '1.13';
+$Search::Elasticsearch::Role::API::VERSION = '1.14';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -159,6 +159,22 @@ sub api {
         ],
     },
 
+    'delete_script' => {
+        doc    => "modules-scripting",
+        method => "DELETE",
+        parts  => { id => { required => 1 }, lang => { required => 1 } },
+        paths => [ [ { id => 2, lang => 1 }, "_scripts", "{lang}", "{id}" ] ],
+        qs    => [],
+    },
+
+    'delete_template' => {
+        doc    => "search-template",
+        method => "DELETE",
+        parts  => { id => {} },
+        paths  => [ [ { id => 2 }, "_search", "template", "{id}" ] ],
+        qs     => [],
+    },
+
     'exists' => {
         doc    => "docs-get",
         method => "HEAD",
@@ -223,6 +239,13 @@ sub api {
         ],
     },
 
+    'get_script' => {
+        doc   => "modules-scripting",
+        parts => { id => { required => 1 }, lang => { required => 1 } },
+        paths => [ [ { id => 2, lang => 1 }, "_scripts", "{lang}", "{id}" ] ],
+        qs    => [],
+    },
+
     'get_source' => {
         doc   => "docs-get",
         parts => {
@@ -242,6 +265,14 @@ sub api {
             "refresh",         "routing",
             "version",         "version_type",
         ],
+    },
+
+    'get_template' => {
+        body  => {},
+        doc   => "search-template",
+        parts => { id => { required => 1 } },
+        paths => [ [ { id => 2 }, "_search", "template", "{id}" ] ],
+        qs    => [],
     },
 
     'index' => {
@@ -405,6 +436,24 @@ sub api {
         parts  => {},
         paths  => [ [ {} ] ],
         qs     => []
+    },
+
+    'put_script' => {
+        body   => { required => 1 },
+        doc    => "modules-scripting",
+        method => "PUT",
+        parts => { id => { required => 1 }, lang => { required => 1 } },
+        paths => [ [ { id => 2, lang => 1 }, "_scripts", "{lang}", "{id}" ] ],
+        qs => [],
+    },
+
+    'put_template' => {
+        body   => { required => 1 },
+        doc    => "search-template",
+        method => "PUT",
+        parts => { id => { required => 1 } },
+        paths => [ [ { id => 2 }, "_search", "template", "{id}" ] ],
+        qs => [],
     },
 
     'scroll' => {
@@ -1176,6 +1225,18 @@ sub api {
         ],
     },
 
+    'indices.snapshot_index' => {
+        doc    => "indices-gateway-snapshot",
+        method => "POST",
+        parts  => { index => { multi => 1 } },
+        paths  => [
+            [ { index => 0 }, "{index}", "_gateway", "snapshot" ],
+            [ {}, "_gateway", "snapshot" ],
+        ],
+        qs =>
+            [ "allow_no_indices", "expand_wildcards", "ignore_unavailable" ],
+    },
+
     'indices.stats' => {
         doc   => "indices-stats",
         parts => { index => { multi => 1 }, metric => { multi => 1 } },
@@ -1190,6 +1251,18 @@ sub api {
             "fields",            "groups",
             "human",             "level",
             "types",
+        ],
+    },
+
+    'indices.status' => {
+        doc   => "indices-status",
+        parts => { index => { multi => 1 } },
+        paths =>
+            [ [ { index => 0 }, "{index}", "_status" ], [ {}, "_status" ] ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "human",            "ignore_unavailable",
+            "recovery",         "snapshot",
         ],
     },
 
@@ -1425,7 +1498,7 @@ Search::Elasticsearch::Role::API - This class contains the spec for the Elastics
 
 =head1 VERSION
 
-version 1.13
+version 1.14
 
 =head1 DESCRIPTION
 

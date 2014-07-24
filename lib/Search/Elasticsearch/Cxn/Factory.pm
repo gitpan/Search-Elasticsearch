@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Cxn::Factory;
-$Search::Elasticsearch::Cxn::Factory::VERSION = '1.13';
+$Search::Elasticsearch::Cxn::Factory::VERSION = '1.14';
 use Moo;
 use Search::Elasticsearch::Util qw(parse_params load_plugin);
 use namespace::clean;
@@ -48,13 +48,13 @@ Search::Elasticsearch::Cxn::Factory - Used by CxnPools to create new Cxn instanc
 
 =head1 VERSION
 
-version 1.13
+version 1.14
 
 =head1 DESCRIPTION
 
 This class is used by the L<Search::Elasticsearch::Role::CxnPool> implementations
 to create new L<Search::Elasticsearch::Role::Cxn>-based instances. It holds on
-to all the configuration options passed to L<Elasticsearhch/new()> so
+to all the configuration options passed to L<Elasticsearch/new()> so
 that new Cxns can use them.
 
 It contains no user serviceable parts.

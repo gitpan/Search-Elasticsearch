@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Util::API::QS;
-$Search::Elasticsearch::Util::API::QS::VERSION = '1.13';
+$Search::Elasticsearch::Util::API::QS::VERSION = '1.14';
 use strict;
 use warnings;
 
@@ -255,7 +255,7 @@ Search::Elasticsearch::Util::API::QS - A utility class for query string paramete
 
 =head1 VERSION
 
-version 1.13
+version 1.14
 
 =head1 DESCRIPTION
 
