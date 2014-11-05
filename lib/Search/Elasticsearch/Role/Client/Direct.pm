@@ -1,9 +1,10 @@
 package Search::Elasticsearch::Role::Client::Direct;
-$Search::Elasticsearch::Role::Client::Direct::VERSION = '1.14';
+$Search::Elasticsearch::Role::Client::Direct::VERSION = '1.15';
 use Moo::Role;
 with 'Search::Elasticsearch::Role::Client';
 use Search::Elasticsearch::Util::API::Path qw(path_handler);
 use Try::Tiny;
+use Package::Stash 0.34 ();
 use namespace::clean;
 
 #===================================
@@ -119,7 +120,7 @@ Search::Elasticsearch::Role::Client::Direct - Request parsing for Direct clients
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::CxnPool::Static;
-$Search::Elasticsearch::Role::CxnPool::Static::VERSION = '1.14';
+$Search::Elasticsearch::Role::CxnPool::Static::VERSION = '1.15';
 use Moo::Role;
 with 'Search::Elasticsearch::Role::CxnPool';
 requires 'next_cxn';
@@ -39,7 +39,7 @@ Search::Elasticsearch::Role::CxnPool::Static - A CxnPool role for connecting to 
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 METHODS
 

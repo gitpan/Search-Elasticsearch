@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct;
-$Search::Elasticsearch::Client::Direct::VERSION = '1.14';
+$Search::Elasticsearch::Client::Direct::VERSION = '1.15';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -34,13 +34,15 @@ sub index {
     $self->_index( 'index', $params );
 }
 
+my $index_with_id = { %{ __PACKAGE__->api->{index} }, method => 'PUT' };
+
 #===================================
 sub _index {
 #===================================
     my ( $self, $name, $params ) = @_;
     my $defn = $self->api->{index};
-    unless ( defined $params->{id} and length $params->{id} ) {
-        $defn = { %$defn, method => 'POST' };
+    if ( defined $params->{id} and length $params->{id} ) {
+        $defn = $index_with_id;
     }
     $self->perform_request( { %$defn, name => $name }, $params );
 }
@@ -116,7 +118,7 @@ Search::Elasticsearch::Client::Direct - Thin client with full support for Elasti
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 SYNOPSIS
 
@@ -576,6 +578,8 @@ Query string parameters:
     C<retry_on_conflict>,
     C<routing>,
     C<script>,
+    C<script_id>,
+    C<scripted_upsert>,
     C<timeout>,
     C<timestamp>,
     C<ttl>,
@@ -600,6 +604,7 @@ offsets and payloads for the specified document, assuming that termvectors
 have been enabled.
 
 Query string parameters:
+    C<dfs>,
     C<field_statistics>,
     C<fields>,
     C<offsets>,
@@ -607,6 +612,7 @@ Query string parameters:
     C<payloads>,
     C<positions>,
     C<preference>,
+    C<realtime>,
     C<routing>,
     C<term_statistics>
 
@@ -827,6 +833,7 @@ Query string parameters:
     C<payloads>,
     C<positions>,
     C<preference>,
+    C<realtime>,
     C<routing>,
     C<term_statistics>
 
@@ -893,6 +900,7 @@ Query string parameters:
     C<lowercase_expanded_terms>,
     C<preference>,
     C<q>,
+    C<query_cache>,
     C<routing>,
     C<scroll>,
     C<search_type>,
@@ -912,6 +920,31 @@ See the L<search reference|http://www.elasticsearch.org/guide/en/elasticsearch/r
 for more information.
 
 Also see L<Search::Elasticsearch::Transport/send_get_body_as>.
+
+=head2 C<search_exists()>
+
+The C<search_exists()> method is a quick version of search which can be
+used to find out whether there are matching search results or not.
+It doesn't return any results itself.
+
+    $results = $e->search_exists(
+        index   => 'index' | \@indices,     # optional
+        type    => 'type'  | \@types,       # optional
+
+        body    => { search params }        # optional
+    );
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<min_score>,
+    C<preference>,
+    C<routing>,
+    C<source>
+
+See the L<search exists reference|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-exists.html>
+for more information.
 
 =head2 C<count()>
 
@@ -1316,7 +1349,6 @@ Query string parameters:
     C<routing>,
     C<search_from>,
     C<search_indices>,
-    C<search_query_hint>,
     C<search_scroll>,
     C<search_size>,
     C<search_source>,
@@ -1350,7 +1382,10 @@ The C<put_script()> method is used to store a script in the C<.scripts> index. F
         }
     );
 
-Query string parameters: None
+Query string parameters:
+    C<op_type>,
+    C<version>,
+    C<version_type>
 
 See the L<indexed scripts docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-scripting.html#_indexed_scripts> for more.
 
@@ -1363,7 +1398,9 @@ See the L<indexed scripts docs|http://www.elasticsearch.org/guide/en/elasticsear
 
 Retrieve the indexed script from the C<.scripts> index.
 
-Query string parameters: None
+Query string parameters:
+    C<version>,
+    C<version_type>
 
 See the L<indexed scripts docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-scripting.html#_indexed_scripts> for more.
 
@@ -1376,7 +1413,9 @@ See the L<indexed scripts docs|http://www.elasticsearch.org/guide/en/elasticsear
 
 Delete the indexed script from the C<.scripts> index.
 
-Query string parameters: None
+Query string parameters:
+    C<version>,
+    C<version_type>
 
 See the L<indexed scripts docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-scripting.html#_indexed_scripts> for more.
 
@@ -1421,7 +1460,9 @@ See the L<indexed search template docs|http://www.elasticsearch.org/guide/en/ela
 
 Retrieve the indexed template from the C<.scripts> index.
 
-Query string parameters: None
+Query string parameters:
+    C<version>,
+    C<version_type>
 
 See the L<indexed search template docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-template.html#_pre_registered_template> for more.
 

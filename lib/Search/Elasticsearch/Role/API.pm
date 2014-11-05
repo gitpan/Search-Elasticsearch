@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API;
-$Search::Elasticsearch::Role::API::VERSION = '1.14';
+$Search::Elasticsearch::Role::API::VERSION = '1.15';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -164,7 +164,7 @@ sub api {
         method => "DELETE",
         parts  => { id => { required => 1 }, lang => { required => 1 } },
         paths => [ [ { id => 2, lang => 1 }, "_scripts", "{lang}", "{id}" ] ],
-        qs    => [],
+        qs => [ "version", "version_type" ],
     },
 
     'delete_template' => {
@@ -243,7 +243,7 @@ sub api {
         doc   => "modules-scripting",
         parts => { id => { required => 1 }, lang => { required => 1 } },
         paths => [ [ { id => 2, lang => 1 }, "_scripts", "{lang}", "{id}" ] ],
-        qs    => [],
+        qs => [ "version", "version_type" ],
     },
 
     'get_source' => {
@@ -268,11 +268,10 @@ sub api {
     },
 
     'get_template' => {
-        body  => {},
         doc   => "search-template",
         parts => { id => { required => 1 } },
         paths => [ [ { id => 2 }, "_search", "template", "{id}" ] ],
-        qs    => [],
+        qs => [ "version", "version_type" ],
     },
 
     'index' => {
@@ -349,10 +348,9 @@ sub api {
             "min_word_length",        "mlt_fields",
             "percent_terms_to_match", "routing",
             "search_from",            "search_indices",
-            "search_query_hint",      "search_scroll",
-            "search_size",            "search_source",
-            "search_type",            "search_types",
-            "stop_words",
+            "search_scroll",          "search_size",
+            "search_source",          "search_type",
+            "search_types",           "stop_words",
         ],
     },
 
@@ -402,7 +400,8 @@ sub api {
             "ids",              "offsets",
             "parent",           "payloads",
             "positions",        "preference",
-            "routing",          "term_statistics",
+            "realtime",         "routing",
+            "term_statistics",
         ],
     },
 
@@ -444,7 +443,7 @@ sub api {
         method => "PUT",
         parts => { id => { required => 1 }, lang => { required => 1 } },
         paths => [ [ { id => 2, lang => 1 }, "_scripts", "{lang}", "{id}" ] ],
-        qs => [],
+        qs => [ "op_type", "version", "version_type" ],
     },
 
     'put_template' => {
@@ -486,14 +485,36 @@ sub api {
             "fields",                   "from",
             "ignore_unavailable",       "lenient",
             "lowercase_expanded_terms", "preference",
-            "q",                        "routing",
-            "scroll",                   "search_type",
-            "size",                     "sort",
-            "source",                   "stats",
-            "suggest_field",            "suggest_mode",
-            "suggest_size",             "suggest_text",
-            "timeout",                  "track_scores",
-            "version",
+            "q",                        "query_cache",
+            "routing",                  "scroll",
+            "search_type",              "size",
+            "sort",                     "source",
+            "stats",                    "suggest_field",
+            "suggest_mode",             "suggest_size",
+            "suggest_text",             "timeout",
+            "track_scores",             "version",
+        ],
+    },
+
+    'search_exists' => {
+        body   => {},
+        doc    => "exists",
+        method => "POST",
+        parts  => { index => { multi => 1 }, type => { multi => 1 } },
+        paths  => [
+            [   { index => 0, type => 1 }, "{index}",
+                "{type}", "_search",
+                "exists",
+            ],
+            [ { type => 1 }, "_all", "{type}", "_search", "exists" ],
+            [ { index => 0 }, "{index}", "_search", "exists" ],
+            [ {}, "_search", "exists" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "min_score",
+            "preference",         "routing",
+            "source",
         ],
     },
 
@@ -565,10 +586,11 @@ sub api {
             ],
         ],
         qs => [
-            "field_statistics", "fields",
-            "offsets",          "parent",
-            "payloads",         "positions",
-            "preference",       "routing",
+            "dfs",       "field_statistics",
+            "fields",    "offsets",
+            "parent",    "payloads",
+            "positions", "preference",
+            "realtime",  "routing",
             "term_statistics",
         ],
     },
@@ -592,7 +614,8 @@ sub api {
             "lang",              "parent",
             "refresh",           "replication",
             "retry_on_conflict", "routing",
-            "script",            "timeout",
+            "script",            "script_id",
+            "scripted_upsert",   "timeout",
             "timestamp",         "ttl",
             "version",           "version_type",
         ],
@@ -761,11 +784,7 @@ sub api {
         method => "POST",
         parts  => {},
         paths  => [ [ {}, "_cluster", "reroute" ] ],
-        qs     => [
-            "dry_run",         "explain",
-            "filter_metadata", "master_timeout",
-            "timeout",
-        ],
+        qs => [ "dry_run", "explain", "master_timeout", "metric", "timeout" ],
     },
 
     'cluster.state' => {
@@ -819,7 +838,7 @@ sub api {
             "filter",           "filter_cache",
             "filter_keys",      "id",
             "id_cache",         "ignore_unavailable",
-            "recycler",
+            "query_cache",      "recycler",
         ],
     },
 
@@ -898,7 +917,7 @@ sub api {
     },
 
     'indices.exists' => {
-        doc    => "indices-get-settings",
+        doc    => "indices-exists",
         method => "HEAD",
         parts  => { index => { multi => 1, required => 1 } },
         paths => [ [ { index => 0 }, "{index}" ] ],
@@ -914,8 +933,8 @@ sub api {
         parts  => { index => { multi => 1 }, name => { multi => 1 } },
         paths  => [
             [ { index => 0, name => 2 }, "{index}", "_alias", "{name}" ],
-            [ { name  => 1 }, "_alias",  "{name}" ],
             [ { index => 0 }, "{index}", "_alias" ],
+            [ { name  => 1 }, "_alias",  "{name}" ],
         ],
         qs => [
             "allow_no_indices",   "expand_wildcards",
@@ -952,9 +971,25 @@ sub api {
         paths =>
             [ [ { index => 0 }, "{index}", "_flush" ], [ {}, "_flush" ] ],
         qs => [
-            "allow_no_indices", "expand_wildcards",
-            "force",            "full",
-            "ignore_unavailable",
+            "allow_no_indices",   "expand_wildcards",
+            "force",              "full",
+            "ignore_unavailable", "wait_if_ongoing",
+        ],
+    },
+
+    'indices.get' => {
+        doc   => "indices-get-index",
+        parts => {
+            feature => { multi => 1 },
+            index   => { multi => 1, required => 1 }
+        },
+        paths => [
+            [ { feature => 1, index => 0 }, "{index}", "{feature}" ],
+            [ { index => 0 }, "{index}" ],
+        ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "local",
         ],
     },
 
@@ -963,8 +998,8 @@ sub api {
         parts => { index => { multi => 1 }, name => { multi => 1 } },
         paths => [
             [ { index => 0, name => 2 }, "{index}", "_alias", "{name}" ],
-            [ { name  => 1 }, "_alias",  "{name}" ],
             [ { index => 0 }, "{index}", "_alias" ],
+            [ { name  => 1 }, "_alias",  "{name}" ],
             [ {}, "_alias" ],
         ],
         qs => [
@@ -978,8 +1013,8 @@ sub api {
         parts => { index => { multi => 1 }, name => { multi => 1 } },
         paths => [
             [ { index => 0, name => 2 }, "{index}", "_aliases", "{name}" ],
-            [ { name  => 1 }, "_aliases", "{name}" ],
             [ { index => 0 }, "{index}",  "_aliases" ],
+            [ { name  => 1 }, "_aliases", "{name}" ],
             [ {}, "_aliases" ],
         ],
         qs => [ "local", "timeout" ],
@@ -1019,8 +1054,8 @@ sub api {
         parts => { index => { multi => 1 }, type => { multi => 1 } },
         paths => [
             [ { index => 0, type => 2 }, "{index}", "_mapping", "{type}" ],
-            [ { type  => 1 }, "_mapping", "{type}" ],
             [ { index => 0 }, "{index}",  "_mapping" ],
+            [ { type  => 1 }, "_mapping", "{type}" ],
             [ {}, "_mapping" ],
         ],
         qs => [
@@ -1034,8 +1069,8 @@ sub api {
         parts => { index => { multi => 1 }, name => { multi => 1 } },
         paths => [
             [ { index => 0, name => 2 }, "{index}", "_settings", "{name}" ],
-            [ { name  => 1 }, "_settings", "{name}" ],
             [ { index => 0 }, "{index}",   "_settings" ],
+            [ { name  => 1 }, "_settings", "{name}" ],
             [ {}, "_settings" ],
         ],
         qs => [
@@ -1051,6 +1086,17 @@ sub api {
         paths =>
             [ [ { name => 1 }, "_template", "{name}" ], [ {}, "_template" ] ],
         qs => [ "flat_settings", "local" ],
+    },
+
+    'indices.get_upgrade' => {
+        doc   => "indices-upgrade",
+        parts => { index => { multi => 1 } },
+        paths =>
+            [ [ { index => 0 }, "{index}", "_upgrade" ], [ {}, "_upgrade" ] ],
+        qs => [
+            "allow_no_indices", "expand_wildcards",
+            "human",            "ignore_unavailable",
+        ],
     },
 
     'indices.get_warmer' => {
@@ -1069,8 +1115,8 @@ sub api {
                 "{name}"
             ],
             [ { index => 0, name => 2 }, "{index}", "_warmer", "{name}" ],
-            [ { name  => 1 }, "_warmer", "{name}" ],
             [ { index => 0 }, "{index}", "_warmer" ],
+            [ { name  => 1 }, "_warmer", "{name}" ],
             [ {}, "_warmer" ],
         ],
         qs => [
@@ -1111,11 +1157,12 @@ sub api {
         body   => {},
         doc    => "indices-aliases",
         method => "PUT",
-        parts  => { index => { multi => 1 }, name => { required => 1 } },
-        paths  => [
-            [ { index => 0, name => 2 }, "{index}", "_alias", "{name}" ],
-            [ { name => 1 }, "_alias", "{name}" ],
-        ],
+        parts  => {
+            index => { multi    => 1, required => 1 },
+            name  => { required => 1 }
+        },
+        paths =>
+            [ [ { index => 0, name => 2 }, "{index}", "_alias", "{name}" ] ],
         qs => [ "master_timeout", "timeout" ],
     },
 
@@ -1242,8 +1289,8 @@ sub api {
         parts => { index => { multi => 1 }, metric => { multi => 1 } },
         paths => [
             [ { index => 0, metric => 2 }, "{index}", "_stats", "{metric}" ],
-            [ { metric => 1 }, "_stats",  "{metric}" ],
             [ { index  => 0 }, "{index}", "_stats" ],
+            [ { metric => 1 }, "_stats",  "{metric}" ],
             [ {}, "_stats" ],
         ],
         qs => [
@@ -1273,6 +1320,18 @@ sub api {
         parts  => {},
         paths => [ [ {}, "_aliases" ] ],
         qs => [ "master_timeout", "timeout" ],
+    },
+
+    'indices.upgrade' => {
+        doc    => "indices-upgrade",
+        method => "POST",
+        parts  => { index => { multi => 1 } },
+        paths =>
+            [ [ { index => 0 }, "{index}", "_upgrade" ], [ {}, "_upgrade" ] ],
+        qs => [
+            "allow_no_indices",   "expand_wildcards",
+            "ignore_unavailable", "wait_for_completion",
+        ],
     },
 
     'indices.validate_query' => {
@@ -1393,7 +1452,7 @@ sub api {
         method => "PUT",
         parts => { repository => { required => 1 } },
         paths => [ [ { repository => 1 }, "_snapshot", "{repository}" ] ],
-        qs => [ "master_timeout", "timeout" ],
+        qs => [ "master_timeout", "timeout", "verify" ],
     },
 
     'snapshot.delete' => {
@@ -1478,6 +1537,16 @@ sub api {
         qs => ["master_timeout"],
     },
 
+    'snapshot.verify_repository' => {
+        doc    => "modules-snapshots",
+        method => "POST",
+        parts  => { repository => { required => 1 } },
+        paths  => [
+            [ { repository => 1 }, "_snapshot", "{repository}", "_verify" ],
+        ],
+        qs => [ "master_timeout", "timeout" ],
+    },
+
 #=== AUTOGEN - END ===
 
 );
@@ -1498,7 +1567,7 @@ Search::Elasticsearch::Role::API - This class contains the spec for the Elastics
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 

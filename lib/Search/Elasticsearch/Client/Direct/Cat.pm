@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Cat;
-$Search::Elasticsearch::Client::Direct::Cat::VERSION = '1.14';
+$Search::Elasticsearch::Client::Direct::Cat::VERSION = '1.15';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -28,7 +28,7 @@ Search::Elasticsearch::Client::Direct::Cat - A client for running cat debugging 
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 
@@ -195,7 +195,7 @@ for more information.
 
 =head2 C<master()>
 
-    say $e->cat->indices();
+    say $e->cat->master();
 
 Displays the master’s node ID, bound IP address, and node name.
 

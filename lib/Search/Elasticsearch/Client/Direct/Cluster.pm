@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Cluster;
-$Search::Elasticsearch::Client::Direct::Cluster::VERSION = '1.14';
+$Search::Elasticsearch::Client::Direct::Cluster::VERSION = '1.15';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -29,7 +29,7 @@ Search::Elasticsearch::Client::Direct::Cluster - A client for running cluster-le
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 
@@ -188,8 +188,8 @@ which changes should be made. For instance:
 Query string parameters:
     C<dry_run>,
     C<explain>,
-    C<filter_metadata>,
     C<master_timeout>,
+    C<metric>,
     C<timeout>
 
 See the L<reroute docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/cluster-reroute.html>

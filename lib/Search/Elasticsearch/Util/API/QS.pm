@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Util::API::QS;
-$Search::Elasticsearch::Util::API::QS::VERSION = '1.14';
+$Search::Elasticsearch::Util::API::QS::VERSION = '1.15';
 use strict;
 use warnings;
 
@@ -20,18 +20,18 @@ our %Handler = (
 );
 
 our %Params = (
-    active_only      => { type => 'bool' },
-    all              => { type => 'bool' },
-    allow_no_indices => { type => 'bool' },
-    analyze_wildcard => { type => 'bool' },
-    analyzer         => { type => 'string' },
-    boost_terms      => { type => 'number' },
-    bytes            => { type => 'enum', options => [ 'b', 'k', 'm', 'g' ] },
-    char_filters     => { type => 'list' },
-    clear            => { type => 'bool' },
-    completion       => { type => 'bool' },
+    active_only       => { type => 'bool' },
+    all               => { type => 'bool' },
+    allow_no_indices  => { type => 'bool' },
+    analyze_wildcard  => { type => 'bool' },
+    analyzer          => { type => 'string' },
+    boost_terms       => { type => 'number' },
+    bytes             => { type => 'enum', options => [ 'b', 'k', 'm', 'g' ] },
+    char_filters      => { type => 'list' },
+    clear             => { type => 'bool' },
+    completion        => { type => 'bool' },
     completion_fields => { type => 'list' },
-    consistency       => {
+    consistency => {
         options => [ 'one', 'quorum', 'all' ],
         type    => 'enum'
     },
@@ -44,6 +44,7 @@ our %Params = (
     delay            => { type => 'duration' },
     detailed         => { type => 'bool' },
     df               => { type => 'string' },
+    dfs              => { type => 'bool' },
     docs             => { type => 'bool' },
     dry_run          => { type => 'bool' },
     exit             => { type => 'bool' },
@@ -114,18 +115,25 @@ our %Params = (
     max_query_terms          => { type => 'number' },
     max_word_len             => { type => 'number' },     # depr 0.90
     max_word_length          => { type => 'number' },
-    merge                    => { type => 'bool' },
-    min_doc_freq             => { type => 'number' },
-    min_score                => { type => 'number' },
-    min_term_freq            => { type => 'number' },
-    min_word_len             => { type => 'number' },     # depr 0.90
-    min_word_length          => { type => 'number' },
-    mlt_fields               => { type => 'list' },
-    name                     => { type => 'list' },
-    network                  => { type => 'bool' },
-    offsets                  => { type => 'bool' },
-    only_expunge_deletes     => { type => 'bool' },
-    op_type                  => {
+    metric                   => {
+        type    => 'enum',
+        options => [
+            "_all",          "blocks",      "metadata", "nodes",
+            "routing_table", "master_node", "version"
+        ]
+    },
+    merge                => { type => 'bool' },
+    min_doc_freq         => { type => 'number' },
+    min_score            => { type => 'number' },
+    min_term_freq        => { type => 'number' },
+    min_word_len         => { type => 'number' },    # depr 0.90
+    min_word_length      => { type => 'number' },
+    mlt_fields           => { type => 'list' },
+    name                 => { type => 'list' },
+    network              => { type => 'bool' },
+    offsets              => { type => 'bool' },
+    only_expunge_deletes => { type => 'bool' },
+    op_type              => {
         default => 'index',
         options => [ 'index', 'create' ],
         type    => 'enum'
@@ -146,6 +154,7 @@ our %Params = (
     pri                    => { type => 'bool' },
     process                => { type => 'bool' },
     q                      => { type => 'string' },
+    query_cache            => { type => 'bool' },
     realtime               => { type => 'bool' },
     recovery               => { type => 'bool' },
     recycler               => { type => 'bool' },
@@ -157,13 +166,14 @@ our %Params = (
     },
     retry_on_conflict => { type => 'number' },
     routing           => { type => 'string' },
-    script            => { type => 'string', },
+    script            => { type => 'string' },
+    script_id         => { type => 'string' },
+    scripted_upsert   => { type => 'bool' },
     scroll            => { type => 'duration' },
     scroll_id         => { type => 'string' },
     search            => { type => 'bool' },
     search_from       => { type => 'number' },
     search_indices    => { type => 'list' },
-    search_query_hint => { type => 'string' },
     search_scroll     => { type => 'string' },
     search_size       => { type => 'number' },
     search_source     => { type => 'string' },
@@ -211,6 +221,7 @@ our %Params = (
     types           => { type => 'list' },
     v               => { type => 'bool' },
     verbose         => { type => 'bool' },
+    verify          => { type => 'bool' },
     version         => { type => 'number' },
     version_type    => {
         type    => 'enum',
@@ -226,7 +237,8 @@ our %Params = (
         options => [ 'green', 'yellow', 'red' ],
         type    => 'enum'
     },
-    warmer => { type => 'bool' }
+    wait_if_ongoing => { type => 'bool' },
+    warmer          => { type => 'bool' }
 );
 
 #===================================
@@ -255,7 +267,7 @@ Search::Elasticsearch::Util::API::QS - A utility class for query string paramete
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 

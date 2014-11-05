@@ -1,5 +1,5 @@
 package Search::Elasticsearch::CxnPool::Static;
-$Search::Elasticsearch::CxnPool::Static::VERSION = '1.14';
+$Search::Elasticsearch::CxnPool::Static::VERSION = '1.15';
 use Moo;
 with 'Search::Elasticsearch::Role::CxnPool::Static',
     'Search::Elasticsearch::Role::Is_Sync';
@@ -50,7 +50,7 @@ Search::Elasticsearch::CxnPool::Static - A CxnPool for connecting to a remote cl
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 SYNOPSIS
 

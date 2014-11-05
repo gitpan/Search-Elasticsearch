@@ -1,5 +1,5 @@
 package Search::Elasticsearch::CxnPool::Sniff;
-$Search::Elasticsearch::CxnPool::Sniff::VERSION = '1.14';
+$Search::Elasticsearch::CxnPool::Sniff::VERSION = '1.15';
 use Moo;
 with 'Search::Elasticsearch::Role::CxnPool::Sniff',
     'Search::Elasticsearch::Role::Is_Sync';
@@ -81,7 +81,7 @@ Search::Elasticsearch::CxnPool::Sniff - A CxnPool for connecting to a local clus
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 SYNOPSIS
 

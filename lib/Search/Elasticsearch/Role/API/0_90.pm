@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API::0_90;
-$Search::Elasticsearch::Role::API::0_90::VERSION = '1.14';
+$Search::Elasticsearch::Role::API::0_90::VERSION = '1.15';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -249,7 +249,7 @@ sub api {
             "min_word_len",           "mlt_fields",
             "percent_terms_to_match", "routing",
             "search_from",            "search_indices",
-            "search_query_hint",      "search_scroll",
+            "search_scroll",
             "search_size",            "search_source",
             "search_type",            "search_types",
             "stop_words",
@@ -952,7 +952,7 @@ Search::Elasticsearch::Role::API::0_90 - This class contains the spec for the El
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 

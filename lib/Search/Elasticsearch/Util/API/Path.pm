@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Util::API::Path;
-$Search::Elasticsearch::Util::API::Path::VERSION = '1.14';
+$Search::Elasticsearch::Util::API::Path::VERSION = '1.15';
 use strict;
 use warnings;
 use Any::URI::Escape qw(uri_escape);
@@ -66,7 +66,7 @@ Search::Elasticsearch::Util::API::Path - A utility class for converting path tem
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 

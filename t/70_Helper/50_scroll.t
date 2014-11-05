@@ -70,12 +70,12 @@ SKIP: {
                 aggs   => { color => { terms => { field => 'color' } } },
             }
         },
-        total        => 50,
-        max_score    => num( 1.6, 0.2 ),
-        aggregations => $es_version ge '1' ? bool(1) : undef,
-        facets       => bool(1),
-        suggest      => bool(1),
-        steps        => [
+        total     => 50,
+        max_score => num( 1.6, 0.5 ),
+        aggs      => bool(1),
+        facets    => bool(1),
+        suggest   => bool(1),
+        steps     => [
             next        => [1],
             next_50     => [49],
             is_finished => 1,
@@ -95,12 +95,12 @@ SKIP: {
                 aggs   => { color => { terms => { field => 'color' } } },
             }
         },
-        total        => 50,
-        max_score    => num( 1.6, 0.2 ),
-        aggregations => $es_version ge '1' ? bool(1) : undef,
-        facets       => bool(1),
-        suggest      => bool(1),
-        steps        => [
+        total     => 50,
+        max_score => num( 1.6, 0.5 ),
+        aggs      => bool(1),
+        facets    => bool(1),
+        suggest   => bool(1),
+        steps     => [
             next        => [1],
             next_50     => [49],
             is_finished => 1,
@@ -116,15 +116,13 @@ SKIP: {
                         { text => 'green', term => { field => 'color' } }
                 },
                 facets => { color => { terms => { field => 'color' } } },
-                aggs   => { color => { terms => { field => 'color' } } },
             }
         },
-        total        => 100,
-        max_score    => 0,
-        aggregations => $es_version ge '1' ? bool(1) : undef,
-        facets       => bool(1),
-        suggest      => bool(1),
-        steps        => [
+        total     => 100,
+        max_score => 0,
+        facets    => bool(1),
+        suggest   => bool(1),
+        steps     => [
             buffer_size => 0,
             next        => [1],
             buffer_size => 49,
@@ -162,7 +160,8 @@ $es->indices->delete( index => 'test' );
 sub test_scroll {
 #===================================
     my ( $title, $params, %tests ) = @_;
-    delete $params->{body}{aggs} unless $es_version ge '1';
+    delete $params->{body}{ $es_version ge '1' ? 'facets' : 'aggs' };
+
     subtest $title => sub {
         isa_ok my $s
             = Search::Elasticsearch::Scroll->new( es => $es, %$params ),
@@ -170,8 +169,10 @@ sub test_scroll {
 
         is $s->total,             $tests{total},     "$title - total";
         cmp_deeply $s->max_score, $tests{max_score}, "$title - max_score";
-        cmp_deeply $s->facets,    $tests{facets},    "$title - facets";
         cmp_deeply $s->suggest,   $tests{suggest},   "$title - suggest";
+        $es_version ge 1
+            ? cmp_deeply $s->aggregations, $tests{aggs}, "$title - aggs"
+            : cmp_deeply $s->facets, $tests{facets}, "$title - facets";
 
         my $i     = 1;
         my @steps = @{ $tests{steps} };

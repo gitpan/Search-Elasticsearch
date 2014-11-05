@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Indices;
-$Search::Elasticsearch::Client::Direct::Indices::VERSION = '1.14';
+$Search::Elasticsearch::Client::Direct::Indices::VERSION = '1.15';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -17,7 +17,7 @@ Search::Elasticsearch::Client::Direct::Indices - A client for running index-leve
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 
@@ -50,6 +50,25 @@ Query string parameters:
 
 See the L<create index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-create-index.html>
 for more information.
+
+=head2 C<get()>
+
+    $response = $e->indices->get(
+        index   => 'index'   | \@indices    # optional
+        feature => 'feature' | \@features   # optional
+    );
+
+Returns the aliases, settings, mappings, and warmers for the specified indices.
+The C<feature> parameter can be set to none or more of: C<_settings>, C<_mappings>,
+C<_warmers> and C<_aliases>.
+
+See the L<get index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-get-index.html>.
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<local>
 
 =head2 C<exists()>
 
@@ -144,6 +163,7 @@ Query string parameters:
     C<id>,
     C<id_cache>,
     C<ignore_unavailable>,
+    C<query_cache>,
     C<recycler>
 
 See the L<clear_cache docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-clearcache.html>
@@ -183,7 +203,8 @@ Query string parameters:
     C<expand_wildcards>,
     C<force>,
     C<full>,
-    C<ignore_unavailable>
+    C<ignore_unavailable>,
+    C<wait_if_ongoing>
 
 See the L<flush index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-flush.html>
 for more information.
@@ -202,13 +223,47 @@ Query string parameters:
     C<allow_no_indices>,
     C<expand_wildcards>,
     C<flush>,
-    C<force>,
     C<ignore_unavailable>,
     C<max_num_segments>,
     C<only_expunge_deletes>,
     C<wait_for_merge>
 
 See the L<optimize index docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-optimize.html>
+for more information.
+
+=head2 C<get_upgrade()>
+
+    $response = $e->indices->get_upgrade(
+        index => 'index' | \@indices    # optional
+    );
+
+The C<get_upgrade()> method returns information about which indices need to be
+upgraded, which can be done with the C<upgrade()> method.
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<human>,
+    C<ignore_unavailable>
+
+See the L<upgrade docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-upgrade.html>
+for more information.
+
+=head2 C<upgrade()>
+
+    $response = $e->indices->upgrade(
+        index => 'index' | \@indices    # optional
+    );
+
+The C<upgrade()> method upgrades all segments in the specified indices to the latest format.
+
+Query string parameters:
+    C<allow_no_indices>,
+    C<expand_wildcards>,
+    C<ignore_unavailable>,
+    C<wait_for_completion>
+
+See the L<upgrade docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-upgrade.html>
 for more information.
 
 =head1 MAPPING METHODS
@@ -359,7 +414,7 @@ for more information.
 =head2 C<get_aliases()>
 
     $result = $e->indices->get_aliases(
-        index   => 'index' | \@indices      # optional
+        index   => 'index' | \@indices,     # optional
         alias   => 'alias' | \@aliases      # optional
     );
 
@@ -376,7 +431,7 @@ for more information.
 =head2 C<put_alias()>
 
     $response = $e->indices->put_alias(
-        index => 'index' | \@indices        # optional,
+        index => 'index' | \@indices,       # required
         name  => 'alias',                   # required
 
         body  => { alias defn }             # optional
@@ -660,6 +715,7 @@ Allowed metrics are:
     C<indexing>,
     C<merge>,
     C<percolate>,
+    C<query_cache>,
     C<refresh>,
     C<search>,
     C<segments>,

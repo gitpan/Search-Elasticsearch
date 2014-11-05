@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Cxn;
-$Search::Elasticsearch::Role::Cxn::VERSION = '1.14';
+$Search::Elasticsearch::Role::Cxn::VERSION = '1.15';
 use Moo::Role;
 use Search::Elasticsearch::Util qw(throw);
 use List::Util qw(min);
@@ -137,7 +137,7 @@ sub process_response {
 
     my $error_type = $Code_To_Error{$code};
     unless ($error_type) {
-        if ( defined $body ) {
+        if ( defined $body and length $body ) {
             $msg  = $body;
             $body = undef;
         }
@@ -183,7 +183,7 @@ Search::Elasticsearch::Role::Cxn - Provides common functionality to Cxn implemen
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 

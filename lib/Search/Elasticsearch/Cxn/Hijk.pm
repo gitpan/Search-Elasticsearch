@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Cxn::Hijk;
-$Search::Elasticsearch::Cxn::Hijk::VERSION = '1.14';
+$Search::Elasticsearch::Cxn::Hijk::VERSION = '1.15';
 use Moo;
 with 'Search::Elasticsearch::Role::Cxn::HTTP',
     'Search::Elasticsearch::Role::Cxn',
@@ -114,7 +114,7 @@ Search::Elasticsearch::Cxn::Hijk - A Cxn implementation which uses Hijk
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 
@@ -168,6 +168,10 @@ From L<Search::Elasticsearch::Role::Cxn>
 =item * L<handle_args|Search::Elasticsearch::Role::Cxn/"handle_args">
 
 =back
+
+=head1 SSL/TLS
+
+L<Search::Elasticsearch::Cxn::Hijk> does not support HTTPS.
 
 =head1 METHODS
 
