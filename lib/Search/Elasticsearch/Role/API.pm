@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API;
-$Search::Elasticsearch::Role::API::VERSION = '1.15';
+$Search::Elasticsearch::Role::API::VERSION = '1.16';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -423,7 +423,8 @@ sub api {
         qs => [
             "allow_no_indices",   "expand_wildcards",
             "ignore_unavailable", "percolate_format",
-            "percolate_index",    "percolate_type",
+            "percolate_index",    "percolate_preference",
+            "percolate_routing",  "percolate_type",
             "preference",         "routing",
             "version",            "version_type",
         ],
@@ -866,8 +867,8 @@ sub api {
     'indices.delete' => {
         doc    => "indices-delete-index",
         method => "DELETE",
-        parts  => { index => { multi => 1 } },
-        paths  => [ [ { index => 0 }, "{index}" ] ],
+        parts  => { index => { multi => 1, required => 1 } },
+        paths => [ [ { index => 0 }, "{index}" ] ],
         qs => [ "master_timeout", "timeout" ],
     },
 
@@ -1567,7 +1568,7 @@ Search::Elasticsearch::Role::API - This class contains the spec for the Elastics
 
 =head1 VERSION
 
-version 1.15
+version 1.16
 
 =head1 DESCRIPTION
 

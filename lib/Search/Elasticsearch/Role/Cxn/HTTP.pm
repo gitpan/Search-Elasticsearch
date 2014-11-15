@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Cxn::HTTP;
-$Search::Elasticsearch::Role::Cxn::HTTP::VERSION = '1.15';
+$Search::Elasticsearch::Role::Cxn::HTTP::VERSION = '1.16';
 use Moo::Role;
 
 use URI();
@@ -167,7 +167,7 @@ Search::Elasticsearch::Role::Cxn::HTTP - Provides common functionality to HTTP C
 
 =head1 VERSION
 
-version 1.15
+version 1.16
 
 =head1 DESCRIPTION
 

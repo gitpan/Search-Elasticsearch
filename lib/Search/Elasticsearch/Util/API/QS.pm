@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Util::API::QS;
-$Search::Elasticsearch::Util::API::QS::VERSION = '1.15';
+$Search::Elasticsearch::Util::API::QS::VERSION = '1.16';
 use strict;
 use warnings;
 
@@ -146,6 +146,8 @@ our %Params = (
     percolate              => { type => 'string' },
     percolate_format       => { type => 'string' },
     percolate_index        => { type => 'string' },
+    percolate_preference   => { type => 'string' },
+    percolate_routing      => { type => 'list' },
     percolate_type         => { type => 'string' },
     plugin                 => { type => 'bool' },
     positions              => { type => 'bool' },
@@ -267,7 +269,7 @@ Search::Elasticsearch::Util::API::QS - A utility class for query string paramete
 
 =head1 VERSION
 
-version 1.15
+version 1.16
 
 =head1 DESCRIPTION
 

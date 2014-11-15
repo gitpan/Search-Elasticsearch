@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API::0_90;
-$Search::Elasticsearch::Role::API::0_90::VERSION = '1.15';
+$Search::Elasticsearch::Role::API::0_90::VERSION = '1.16';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -952,7 +952,7 @@ Search::Elasticsearch::Role::API::0_90 - This class contains the spec for the El
 
 =head1 VERSION
 
-version 1.15
+version 1.16
 
 =head1 DESCRIPTION
 

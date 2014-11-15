@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Logger;
-$Search::Elasticsearch::Role::Logger::VERSION = '1.15';
+$Search::Elasticsearch::Role::Logger::VERSION = '1.16';
 use Moo::Role;
 
 use URI();
@@ -139,7 +139,7 @@ Search::Elasticsearch::Role::Logger - Provides common functionality to Logger im
 
 =head1 VERSION
 
-version 1.15
+version 1.16
 
 =head1 DESCRIPTION
 

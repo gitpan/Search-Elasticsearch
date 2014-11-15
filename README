@@ -2,7 +2,7 @@ NAME
     Search::Elasticsearch - The official client for Elasticsearch
 
 VERSION
-    version 1.15
+    version 1.16
 
 SYNOPSIS
         use Search::Elasticsearch;

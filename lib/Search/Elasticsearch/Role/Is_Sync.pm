@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Is_Sync;
-$Search::Elasticsearch::Role::Is_Sync::VERSION = '1.15';
+$Search::Elasticsearch::Role::Is_Sync::VERSION = '1.16';
 use Moo::Role;
 use namespace::clean;
 
@@ -19,7 +19,7 @@ Search::Elasticsearch::Role::Is_Sync - A role to mark classes which should be us
 
 =head1 VERSION
 
-version 1.15
+version 1.16
 
 =head1 AUTHOR
 

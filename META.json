@@ -21,7 +21,8 @@
       },
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "0"
+            "ExtUtils::MakeMaker" : "0",
+            "Pod::Simple" : "3.28"
          }
       },
       "develop" : {
@@ -97,6 +98,6 @@
          "web" : "https://github.com/elasticsearch/elasticsearch-perl"
       }
    },
-   "version" : "1.15"
+   "version" : "1.16"
 }
 

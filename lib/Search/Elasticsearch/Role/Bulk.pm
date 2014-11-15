@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Bulk;
-$Search::Elasticsearch::Role::Bulk::VERSION = '1.15';
+$Search::Elasticsearch::Role::Bulk::VERSION = '1.16';
 use Moo::Role;
 requires 'add_action', 'flush';
 
@@ -255,7 +255,7 @@ Search::Elasticsearch::Role::Bulk - Provides common functionality to L<Elasticse
 
 =head1 VERSION
 
-version 1.15
+version 1.16
 
 =head1 AUTHOR
 

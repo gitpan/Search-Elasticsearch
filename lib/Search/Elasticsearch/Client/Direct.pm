@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct;
-$Search::Elasticsearch::Client::Direct::VERSION = '1.15';
+$Search::Elasticsearch::Client::Direct::VERSION = '1.16';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -118,7 +118,7 @@ Search::Elasticsearch::Client::Direct - Thin client with full support for Elasti
 
 =head1 VERSION
 
-version 1.15
+version 1.16
 
 =head1 SYNOPSIS
 
@@ -1202,6 +1202,8 @@ Query string parameters:
     C<ignore_unavailable>,
     C<percolate_format>,
     C<percolate_index>,
+    C<percolate_preference>,
+    C<percolate_routing>,
     C<percolate_type>,
     C<preference>,
     C<routing>,
