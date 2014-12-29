@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Util::API::QS;
-$Search::Elasticsearch::Util::API::QS::VERSION = '1.16';
+$Search::Elasticsearch::Util::API::QS::VERSION = '1.17';
 use strict;
 use warnings;
 
@@ -92,18 +92,19 @@ our %Params = (
         options => [ 'none', 'missing' ],
         type    => 'enum'
     },
-    ignore             => { type => 'list', },
-    ignore_unavailable => { type => 'bool' },
-    include_defaults   => { type => 'bool' },
-    index              => { type => 'list' },
-    index_templates    => { type => 'list' },
-    indexing           => { type => 'bool' },
-    indices            => { type => 'bool' },
-    interval           => { type => 'duration' },
-    jvm                => { type => 'bool' },
-    lang               => { type => 'string' },
-    lenient            => { type => 'bool' },
-    level              => {
+    ignore              => { type => 'list', },
+    ignore_idle_threads => { type => 'bool' },
+    ignore_unavailable  => { type => 'bool' },
+    include_defaults    => { type => 'bool' },
+    index               => { type => 'list' },
+    index_templates     => { type => 'list' },
+    indexing            => { type => 'bool' },
+    indices             => { type => 'bool' },
+    interval            => { type => 'duration' },
+    jvm                 => { type => 'bool' },
+    lang                => { type => 'string' },
+    lenient             => { type => 'bool' },
+    level               => {
         options => [ 'cluster', 'node', 'indices', 'shards' ],
         type    => 'enum'
     },
@@ -209,6 +210,7 @@ our %Params = (
     suggest_size    => { type => 'number' },
     suggest_text    => { type => 'string' },
     term_statistics => { type => 'bool' },
+    terminate_after => { type => 'number' },
     text            => { type => 'string' },
     thread_pool     => { type => 'bool' },
     threads         => { type => 'number' },
@@ -269,7 +271,7 @@ Search::Elasticsearch::Util::API::QS - A utility class for query string paramete
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 DESCRIPTION
 

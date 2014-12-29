@@ -1,11 +1,11 @@
 package Search::Elasticsearch::Logger::LogAny;
-$Search::Elasticsearch::Logger::LogAny::VERSION = '1.16';
+$Search::Elasticsearch::Logger::LogAny::VERSION = '1.17';
 use Moo;
 with 'Search::Elasticsearch::Role::Logger';
 use Search::Elasticsearch::Util qw(parse_params to_list);
 use namespace::clean;
 
-use Log::Any 0.15 ();
+use Log::Any 1.02 ();
 use Log::Any::Adapter();
 
 #===================================
@@ -44,7 +44,7 @@ Search::Elasticsearch::Logger::LogAny - A Log::Any-based Logger implementation
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 DESCRIPTION
 

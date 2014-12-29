@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Serializer::JSON::XS;
-$Search::Elasticsearch::Serializer::JSON::XS::VERSION = '1.16';
+$Search::Elasticsearch::Serializer::JSON::XS::VERSION = '1.17';
 use Moo;
 use JSON::XS 2.26;
 
@@ -19,7 +19,7 @@ Search::Elasticsearch::Serializer::JSON::XS - A JSON Serializer using JSON::XS
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 SYNOPSIS
 

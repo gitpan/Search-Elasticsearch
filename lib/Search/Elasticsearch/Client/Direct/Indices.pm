@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::Direct::Indices;
-$Search::Elasticsearch::Client::Direct::Indices::VERSION = '1.16';
+$Search::Elasticsearch::Client::Direct::Indices::VERSION = '1.17';
 use Moo;
 with 'Search::Elasticsearch::Role::API';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -17,7 +17,7 @@ Search::Elasticsearch::Client::Direct::Indices - A client for running index-leve
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 DESCRIPTION
 
@@ -573,8 +573,11 @@ Query string parameters:
     C<create>,
     C<flat_settings>,
     C<master_timeout>,
+    C<op_type>,
     C<order>,
-    C<timeout>
+    C<timeout>,
+    C<version>,
+    C<version_type>
 
 See the L<put_template docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-templates.html>
 for more information.
@@ -618,7 +621,9 @@ The C<delete_template()> method is used to delete a named template.
 
 Query string parameters:
     C<master_timeout>,
-    C<timeout>
+    C<timeout>,
+    C<version>,
+    C<version_type>
 
 See the L<delete_template docs|http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-templates.html>
 for more information.

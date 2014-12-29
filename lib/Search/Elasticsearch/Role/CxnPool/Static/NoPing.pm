@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::CxnPool::Static::NoPing;
-$Search::Elasticsearch::Role::CxnPool::Static::NoPing::VERSION = '1.16';
+$Search::Elasticsearch::Role::CxnPool::Static::NoPing::VERSION = '1.17';
 use Moo::Role;
 with 'Search::Elasticsearch::Role::CxnPool';
 
@@ -79,7 +79,7 @@ Search::Elasticsearch::Role::CxnPool::Static::NoPing - A CxnPool for connecting 
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 AUTHOR
 

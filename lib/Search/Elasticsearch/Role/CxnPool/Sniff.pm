@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::CxnPool::Sniff;
-$Search::Elasticsearch::Role::CxnPool::Sniff::VERSION = '1.16';
+$Search::Elasticsearch::Role::CxnPool::Sniff::VERSION = '1.17';
 use Moo::Role;
 with 'Search::Elasticsearch::Role::CxnPool';
 requires 'next_cxn', 'sniff';
@@ -88,7 +88,7 @@ Search::Elasticsearch::Role::CxnPool::Sniff - A CxnPool role for connecting to a
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 CONFIGURATION
 

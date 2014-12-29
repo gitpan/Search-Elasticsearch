@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::Client::Direct;
-$Search::Elasticsearch::Role::Client::Direct::VERSION = '1.16';
+$Search::Elasticsearch::Role::Client::Direct::VERSION = '1.17';
 use Moo::Role;
 with 'Search::Elasticsearch::Role::Client';
 use Search::Elasticsearch::Util::API::Path qw(path_handler);
@@ -120,7 +120,7 @@ Search::Elasticsearch::Role::Client::Direct - Request parsing for Direct clients
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 DESCRIPTION
 

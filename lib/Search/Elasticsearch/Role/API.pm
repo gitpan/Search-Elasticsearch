@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Role::API;
-$Search::Elasticsearch::Role::API::VERSION = '1.16';
+$Search::Elasticsearch::Role::API::VERSION = '1.17';
 use Moo::Role;
 
 use Search::Elasticsearch::Util qw(throw);
@@ -172,7 +172,7 @@ sub api {
         method => "DELETE",
         parts  => { id => {} },
         paths  => [ [ { id => 2 }, "_search", "template", "{id}" ] ],
-        qs     => [],
+        qs => [ "version", "version_type" ],
     },
 
     'exists' => {
@@ -387,7 +387,7 @@ sub api {
         body            => {},
         doc             => "docs-multi-termvectors",
         index_when_type => 1,
-        parts           => { id => {}, index => {}, type => {} },
+        parts           => { index => {}, type => {} },
         paths           => [
             [   { index => 0, type => 1 }, "{index}",
                 "{type}", "_mtermvectors"
@@ -401,7 +401,8 @@ sub api {
             "parent",           "payloads",
             "positions",        "preference",
             "realtime",         "routing",
-            "term_statistics",
+            "term_statistics",  "version",
+            "version_type",
         ],
     },
 
@@ -453,7 +454,7 @@ sub api {
         method => "PUT",
         parts => { id => { required => 1 } },
         paths => [ [ { id => 2 }, "_search", "template", "{id}" ] ],
-        qs => [],
+        qs => [ "op_type", "version", "version_type" ],
     },
 
     'scroll' => {
@@ -492,14 +493,15 @@ sub api {
             "sort",                     "source",
             "stats",                    "suggest_field",
             "suggest_mode",             "suggest_size",
-            "suggest_text",             "timeout",
-            "track_scores",             "version",
+            "suggest_text",             "terminate_after",
+            "timeout",                  "track_scores",
+            "version",
         ],
     },
 
     'search_exists' => {
         body   => {},
-        doc    => "exists",
+        doc    => "search-exists",
         method => "POST",
         parts  => { index => { multi => 1 }, type => { multi => 1 } },
         paths  => [
@@ -560,7 +562,7 @@ sub api {
 
     'suggest' => {
         body   => { required => 1 },
-        doc    => "search-search",
+        doc    => "search-suggesters",
         method => "POST",
         parts => { index => { multi => 1 } },
         paths =>
@@ -596,6 +598,34 @@ sub api {
         ],
     },
 
+    'termvectors' => {
+        body  => {},
+        doc   => "docs-termvectors",
+        parts => {
+            id    => {},
+            index => { required => 1 },
+            type  => { required => 1 }
+        },
+        paths => [
+            [   { id => 2, index => 0, type => 1 }, "{index}",
+                "{type}", "{id}",
+                "_termvectors",
+            ],
+            [   { index => 0, type => 1 }, "{index}", "{type}",
+                "_termvectors"
+            ],
+        ],
+        qs => [
+            "dfs",             "field_statistics",
+            "fields",          "offsets",
+            "parent",          "payloads",
+            "positions",       "preference",
+            "realtime",        "routing",
+            "term_statistics", "version",
+            "version_type",
+        ],
+    },
+
     'update' => {
         body   => {},
         doc    => "docs-update",
@@ -623,7 +653,7 @@ sub api {
     },
 
     'cat.aliases' => {
-        doc   => "cat-aliases",
+        doc   => "cat-alias",
         parts => { name => { multi => 1 } },
         paths => [
             [ { name => 2 }, "_cat", "aliases", "{name}" ],
@@ -776,7 +806,7 @@ sub api {
         method => "PUT",
         parts  => {},
         paths  => [ [ {}, "_cluster", "settings" ] ],
-        qs     => ["flat_settings"],
+        qs => [ "flat_settings", "master_timeout", "timeout" ],
     },
 
     'cluster.reroute' => {
@@ -1066,7 +1096,7 @@ sub api {
     },
 
     'indices.get_settings' => {
-        doc   => "indices-get-mapping",
+        doc   => "indices-get-settings",
         parts => { index => { multi => 1 }, name => { multi => 1 } },
         paths => [
             [ { index => 0, name => 2 }, "{index}", "_settings", "{name}" ],
@@ -1362,7 +1392,11 @@ sub api {
             [ { node_id => 1 }, "_nodes", "{node_id}", "hot_threads" ],
             [ {}, "_nodes", "hot_threads" ],
         ],
-        qs => [ "interval", "snapshots", "threads", "type" ],
+        qs => [
+            "ignore_idle_threads", "interval",
+            "snapshots",           "threads",
+            "type",
+        ],
     },
 
     'nodes.info' => {
@@ -1568,7 +1602,7 @@ Search::Elasticsearch::Role::API - This class contains the spec for the Elastics
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Cxn::Hijk;
-$Search::Elasticsearch::Cxn::Hijk::VERSION = '1.16';
+$Search::Elasticsearch::Cxn::Hijk::VERSION = '1.17';
 use Moo;
 with 'Search::Elasticsearch::Role::Cxn::HTTP',
     'Search::Elasticsearch::Role::Cxn',
@@ -43,6 +43,7 @@ sub perform_request {
         method          => $method,
         path            => $uri->path,
         query_string    => $uri->query,
+        %{ $self->handle_args }
     );
     if ( defined $params->{data} ) {
         $args{body} = $params->{data};
@@ -114,7 +115,7 @@ Search::Elasticsearch::Cxn::Hijk - A Cxn implementation which uses Hijk
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 DESCRIPTION
 

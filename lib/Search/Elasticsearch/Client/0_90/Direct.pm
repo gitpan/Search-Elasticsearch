@@ -1,5 +1,5 @@
 package Search::Elasticsearch::Client::0_90::Direct;
-$Search::Elasticsearch::Client::0_90::Direct::VERSION = '1.16';
+$Search::Elasticsearch::Client::0_90::Direct::VERSION = '1.17';
 use Moo;
 with 'Search::Elasticsearch::Role::API::0_90';
 with 'Search::Elasticsearch::Role::Client::Direct';
@@ -119,7 +119,7 @@ Search::Elasticsearch::Client::0_90::Direct - Thin client with full support for 
 
 =head1 VERSION
 
-version 1.16
+version 1.17
 
 =head1 SYNOPSIS
 
